@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      { "type": "command", "bash": "\"${PLUGIN_ROOT}/.agent-hooks/log-event.sh\" sessionStart", "timeoutSec": 10 }
+    ],
+    "userPromptSubmitted": [
+      { "type": "command", "bash": "\"${PLUGIN_ROOT}/.agent-hooks/log-event.sh\" userPromptSubmitted", "timeoutSec": 10 }
+    ],
+    "postToolUse": [
+      { "type": "command", "bash": "\"${PLUGIN_ROOT}/.agent-hooks/log-event.sh\" postToolUse", "timeoutSec": 10 }
+    ],
+    "agentStop": [
+      { "type": "command", "bash": "\"${PLUGIN_ROOT}/.agent-hooks/log-event.sh\" agentStop", "timeoutSec": 10 }
+    ],
+    "subagentStop": [
+      { "type": "command", "bash": "\"${PLUGIN_ROOT}/.agent-hooks/log-event.sh\" subagentStop", "timeoutSec": 10 }
+    ],
+    "preCompact": [
+      { "type": "command", "bash": "\"${PLUGIN_ROOT}/.agent-hooks/log-event.sh\" preCompact", "timeoutSec": 10 }
+    ],
+    "errorOccurred": [
+      { "type": "command", "bash": "\"${PLUGIN_ROOT}/.agent-hooks/log-event.sh\" errorOccurred", "timeoutSec": 10 }
+    ],
+    "sessionEnd": [
+      { "type": "command", "bash": "\"${PLUGIN_ROOT}/.agent-hooks/log-event.sh\" sessionEnd", "timeoutSec": 10 }
+    ]
+  }
+}

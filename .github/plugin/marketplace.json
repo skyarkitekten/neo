@@ -1,0 +1,25 @@
+{
+  "name": "neo",
+  "owner": {
+    "name": "skyarkitekten"
+  },
+  "metadata": {
+    "description": "Neo coding-agent crew and config-authoring tools for GitHub Copilot CLI.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "neo",
+      "source": ".",
+      "description": "Coordinated coding-agent crew (orchestrator + researcher/planner/writer/reviewer) plus a master-control config-authoring agent, with lifecycle-logging hooks.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Chad Thomas"
+      },
+      "license": "MIT",
+      "keywords": ["agents", "orchestration", "code-review", "hooks"],
+      "agents": ".github/agents",
+      "hooks": ".github/hooks/hooks.json"
+    }
+  ]
+}
