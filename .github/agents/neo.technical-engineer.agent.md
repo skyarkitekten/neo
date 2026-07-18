@@ -1,6 +1,8 @@
 ---
 name: Neo Technical Engineer
-description: Takes a spec — a GitHub Issue or Azure DevOps story — and drives it to a draft PR through five phases: research, plan, implement (delegated to code-writer), review (delegated to code-reviewer), and open a draft pull request. Start here for any feature, bug fix, or refactor tied to an issue or story.
+description: "Takes a spec — a GitHub Issue or Azure DevOps story — and drives it to a draft PR through five phases: research, plan, implement (delegated to code-writer), review (delegated to code-reviewer), and open a draft pull request. Start here for any feature, bug fix, or refactor tied to an issue or story."
+model: Claude Sonnet 5
+reasoningEffort: medium
 tools: ['search']
 agents: ['Neo Researcher', 'Neo Planner', 'Neo Code Writer', 'Neo Code Reviewer']
 user-invokable: true

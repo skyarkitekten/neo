@@ -1,6 +1,8 @@
 ---
 name: Neo Code Reviewer
 description: Reviews a code change in this repo — React/TypeScript frontend or .NET/C# backend — for correctness, style, and safety. The change may be feature/fix code or test code; review whichever the orchestrator assigns. Invoked by the orchestrator, not directly by the user. Reviews only; does not write or edit code.
+model: Claude Sonnet 5
+reasoningEffort: high
 tools: [read/readFile, search, azure/search]
 user-invokable: false
 ---

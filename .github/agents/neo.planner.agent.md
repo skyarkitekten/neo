@@ -1,6 +1,8 @@
 ---
 name: Neo Planning Agent
 description: Turns a spec plus research findings into an ordered list of discrete work units — each a feature/fix or a test — mapped to acceptance criteria, with dependencies and parallelizable groups marked. Read-only. Invoked by the orchestrator. Does not write code or re-run research from scratch.
+model: Claude Opus 4.8
+reasoningEffort: high
 tools: ["search"]
 user-invokable: false
 ---
