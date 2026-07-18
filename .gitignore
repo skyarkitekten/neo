@@ -1,0 +1,19 @@
+# Agent logs
+.agent-logs/
+*.jsonl
+
+# Node / Bun (frontend)
+node_modules/
+frontend/dist/
+bun.lockb
+
+# .NET (backend)
+backend/**/bin/
+backend/**/obj/
+
+# Python
+__pycache__/
+*.pyc
+
+# OS / editor
+.DS_Store

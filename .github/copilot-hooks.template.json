@@ -1,0 +1,26 @@
+{
+  "//": "GitHub Copilot CLI hook config — TEMPLATE. Copilot configures hooks in its CLI settings; the exact file location and key names vary by Copilot version, so VERIFY this against your installed version before relying on it. The intent: fire log-event.sh with the event name for each lifecycle event. Copilot event names are camelCase and differ from Claude Code (userPromptSubmitted, agentStop, errorOccurred). Copilot has no SubagentStop — agentStop brackets each agent run instead.",
+  "hooks": {
+    "sessionStart": [
+      { "type": "command", "command": "./.agent-hooks/log-event.sh sessionStart" }
+    ],
+    "userPromptSubmitted": [
+      { "type": "command", "command": "./.agent-hooks/log-event.sh userPromptSubmitted" }
+    ],
+    "postToolUse": [
+      { "type": "command", "command": "./.agent-hooks/log-event.sh postToolUse" }
+    ],
+    "agentStop": [
+      { "type": "command", "command": "./.agent-hooks/log-event.sh agentStop" }
+    ],
+    "preCompact": [
+      { "type": "command", "command": "./.agent-hooks/log-event.sh preCompact" }
+    ],
+    "errorOccurred": [
+      { "type": "command", "command": "./.agent-hooks/log-event.sh errorOccurred" }
+    ],
+    "sessionEnd": [
+      { "type": "command", "command": "./.agent-hooks/log-event.sh sessionEnd" }
+    ]
+  }
+}
