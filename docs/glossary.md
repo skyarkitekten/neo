@@ -6,7 +6,7 @@ Canonical vocabulary for the Neo Agentic SDLC. Define a term once — here — a
 
 ## Roles
 
-**Business Engineer (BE)** `[live]` — The single human who owns a feature from business intent through decomposition. Same seat as "the business", "business analyst", and the scrum "product owner". Explicitly **not** the hand-off BA who transcribes a PO and passes notes to engineers — neo removes that hand-off. The BE authors and signs the feature contract *and* co-owns Feature→Task decomposition, so intent is never laundered through a middleman.
+**Business Engineer (BE)** `[live]` — The single human who owns a feature from business intent through decomposition. Same seat as "the business", "business analyst", and the scrum "product owner". Explicitly **not** the hand-off BA who transcribes a PO and passes notes to engineers — neo removes that hand-off. The BE authors and signs the feature contract _and_ co-owns Feature→Task decomposition, so intent is never laundered through a middleman.
 
 **Researcher** `[target]` — Agent that gathers context feeding the Specification and Coding loops.
 
@@ -38,11 +38,11 @@ Canonical vocabulary for the Neo Agentic SDLC. Define a term once — here — a
 
 ## Loops & spaces (Diagram 2)
 
-**Specification loop** `[partly live]` — PRD→Feature and Feature→Task; problem space into solution space. Human-gated: *Start Human, Finish Human; Critical Thinking required.*
+**Specification loop** `[partly live]` — PRD→Feature and Feature→Task; problem space into solution space. Human-gated: _Start Human, Finish Human; Critical Thinking required._
 
 **Coding loop** `[target]` — `Research → Planner → Implement` across Build, Validation, and Verification spaces. Ends at Review → Code Review → PR.
 
-**Verification loop / Operations & Deployment** `[target]` — PR Review, Smoke Test, User Test, CD, Telemetry. *Human Judgement Required.*
+**Verification loop / Operations & Deployment** `[target]` — PR Review, Smoke Test, User Test, CD, Telemetry. _Human Judgement Required._
 
 ## Artifacts
 
@@ -54,4 +54,4 @@ Canonical vocabulary for the Neo Agentic SDLC. Define a term once — here — a
 
 ---
 
-**Planner naming.** The two planners are named by output, never by level: **Task Planner** (Feature → Tasks, spec loop) and **Implementation Planner** (Task → Steps, coding loop). Do not reintroduce a "Feature Planner" — it collides with the Feature Agent one level up.
+**Planner naming.** The two planners are named by output, never by level: **Task Planner** (Feature → Tasks, spec loop) and **Implementation Planner** (Task → Steps, coding loop). The PRD→Feature agent is deliberately **not** a "Feature Planner" — it is the **Feature Agent**, to avoid colliding with the two planners one level down.
