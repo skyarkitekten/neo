@@ -24,7 +24,9 @@ for the workflow and `docs/observability.md` for the logging/tuning setup.
 ## Install as a plugin
 
 This repo is packaged as a plugin for both harnesses from one tree. Each harness reads its
-own manifest, so there's no cross-contamination:
+own manifest, so there's no cross-contamination. See [`docs/plugin-contract.md`](docs/plugin-contract.md)
+for the normative contract — folder shape, required manifest fields, the dual-manifest rule,
+and `neo` naming:
 
 - **Claude Code** reads `.claude-plugin/{plugin,marketplace}.json` → agents from `agents/`
   (Claude subagent format), hooks from `hooks/hooks.json` (`${CLAUDE_PLUGIN_ROOT}`).
