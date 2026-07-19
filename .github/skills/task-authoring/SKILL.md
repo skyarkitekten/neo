@@ -43,6 +43,22 @@ A task is correctly sized when it would land as **one coherent, reviewable pull 
 
 A task must be **independently validatable**: its criteria pass or fail on their own, not contingent on a sibling shipping first beyond declared ordering.
 
+**"One PR" here is a unit of measure, not a merge destination.** This rule governs how big a task is — nothing more. Where the resulting PR *targets*, and what can be reverted atomically afterward, is a separate project-level decision (the **integration mode**) and is not yours to make during decomposition. Size tasks identically under either mode.
+
+## Integration mode — not your call
+
+The project chooses one of two integration modes. Both preserve one-task-one-PR; they differ only in what the PR targets.
+
+- **Mode A (neo default)** — each task PRs into a long-lived **feature branch**; the feature branch squash-merges to the default branch once verified.
+- **Mode B** — each task PRs directly to the **default branch** behind a feature flag.
+
+You do not select the mode, and your task shapes should not vary by it. Two things follow for decomposition:
+
+- **Do not author a task whose only purpose is integration plumbing** — merging, flag creation, or branch mechanics. That is the mode's job, not a unit of work.
+- **Under Mode B, flag-gating is not a task.** If the project runs Mode B, gating is a standing implementation convention for every task under a feature, not a separate task you carve.
+
+If you cannot tell which mode is in effect and it changes what you would propose, **ask the BE** rather than assuming. See `docs/process-flow.md` § Integration modes.
+
 ## Shape, not layers
 
 A task is a coherent logical unit — typically a vertical slice of behavior that cuts through whatever layers it needs. Do **not** shape tasks around stack layers by default (a "React task", an "API task", a "DB task"); layer-shaped tasks usually can't validate independently. Layer-based tasks are legitimate only when the change genuinely is one layer (a shared library, pure infra). The stack skills (React, Web API, Bicep, etc.) serve the Coder *inside* a task — they are not a decomposition template.
