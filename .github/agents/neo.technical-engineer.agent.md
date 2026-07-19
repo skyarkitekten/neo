@@ -4,7 +4,7 @@ description: "Takes a spec — a GitHub Issue or Azure DevOps story — and driv
 model: Claude Sonnet 5
 reasoningEffort: medium
 tools: ['search']
-agents: ['Neo Researcher', 'Neo Planner', 'Neo Code Writer', 'Neo Code Reviewer']
+agents: ['Neo Researcher', 'Neo Implementation Planner', 'Neo Code Writer', 'Neo Code Reviewer']
 user-invokable: true
 argument-hint: <issue or story URL/ID>
 ---
