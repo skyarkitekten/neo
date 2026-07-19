@@ -1,9 +1,9 @@
 ---
 name: Neo Task Planner
 description: Use when decomposing one signed-off feature into workable tasks with the Business Engineer. Runs the interactive Feature→Task breakdown — proposes a task split, surfaces its uncertainty, and converges with the human. Pick this at the start of the Specification loop's Feature→Task step.
-model: Claude Sonnet 5 (copilot)
+model: Claude Sonnet 5
 tools: [read, search, edit]
-user-invocable: true
+user-invokable: true
 argument-hint: <feature id or path>
 ---
 

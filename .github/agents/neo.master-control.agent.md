@@ -80,7 +80,7 @@ YAML frontmatter + markdown body (the agent's system prompt). Keep the body unde
 - `reasoningEffort` (optional) — **Copilot CLI only** (v1.0.66+); `low` | `medium` | `high` pins the cost/quality tradeoff. VS Code and the GitHub.com cloud agent do not support it (they ignore the key harmlessly). CLI precedence: agent frontmatter > `--effort`/`--reasoning-effort` flag > `~/.copilot/config.json` > default `medium`.
 - `tools` (recommended) — allowlist of built-in tools + MCP servers (by server name). Grant only what the role needs.
 - `agents` (optional) — allowlist of worker agents this one may launch; requires the `agent` tool. See "Authoring coordinators."
-- `user-invocable` (optional) — whether a human can select it directly. (VS Code also accepts the spelling `user-invocable`; match the surrounding files.)
+- `user-invokable` (optional) — whether a human can select it directly. (VS Code also accepts the spelling `user-invocable`; match the surrounding files.)
 - `disable-model-invocation` (optional) — prevent use as a subagent unless a coordinator explicitly allows it.
 - `argument-hint` (optional) — invocation-arg hint. **Permitted**, but note it is ignored on the GitHub.com cloud agent (works in VS Code / CLI).
 - `target` (optional) — `vscode` or `github-copilot`; omit for both.
