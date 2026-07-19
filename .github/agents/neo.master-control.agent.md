@@ -4,7 +4,7 @@ description: Authors and edits the harness configuration for this repo — custo
 model: Claude Sonnet 5
 reasoningEffort: high
 tools: [read, edit, search, web]
-user-invocable: true
+user-invokable: true
 argument-hint: <what to author, e.g. "a skill for running EF migrations" or "an instruction file for our React conventions">
 ---
 
