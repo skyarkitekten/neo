@@ -46,7 +46,7 @@ If a skill exists for the artifact or technology you're authoring against, load 
 ## Procedure
 
 1. **Clarify the ask.** Identify which of the five artifact types is needed and its one job. If the request is ambiguous (unclear scope, unknown commands, missing conventions), inspect the repo or ask before writing — don't guess.
-2. **Read the neighbors.** Before writing, read the existing files of that type so the new one matches their frontmatter, structure, and voice. Canonical examples in this repo: agents `neo.planner.agent.md` and `neo.code-writer.agent.md`; orchestration in `neo.technical-engineer.agent.md`; hooks in `.github/copilot-hooks.template.json` + `.agent-hooks/log-event.sh`; project truth in root `AGENTS.md`.
+2. **Read the neighbors.** Before writing, read the existing files of that type so the new one matches their frontmatter, structure, and voice. Canonical examples in this repo: agents `neo.implementation-planner.agent.md` and `neo.code-writer.agent.md`; orchestration in `neo.technical-engineer.agent.md`; hooks in `.github/copilot-hooks.template.json` + `.agent-hooks/log-event.sh`; project truth in root `AGENTS.md`.
 3. **Author to the type's rules** (below). Place the file in the correct location; mirror to `.claude/` and note it when both harnesses must run it.
 4. **Self-review against "Before you deliver."** Verify every command, path, and reference is real. Cut anything that doesn't change behavior.
 5. **Report** what you created/changed, where it lives, any Claude Code mirror, and anything the user must fill in (e.g. project-specific commands).
