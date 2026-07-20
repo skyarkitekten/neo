@@ -6,7 +6,7 @@ Records what each agent does into a JSONL log so you can tune the `.agent.md` pr
 
 - `.agent-hooks/log-event.sh` — the logger. One record per lifecycle event.
 - `claude-code.settings.json` — Claude Code hook config. Place at `.claude/settings.json`.
-- `copilot-hooks.template.json` — GitHub Copilot CLI hook config (template — verify against your version).
+- `.github/hooks/hooks.json` — GitHub Copilot CLI hook config (v1 schema; shipped in `plugins/neo-core/`, verify against your version).
 - `analyze_agent_logs.py` — turns the log into per-agent and per-run stats.
 
 ## Install
@@ -15,7 +15,7 @@ Records what each agent does into a JSONL log so you can tune the `.agent.md` pr
    `chmod +x .agent-hooks/log-event.sh`
 2. Requires `jq` on PATH.
 3. **Claude Code:** copy `claude-code.settings.json` to `.claude/settings.json`.
-4. **Copilot:** merge `copilot-hooks.template.json` into your Copilot CLI hook settings. Confirm the file location, key names, and event names against your installed Copilot version first — these vary.
+4. **Copilot:** merge `plugins/neo-core/.github/hooks/hooks.json` into your Copilot CLI hook settings. Confirm the file location, key names, and event names against your installed Copilot version first — these vary.
 
 ## What gets logged
 

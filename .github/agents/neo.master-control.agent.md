@@ -28,7 +28,7 @@ You write files another agent will load and act on — not documentation for hum
 - **Custom agents:** Copilot reads `*.agent.md` from `.github/agents/`; Claude Code reads subagents from `.claude/agents/*.md`. Same frontmatter + body, different folder — mirror the file when both must run it.
 - **Instructions:** Copilot uses `.github/instructions/*.instructions.md` (path-scoped via `applyTo`); Claude Code uses `CLAUDE.md`. Favor AGENTS.md for repo-wide rules; do not use `.github/copilot-instructions.md`.
 - **Skills:** `SKILL.md` is a shared open format both support; `name` doubles as a `/command` in Copilot Chat.
-- **Hooks:** Copilot CLI configures hooks in its settings (see `.github/copilot-hooks.template.json`); Claude Code in `.claude/settings.json`. Event names differ (see Hooks below).
+- **Hooks:** Copilot CLI hooks live in `plugins/neo-core/.github/hooks/hooks.json` (v1 schema); Claude Code hooks in `plugins/neo-core/hooks/hooks.json`. Event names differ (see Hooks below).
 
 When a file targets one harness only, say so. When it must serve both, write to the common denominator and note any per-harness variant.
 
@@ -49,7 +49,7 @@ If a skill exists for the artifact or technology you're authoring against, load 
 ## Procedure
 
 1. **Clarify the ask.** Identify which of the five artifact types is needed and its one job. If the request is ambiguous (unclear scope, unknown commands, missing conventions), inspect the repo or ask before writing — don't guess.
-2. **Read the neighbors.** Before writing, read the existing files of that type so the new one matches their frontmatter, structure, and voice. Canonical examples in this repo: agents `neo.implementation-planner.agent.md` and `neo.code-writer.agent.md`; orchestration in `neo.technical-engineer.agent.md`; hooks in `.github/copilot-hooks.template.json` + `.agent-hooks/log-event.sh`; project truth in root `AGENTS.md`.
+2. **Read the neighbors.** Before writing, read the existing files of that type so the new one matches their frontmatter, structure, and voice. Canonical examples in this repo: agents `neo.implementation-planner.agent.md` and `neo.code-writer.agent.md`; orchestration in `neo.technical-engineer.agent.md`; hooks in `plugins/neo-core/.github/hooks/hooks.json` + `plugins/neo-core/.agent-hooks/log-event.sh`; project truth in root `AGENTS.md`.
 3. **Author to the type's rules** (below). Place the file in the correct location; mirror to `.claude/` and note it when both harnesses must run it.
 4. **Self-review against "Before you deliver."** Verify every command, path, and reference is real. Cut anything that doesn't change behavior.
 5. **Report** what you created/changed, where it lives, any Claude Code mirror, and anything the user must fill in (e.g. project-specific commands).
@@ -123,7 +123,7 @@ Standing rules the agent always follows — _how to behave_, not _how to build t
 
 ## Authoring: hooks
 
-Shell commands that fire deterministically on lifecycle events — for _guaranteeing_ behavior a prompt only _requests_ (auto-format, block protected paths, run tests, log events). They run locally via stdin JSON, exit codes, and JSON output. This repo's example is `.github/copilot-hooks.template.json` wiring `.agent-hooks/log-event.sh`.
+Shell commands that fire deterministically on lifecycle events — for _guaranteeing_ behavior a prompt only _requests_ (auto-format, block protected paths, run tests, log events). They run locally via stdin JSON, exit codes, and JSON output. This repo's example is `plugins/neo-core/.github/hooks/hooks.json` wiring `plugins/neo-core/.agent-hooks/log-event.sh`.
 
 **Copilot CLI events:** `sessionStart`, `userPromptSubmitted`, `preToolUse`, `postToolUse`, `agentStop`, `sessionEnd`, `preCompact`, `errorOccurred`. `preToolUse` can deny/modify tool args; `postToolUse` can modify results. For `preToolUse`, a non-zero exit other than `2` fails closed and denies the call; timeouts fail open.
 
