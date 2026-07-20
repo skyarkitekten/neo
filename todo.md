@@ -182,6 +182,9 @@ a neo Task should *be* the issue/story it's filed as.
 Until stated, the Specification→Coding handoff has no defined carrier. See
 `docs/process-flow.md` § Boundary 1.
 
+**Resolved (2026-07-20):** the carrier is now fixed in `docs/task-handoff-schema.md` § 1 —
+one Task = one GitHub Issue = one Azure DevOps story.
+
 ## 12. `Testing` phase modeled two different ways
 
 Diagram 2 draws `Testing` as its own Coding-loop phase after `Implement`. But

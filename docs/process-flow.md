@@ -58,8 +58,8 @@ already binding in `neo.task-planner.agent.md` and `neo-code-writer.md`.
 **Drift to reconcile.** `neo-technical-engineer` declares its input as "a GitHub Issue or
 Azure DevOps story." The spec loop emits a **Task**. These need to be the same object: a neo
 Task should *be* the issue/story it is filed as, so the orchestrator's input contract and the
-task-planner's output contract describe one artifact rather than two. Until that is stated,
-the boundary has no defined carrier.
+task-planner's output contract describe one artifact rather than two. **Resolved** — this is
+now the carrier rule fixed in [`task-handoff-schema.md`](./task-handoff-schema.md) § 1.
 
 ---
 
