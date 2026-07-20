@@ -1,5 +1,5 @@
 ---
-name: Neo Researcher Agent
+name: Neo Research
 description: Investigates one scoped research question about this repo for a spec — affected code, existing patterns, constraints, and risks. Read-only. Invoked by the orchestrator, often several in parallel, one question each. Does not plan, decide an approach, or write code.
 model: Claude Haiku 4.5
 reasoningEffort: low
