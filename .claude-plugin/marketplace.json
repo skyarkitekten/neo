@@ -5,14 +5,14 @@
     "url": "https://github.com/skyarkitekten"
   },
   "metadata": {
-    "description": "Neo coding-agent crew and config-authoring tools for Claude Code.",
+    "description": "Neo — a concept-to-spec-to-PR multi-agent coding system. Core crew plus additive per-stack plugins, for Claude Code.",
     "version": "0.1.0"
   },
   "plugins": [
     {
-      "name": "neo",
-      "source": "./",
-      "description": "Coordinated coding-agent crew (orchestrator + researcher/planner/writer/reviewer) plus a master-control config-authoring agent, with lifecycle-logging hooks.",
+      "name": "neo-core",
+      "source": "./plugins/neo-core",
+      "description": "Coordinated coding-agent crew (technical-engineer orchestrator + researcher, implementation-planner, code-writer, code-reviewer) plus the feature-agent/task-planner specification crew and lifecycle-logging hooks.",
       "version": "0.1.0",
       "author": {
         "name": "Chad Thomas"

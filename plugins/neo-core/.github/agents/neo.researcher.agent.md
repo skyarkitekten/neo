@@ -29,7 +29,7 @@ You answer one scoped research question so the planner and orchestrator can deci
 ## Scope
 
 - One question per invocation (e.g. "where is auth handled in the backend?", "how does the frontend call the API?"). Stay inside it — another researcher covers the rest.
-- Repo: React/TypeScript frontend in `frontend/`, .NET/C# backend in `backend/`. Honor `AGENTS.md`.
+- The repo's layout and stack are defined in `AGENTS.md` — read it for structure and conventions, and honor it.
 
 ## Use skills
 

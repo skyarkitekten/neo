@@ -1,7 +1,7 @@
 {
-  "name": "neo",
+  "name": "neo-core",
   "version": "0.1.0",
-  "description": "A coordinated crew of coding agents — a technical-engineer orchestrator that drives a spec to a draft PR via researcher, planner, code-writer, and code-reviewer workers — plus a master-control agent for authoring harness config, with lifecycle-logging hooks. Portable across Claude Code and GitHub Copilot.",
+  "description": "Neo core — a coordinated crew of coding agents: a technical-engineer orchestrator that drives a spec to a draft PR via researcher, implementation-planner, code-writer, and code-reviewer, plus the feature-agent and task-planner specification crew and their authoring skills, with lifecycle-logging hooks. Portable across Claude Code and GitHub Copilot.",
   "author": {
     "name": "Chad Thomas"
   },
