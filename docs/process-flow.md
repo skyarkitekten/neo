@@ -41,7 +41,7 @@ criteria. The task is self-contained — a Coder needs no further business input
 **Entry gate.** All must hold:
 
 1. The parent **Feature** is BE-signed and carries What + Why + verification steps.
-2. The task conforms to the `task-authoring` skill — title, parent-feature link, What, and
+2. The task conforms to the `neo-task-authoring` skill — title, parent-feature link, What, and
    validation criteria that are machine-checkable.
 3. The task belongs to a **BE-approved task set**, not an agent-emitted one. Feature→Task
    decomposition is interactive and converges with the BE; a task from an unapproved split
@@ -203,7 +203,7 @@ Point 2 has a build consequence: if the telemetry does not exist yet, emitting i
 scope for the feature. A KPI whose instrumentation never shipped is unsettleable, and the
 outer loop silently breaks.
 
-This tightens the `feature-authoring` skill, which today says only that KPIs are optional and
+This tightens the `neo-feature-authoring` skill, which today says only that KPIs are optional and
 to "omit rather than invent one with no credible basis." Credible is now testable — see
 `todo.md` § 14.
 
@@ -244,7 +244,7 @@ to accommodate it.
 
 ### Two rules, not one
 
-`task-authoring` previously stated a single "one task ≈ one PR" rule. That conflated two
+`neo-task-authoring` previously stated a single "one task ≈ one PR" rule. That conflated two
 separate decisions, and only the second is contextual:
 
 - **Task sizing** — a task is one coherent, independently validatable, reviewable chunk of

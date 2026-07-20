@@ -46,11 +46,11 @@ Canonical vocabulary for the Neo Agentic SDLC. Define a term once — here — a
 
 ## Artifacts
 
-**task-authoring** `[live]` — The skill defining what a clean task is: fields, validation-criteria format, one-PR sizing rule.
+**neo-task-authoring** `[live]` — The skill defining what a clean task is: fields, validation-criteria format, one-PR sizing rule.
 
 **Task Planner** `[live]` — The agent (`task-planner`) that runs interactive Feature→Task decomposition with the BE. Named for what it produces (tasks), matching **Implementation Planner**.
 
-**Feature Skill / Feature Agent** `[target]` — The level above `task-authoring` / `task-planner`: PRD-segment → Feature.
+**Feature Skill / Feature Agent** `[target]` — The level above `neo-task-authoring` / `task-planner`: PRD-segment → Feature.
 
 ---
 

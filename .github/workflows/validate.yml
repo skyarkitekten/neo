@@ -1,0 +1,32 @@
+name: validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  manifests-and-mirrors:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate all JSON manifests + hooks parse
+        run: |
+          set -euo pipefail
+          fail=0
+          while IFS= read -r f; do
+            if python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$f"; then
+              echo "ok  $f"
+            else
+              echo "BAD $f"; fail=1
+            fi
+          done < <(git ls-files \
+            '.github/plugin/*.json' \
+            '.claude-plugin/*.json' \
+            'plugins/**/plugin.json' \
+            'plugins/**/hooks.json')
+          exit $fail
+
+      - name: Validate Copilot <-> Claude mirror parity
+        run: python3 scripts/validate-mirrors.py

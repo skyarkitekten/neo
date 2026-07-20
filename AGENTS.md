@@ -1,64 +1,102 @@
 # AGENTS.md
 
-A React frontend and a .NET backend.
+Neo is a concept-to-spec-to-PR multi-agent coding system for GitHub Copilot and
+Claude Code. This repo is a **distribution repo** — a collection of agents, skills,
+instructions, and hooks shipped as plugins for two harnesses. It is **not** an
+application: there is no frontend, no backend, no compiled artifact, and no build.
+It is a tree of Markdown, JSON, Bash, and Python.
 
-> **Template — set before use.** The commands and rules below are sensible defaults for this stack, not verified against your repo. Before relying on this file, **specify your test frameworks and their exact commands**: frontend (e.g. Vitest via `bun run test`) and backend (e.g. xUnit / NUnit via `dotnet test`). A wrong test command breaks the agent's build-and-test loop.
+Every core agent points here as the source of truth for layout, commands, style, and
+guardrails. Keep it accurate.
 
 ## Layout
 
+This is a **monorepo of plugins**. Shipped crews live under `plugins/`; the root holds the
+marketplace manifests, docs, and dev-time-only tooling. Anything under `plugins/*/` is
+shipped; the repo-root agent trees are **dev-time only**.
+
+```javascript
+plugins/neo-core/                    The shipped plugin — a dual-harness tree:
+  .github/agents/                    Copilot agents — neo.<role>.agent.md
+  agents/                            Claude agents  — neo-<role>.md  (mirror)
+  .github/skills/                    Copilot skills — neo-<name>/SKILL.md
+  skills/                            Claude skills  — neo-<name>/SKILL.md  (mirror)
+  .github/plugin/plugin.json         Copilot plugin manifest
+  .claude-plugin/plugin.json         Claude plugin manifest
+  .github/hooks/hooks.json           Copilot hook config (v1 schema, ${PLUGIN_ROOT})
+  hooks/hooks.json                   Claude hook config (${CLAUDE_PLUGIN_ROOT})
+  .agent-hooks/log-event.sh          the observability logger
+  scripts/analyze_agent_logs.py      per-agent / per-run log stats
+.github/plugin/marketplace.json      Copilot marketplace (root, lists plugins[])
+.claude-plugin/marketplace.json      Claude marketplace (root, lists plugins[])
+.github/agents/neo.master-control.agent.md   DEV-TIME agent (Copilot), never shipped
+.claude/agents/neo-master-control.md         DEV-TIME agent (Claude), never shipped
+scripts/validate-mirrors.py          CI mirror check (Copilot ↔ Claude parity)
+docs/                                Normative contracts, glossary, process flow, manuals
 ```
-frontend/   React + TypeScript, built with Vite, package manager is Bun
-backend/    .NET 10 Web API in C#
-```
 
-- Work in the folder for the layer you're changing. A nested `frontend/AGENTS.md` or `backend/AGENTS.md`, if present, overrides this file for that subtree.
-- **Never commit or push to `main`.** All work happens on a feature branch. This must also be enforced at the harness/permission level (or a pre-commit hook) — do not rely on this line alone.
-- Do not edit build output: `frontend/dist/`, `backend/**/bin/`, `backend/**/obj/`.
+The shipped agents (in `plugins/neo-core/`): `technical-engineer` (orchestrator — start
+here), `researcher`, `implementation-planner`, `code-writer`, `code-reviewer`,
+`feature-agent`, `task-planner`. `master-control` is dev-time only and lives at the repo
+root, never in a plugin.
 
-## Frontend (`frontend/`)
+## Naming
 
-Use **Bun**, never npm/yarn/pnpm. Run all commands from `frontend/`.
+All normative in `docs/plugin-contract.md` — don't restate it, conform to it.
+
+- Copilot agents: `neo.<role>.agent.md` (e.g. `neo.code-writer.agent.md`).
+- Claude agents: `neo-<role>.md` (e.g. `neo-code-writer.md`).
+- Kebab-case roles; each agent's frontmatter `name:` is `Neo <Role>`.
+- Skills are `neo-` prefixed when neo-authored; vendored skills keep their upstream name.
+- Both trees must hold matching artifacts — see the mirror rule.
+
+## Checks (there is no build)
+
+This repo has nothing to compile, lint, or unit-test in the app sense. Do **not** run
+`bun`, `dotnet`, or invent a build. What actually needs to hold before you finish:
+
+- **JSON manifests are valid.** The root marketplace manifests (`.github/plugin/marketplace.json`,
+  `.claude-plugin/marketplace.json`) and each plugin's `plugin.json` under `plugins/*/` parse
+  and carry required fields. Copilot's is checked first; a missing Copilot manifest is an
+  **error**, not a warning — it silently falls back to Claude-format agents it can't read.
+- **Agent frontmatter is valid** — `name:`, `tools:`, `agents:` allowlists resolve to
+  real agent names.
+- **The two trees are in sync** — every Copilot agent/skill has its Claude mirror and vice
+  versa (the mirror rule). Run `python3 scripts/validate-mirrors.py` — it walks every
+  `plugins/*/` and fails on any roster/skill mismatch or missing manifest. CI runs it via
+  `.github/workflows/validate.yml`.
+
+Quick manifest sanity check:
 
 ```bash
-bun install       # install deps
-bun run dev       # Vite dev server
-bun run build     # production build (tsc + vite build)
-bun run lint      # lint
-bun run test      # tests (Vitest) — replace if your framework differs
+for f in .github/plugin/marketplace.json .claude-plugin/marketplace.json \
+         plugins/*/.github/plugin/plugin.json plugins/*/.claude-plugin/plugin.json \
+         plugins/*/.github/hooks/hooks.json plugins/*/hooks/hooks.json; do
+  python3 -c "import json,sys; json.load(open('$f'))" && echo "ok  $f" || echo "BAD $f"
+done
+python3 scripts/validate-mirrors.py
 ```
 
-Run tests with `bun run test` (a package.json script), not `bun test` (Bun's built-in runner, which won't pick up Vitest config).
+## Guardrails
 
-- TypeScript is strict — no `any`, no unchecked nulls. Fix type errors; don't suppress with `// @ts-ignore`.
-- Function components with hooks only. No class components.
-- Keep imports absolute from the configured alias if one exists; otherwise relative.
-
-## Backend (`backend/`)
-
-.NET 10, C#. Run all commands from `backend/` (or point `--project` at the target project).
-
-```bash
-dotnet restore
-dotnet build
-dotnet run                    # run the API
-dotnet test                   # run tests
-dotnet format                 # apply code style
-```
-
-- Use `async`/`await` for I/O; suffix async methods with `Async`.
-- Enable and honor nullable reference types; don't silence warnings with `!` unless provably safe.
-- Prefer dependency injection over static/singleton access.
-
-## Before you finish
-
-- Frontend changes: `bun run build`, `bun run lint`, and `bun run test` pass.
-- Backend changes: `dotnet build` and `dotnet test` pass; run `dotnet format`.
-- Fix failures rather than working around them. Never leave a broken build or failing tests, and never commit to `main`.
+- **Never commit or push to `main`.** All work happens on a feature branch. This must
+  also be enforced at the harness/permission level (or a pre-commit hook) — do not rely
+  on this line alone.
+- Don't edit generated logs (`.agent-logs/`, `*.jsonl`).
 
 ## Gotchas
 
-<!-- TODO: fill in project-specific facts an agent can't infer, e.g.:
-- Required env vars and where they're set (.env, user secrets)
-- How the frontend reaches the backend (proxy config, base URL)
-- Any code generation step (OpenAPI client, EF migrations) and when to run it
--->
+- `docs/plugin-contract.md` is the **normative** contract — folder shape, manifest fields,
+  the dual-manifest rule, naming. When in doubt, it wins.
+- `docs/glossary.md` owns the vocabulary; `docs/packaging.md` owns the core/stack split;
+  `docs/process-flow.md` owns the workflow and integration modes.
+- Don't restate rules across files — point to the owning doc.
+- **Repo-root agent trees are dev-time; `plugins/*/` is shipped.** `master-control` lives at
+  the root (`.github/agents/`, `.claude/agents/`) so it's visible to neo devs but never
+  packaged. A role ships iff its file is under a `plugins/*/` tree.
+- Plugins are self-contained on install: a plugin can't reference files outside its own
+  directory (`../neo-react/...` or a repo-root file won't be copied). Shared content must
+  be duplicated into each plugin.
+- The **consuming** repo also needs its own `AGENTS.md` (commands, layout, style,
+  integration mode) — that is the user's artifact, distinct from this one, which describes
+  how to work on neo itself.

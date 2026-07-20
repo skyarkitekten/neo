@@ -50,7 +50,7 @@
 ## 7. Observability & tuning (hooks)
 
 - `log-event.sh` — fail-open JSONL logger; one record per lifecycle event.
-- Configs: `claude-code.settings.json` (→ `.claude/settings.json`), `copilot-hooks.template.json`.
+- Configs: Claude `hooks/hooks.json`, Copilot `.github/hooks/hooks.json` (both shipped in `plugins/neo-core/`).
 - `analyze_agent_logs.py` — per-agent tool/event/time stats; per-run duration + review-round counts.
 - Tuning loop: log real runs → analyze → fix the worst-performing `.agent.md` → compare next batch.
 - Correlation via `AGENT_RUN_ID` (defaults to git branch).

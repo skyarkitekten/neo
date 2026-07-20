@@ -1,0 +1,19 @@
+{
+  "name": "neo-core",
+  "version": "0.1.0",
+  "description": "Neo core — a coordinated crew of coding agents: a technical-engineer orchestrator that drives a spec to a draft PR via researcher, implementation-planner, code-writer, and code-reviewer, plus the feature-agent and task-planner specification crew and their authoring skills, with lifecycle-logging hooks. Portable across Claude Code and GitHub Copilot.",
+  "author": {
+    "name": "Chad Thomas"
+  },
+  "homepage": "https://github.com/skyarkitekten/neo",
+  "repository": "https://github.com/skyarkitekten/neo",
+  "license": "MIT",
+  "keywords": [
+    "agents",
+    "orchestration",
+    "code-review",
+    "coding-agents",
+    "hooks",
+    "observability"
+  ]
+}

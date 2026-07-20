@@ -62,11 +62,11 @@ Interactive and collaborative between the **BE** and the `task-planner` agent �
 - **Sizing: one task ≈ one PR.** Too big → split; too small (can't stand as its own PR) → fold.
 - **Validation criteria are authored at task creation** and must be machine-checkable — an assertion a test or agent can run to a deterministic pass/fail.
 
-Governed by the `task-authoring` skill (what a clean task _is_) and run by the `task-planner` agent (how to _carve_). Both ship for GitHub Copilot (`.github/`) and Claude Code (`.claude/`).
+Governed by the `neo-task-authoring` skill (what a clean task _is_) and run by the `task-planner` agent (how to _carve_). Both ship for GitHub Copilot (`.github/`) and Claude Code (`.claude/`).
 
 ### PRD → Feature
 
-One step upstream of Feature→Task, and interactive with the BE in the same way: the `feature-agent` drafts What, Why, optional KPIs, and verification steps from a PRD/requirements segment, governed by the `feature-authoring` skill. It stops at a BE-signed feature and hands off to `task-planner` for decomposition — it does not decompose tasks itself.
+One step upstream of Feature→Task, and interactive with the BE in the same way: the `feature-agent` drafts What, Why, optional KPIs, and verification steps from a PRD/requirements segment, governed by the `neo-feature-authoring` skill. It stops at a BE-signed feature and hands off to `task-planner` for decomposition — it does not decompose tasks itself.
 
 ## Key decisions
 
@@ -77,7 +77,7 @@ One step upstream of Feature→Task, and interactive with the BE in the same way
 
 ## Status
 
-- **Live:** Specification-loop design; `task-authoring` skill + `task-planner` agent, and `feature-authoring` skill + `feature-agent` (Copilot + Claude Code mirrors for both).
+- **Live:** Specification-loop design; `neo-task-authoring` skill + `task-planner` agent, and `neo-feature-authoring` skill + `feature-agent` (Copilot + Claude Code mirrors for both).
 - **Target (Diagram 2, not yet specced):** Coding loop, Verification / Operations loop, and the root `AGENTS.md` backbone.
 
 ## Open threads
