@@ -1,5 +1,5 @@
 ---
-name: neo-planner
+name: neo-implementation-planner
 description: Turns a spec plus research findings into an ordered list of discrete work units — each a feature/fix or a test — mapped to acceptance criteria, with dependencies and parallelizable groups marked. Read-only. Invoked by the orchestrator. Does not write code or re-run research from scratch.
 model: opus
 tools: Read, Grep, Glob

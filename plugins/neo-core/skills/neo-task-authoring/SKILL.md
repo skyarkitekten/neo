@@ -1,5 +1,5 @@
 ---
-name: task-authoring
+name: neo-task-authoring
 description: Use when writing or reviewing a task during Feature→Task decomposition. Defines the required task fields, how to write machine-checkable validation criteria, and the one-PR sizing rule that bounds a task. Load whenever proposing, editing, or checking a task's shape.
 ---
 

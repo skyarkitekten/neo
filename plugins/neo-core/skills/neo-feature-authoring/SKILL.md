@@ -1,5 +1,5 @@
 ---
-name: feature-authoring
+name: neo-feature-authoring
 description: Use when writing or reviewing a Feature during PRD-segment→Feature definition. Defines the required fields (What, Why, optional KPIs, verification steps), the human-executable verification-steps format, and the BE sign-off gate. Load whenever proposing, editing, or checking a feature's shape.
 ---
 
@@ -15,7 +15,7 @@ A feature is the business-level unit of work. It derives from a PRD/requirements
 - **KPIs** (optional) — a hypothesis with a number and a window (e.g. "decrease abandoned carts by 23% over 30 days"). Omit rather than invent one with no credible basis.
 - **Verification steps** — the contract. See below.
 
-Do not author tasks or validation criteria here. A feature is decomposed into tasks by the Task Planner, collaboratively with the BE — that decomposition is a separate step, governed by the `task-authoring` skill.
+Do not author tasks or validation criteria here. A feature is decomposed into tasks by the Task Planner, collaboratively with the BE — that decomposition is a separate step, governed by the `neo-task-authoring` skill.
 
 ## Verification steps — the rules
 
