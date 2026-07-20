@@ -59,6 +59,9 @@ consistent with the dual-manifest rule in `docs/plugin-contract.md`.
 
 ## 5. Root `AGENTS.md` is irrelevant in its current form — replace it
 
+> **Chad is writing neo's own `AGENTS.md` (2026-07-19).** The template can be deleted once it
+> lands. See § 5a for the separate consumer-side requirement.
+
 **Ruled (Chad, 2026-07-19):** this repo is *not* a React/.NET application. It is a
 distribution repo — a collection of agents, skills, instructions, and hooks shipped as
 plugins for two harnesses. The current `AGENTS.md` is the unfilled React/Bun + .NET 10
@@ -89,6 +92,43 @@ The consuming repo's `AGENTS.md` is the user's own artifact, and neo already has
 answer for how it gets written: `master-control` authors `AGENTS.md` files. Neo ships the
 agent that writes one, not a pre-baked file to copy. Nothing to move to `assets/` or
 `templates/`; `git rm` it once neo's own `AGENTS.md` exists.
+
+## 5a. Consumers of `neo-core` must create an `AGENTS.md` in their project repo
+
+Distinct from § 5, which is neo's own file. This is the **consuming repo's** `AGENTS.md` —
+the project tier in `docs/packaging.md`.
+
+**It is a hard prerequisite, not a nice-to-have.** Every core agent treats `AGENTS.md` as
+"the source of truth for commands, layout, and style." Install `neo-core` into a repo without
+one and:
+
+- `code-writer` has no build, lint, or test commands to run — so the build-and-test gate, the
+  highest-value line in the whole system, silently does nothing.
+- `code-reviewer` is told to judge against `AGENTS.md` and has nothing to judge against.
+- The integration mode (§ 15) has nowhere to be declared.
+
+None of that errors. The crew runs, produces plausible output, and self-corrects against
+nothing. **Absence fails quietly** — which is why it has to be stated loudly at install time.
+
+**What the consuming repo's `AGENTS.md` must carry, at minimum:**
+
+- Layout — where the code lives.
+- Exact runnable commands — install, build, lint, test, per layer.
+- Enforceable style rules.
+- The finish gate — run tests and lint, fix failures.
+- Hard constraints up top (e.g. never commit to `main`).
+- The **integration mode** — Mode A or Mode B (`docs/process-flow.md`).
+- Gotchas an agent can't infer — env vars, codegen steps, generated paths not to edit.
+
+**Where to say so.** Decide the carrier:
+
+- `neo-core`'s README and plugin `description` — cheapest, easily ignored.
+- A `sessionStart` hook that warns when no `AGENTS.md` is found — noisy but effective, and
+  turns a silent failure into a visible one.
+- A setup skill in `neo-core` that interviews the user and writes the file — most helpful,
+  most work, and overlaps the open question in `docs/packaging.md` about who authors it.
+
+Not mutually exclusive; the hook plus the README is probably the right floor.
 
 ## 6. No `preToolUse` / `PreToolUse` hook exists
 
@@ -189,10 +229,15 @@ Note the distinction sharpened by § 5: this is the *consuming* repo's `AGENTS.m
 own. Neo's `AGENTS.md` describes how to work on neo; the integration mode is a fact about the
 project neo is deployed into.
 
-Since no template ships, the carrier is `master-control` — it authors consuming repos'
-`AGENTS.md` files. **Add a rule to `master-control` requiring the integration mode be stated
-when it authors an `AGENTS.md` for a project running neo**, and to ask the BE if it isn't
-already declared. Mirror to both harness trees.
+~~Since no template ships, the carrier is `master-control`.~~ **Superseded 2026-07-19:**
+master-control is not deployed — it's the authoring prompt for building neo, not a runtime
+agent (see `docs/packaging.md`). So no shipped artifact authors the consuming repo's
+`AGENTS.md`, and this item is blocked on that gap.
+
+**Blocked on:** who authors the consuming repo's `AGENTS.md`? Options in
+`docs/packaging.md` § Open questions — neo-team-as-a-service, a thin setup skill in
+`neo-core`, or a documented manual prerequisite. Whichever wins becomes the carrier for the
+integration-mode declaration.
 
 ## 16. Mode A obligations are unenforced
 
@@ -238,6 +283,57 @@ Playwright** on the Testing coders.
 
 Item 3 is a real fork and should be settled before authoring, since it changes the manifest
 layout in `docs/plugin-contract.md`.
+
+## 18. Execute the core/stack split
+
+Design is done — `docs/packaging.md` has the target layout, the core↔stack contract, and a
+file-by-file move table. **Files have not moved.**
+
+Prerequisites, all in that doc:
+
+- ~~Verify nested `"source": "./plugins/neo-core"` works in both marketplace formats.~~
+  **Done 2026-07-19 — supported by both.** Always write the `./` prefix: Claude requires it,
+  Copilot doesn't care.
+- ~~Settle skill prefixing.~~ **Done 2026-07-19 — neo-authored skills take a `neo-` prefix;
+  vendored skills keep their upstream name.** Plugin skills rank near the bottom of Copilot's
+  load order, so an unprefixed skill is silently shadowed by any same-named project or
+  personal skill. Requires renaming `task-authoring` → `neo-task-authoring` and
+  `feature-authoring` → `neo-feature-authoring` during the move, plus every reference to them.
+  Supersedes the rule in `docs/plugin-contract.md`.
+- Write neo's own `AGENTS.md` (§ 5) first, so the repo is never without one. **In progress —
+  Chad.** Last remaining blocker.
+
+**Constraint discovered during verification:** plugins cannot reference files outside their
+own directory — `../neo-core/...` won't be copied on install. Each plugin is a self-contained
+copy; shared content must be duplicated or symlinked. This forecloses sharing files between
+core and stacks.
+
+Executing this resolves § 3, § 4, § 5, § 17, and the superseded hooks template as a side
+effect. Fold them in during the move rather than fixing them first.
+
+## 19. master-control exists in two places and will drift
+
+`agents/neo-master-control.md` (plus its Copilot mirror) is substantially the same text as
+the Claude project custom instructions used to author this repo. Two copies in two different
+systems, no sync mechanism, and drift is invisible because they're never seen side by side.
+
+**Fix:** declare the repo file canonical — it's versioned, diffable, and reviewable — and
+regenerate the project instructions from it. State the rule in neo's `AGENTS.md`.
+
+## 20. Add a mirror-drift check to CI
+
+Nearly every defect on this list is one harness tree edited without the other. The core/stack
+split multiplies the surface: every shipped plugin carries two manifests, two agent trees, and
+two skill trees.
+
+**Fix:** `scripts/validate-mirrors.py` asserting each shipped plugin's Copilot and Claude
+trees hold matching artifacts; wire into CI. Makes the mirror invariant executable instead of
+aspirational, and pays for itself immediately given § 3 and § 4.
+
+**Treat a missing Copilot manifest as an error, not a warning.** Copilot's manifest resolution
+falls back to `.claude-plugin/plugin.json`, so a plugin missing its Copilot manifest still
+*installs* — then resolves to Claude-format agents it can't read. It fails silently. The
+harness won't catch this, so the check must.
 
 ## Lower priority / open
 
