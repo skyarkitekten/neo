@@ -78,8 +78,8 @@ One step upstream of Feature→Task, and interactive with the BE in the same way
 ## Status
 
 - **Live:** Specification-loop design; `neo-task-authoring` skill + `task-planner` agent, and `neo-feature-authoring` skill + `feature-agent` (GitHub Copilot).
-- **Target (Diagram 2, not yet specced):** Coding loop, Verification / Operations loop, and the root `AGENTS.md` backbone.
+- **Target (Diagram 2, not yet specced):** Coding loop and Verification / Operations loop.
 
 ## Open threads
 
-- **Root `AGENTS.md`** — the portable project backbone does not exist yet; neo is currently README + LICENSE only.
+- **Root `AGENTS.md`** — the portable project backbone now exists and describes neo itself (layout, the single-harness rule, checks). See the repo-root `AGENTS.md`.
