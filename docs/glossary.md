@@ -48,6 +48,8 @@ Canonical vocabulary for the Neo Agentic SDLC. Define a term once — here — a
 
 **neo-task-authoring** `[live]` — The skill defining what a clean task is: fields, validation-criteria format, one-PR sizing rule.
 
+**Task handoff schema** `[live]` — The normative definition of the **Task** artifact that crosses Boundary 1 (Specification → Coding): its carrier (a Task *is* the GitHub Issue / Azure DevOps story it is filed as), fields, and on-harness format. See [`task-handoff-schema.md`](./task-handoff-schema.md).
+
 **Task Planner** `[live]` — The agent (`task-planner`) that runs interactive Feature→Task decomposition with the BE. Named for what it produces (tasks), matching **Implementation Planner**.
 
 **Feature Skill / Feature Agent** `[target]` — The level above `neo-task-authoring` / `task-planner`: PRD-segment → Feature.
