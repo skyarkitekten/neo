@@ -8,7 +8,9 @@ invariants executable:
 
   * every plugin has its Copilot manifest AND hooks config, and both are valid JSON;
   * the root Copilot marketplace manifest is valid JSON;
-  * every Copilot agent's `agents:` allowlist references a real agent `name:`.
+  * every Copilot agent's `agents:` allowlist references a real agent `name:`;
+  * any agent that delegates (non-empty `agents:`) also grants the `agent`/`Task`
+    delegation tool in its `tools:` allowlist.
 
 Exit code 0 = all good, 1 = at least one violation. No third-party deps.
 """
@@ -49,22 +51,23 @@ def fm_name(path: Path) -> str | None:
     return None
 
 
-def fm_agents(path: Path) -> list[str] | None:
-    """Parse an agent's `agents:` allowlist (inline `[a, b]` or block `- a`).
+def _fm_list(path: Path, key: str) -> list[str] | None:
+    """Parse a frontmatter list field `key` (inline `[a, b]`, comma string, or block `- a`).
 
-    Returns None when the file declares no `agents:` key at all, so a missing
-    allowlist is distinguishable from an empty one.
+    Returns None when the file declares no `key:` at all, so a missing field is
+    distinguishable from an empty one.
     """
     fm = frontmatter_lines(path)
+    prefix = f"{key}:"
     for idx, ln in enumerate(fm):
-        if not ln.startswith("agents:"):
+        if not ln.startswith(prefix):
             continue
-        rest = ln[len("agents:") :].strip()
+        rest = ln[len(prefix) :].strip()
         if rest.startswith("["):
             inner = rest[rest.index("[") + 1 : rest.rindex("]")] if "]" in rest else rest[1:]
             return [_unquote(x) for x in inner.split(",") if x.strip()]
-        if rest:  # single scalar value
-            return [_unquote(rest)]
+        if rest:  # single scalar or comma-separated string value
+            return [_unquote(x) for x in rest.split(",") if x.strip()]
         # block list on following indented `- item` lines
         items = []
         for ln2 in fm[idx + 1 :]:
@@ -74,6 +77,20 @@ def fm_agents(path: Path) -> list[str] | None:
                 break
         return items
     return None
+
+
+def fm_agents(path: Path) -> list[str] | None:
+    """Parse an agent's `agents:` allowlist (inline `[a, b]` or block `- a`).
+
+    Returns None when the file declares no `agents:` key at all, so a missing
+    allowlist is distinguishable from an empty one.
+    """
+    return _fm_list(path, "agents")
+
+
+def fm_tools(path: Path) -> list[str] | None:
+    """Parse an agent's `tools:` allowlist. None means unset (all tools allowed)."""
+    return _fm_list(path, "tools")
 
 
 def check_json(path: Path) -> None:
@@ -105,6 +122,8 @@ def check_plugin(plugin: Path) -> None:
         errors.append(f"[{name}] no Copilot agents found under .github/agents/")
         return
     declared = {fm_name(f) for f in files} - {None}
+    # Aliases that grant the sub-agent delegation ("Task") tool, case-insensitive.
+    DELEGATION_TOOLS = {"agent", "custom-agent", "task"}
     for f in files:
         refs = fm_agents(f)
         if not refs:
@@ -115,6 +134,20 @@ def check_plugin(plugin: Path) -> None:
                     f"[{name}] {f.name} lists agent '{ref}' in its agents: allowlist, "
                     f"but no Copilot agent declares name: '{ref}'"
                 )
+        # 3. An agent that delegates must also be granted the delegation tool.
+        #    `tools:` is an allowlist: if set and it omits the `agent`/`Task` alias
+        #    (and isn't the `*` wildcard), delegation silently has no task tool.
+        tools = fm_tools(f)
+        if tools is None:
+            continue  # unset => all tools allowed, delegation works
+        lowered = {t.lower() for t in tools}
+        if "*" in lowered or lowered & DELEGATION_TOOLS:
+            continue
+        errors.append(
+            f"[{name}] {f.name} declares a non-empty agents: allowlist but its tools: "
+            f"list omits the delegation tool (one of {sorted(DELEGATION_TOOLS)}); "
+            f"sub-agents cannot be invoked without it"
+        )
 
 
 def main() -> int:

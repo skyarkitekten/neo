@@ -3,13 +3,19 @@ name: Neo Technical Engineer
 description: "Takes a spec — a GitHub Issue or Azure DevOps story — and drives it to a draft PR through five phases: research, plan, implement (delegated to code-writer), review (delegated to code-reviewer), and open a draft pull request. Start here for any feature, bug fix, or refactor tied to an issue or story."
 model: Claude Sonnet 5
 reasoningEffort: medium
-tools: ['search']
+tools: [agent, read, search, execute, web, github/issue_read, github/list_issues, github/search_issues, github/list_pull_requests, github/list_branches, github/list_commits]
 agents: ['Neo Research', 'Neo Implementation Planner', 'Neo Code Writer', 'Neo Code Reviewer']
 user-invokable: true
 argument-hint: <issue or story URL/ID>
 ---
 
-<!-- Tool access is defined per project via helper skills, using a mix of MCP and CLI — reading the spec (GitHub Issue / Azure DevOps story), running git (branch), and opening a draft PR. Ensure the project's skills/tools cover those before running; without them the orchestrator can coordinate research and planning but cannot branch or open a PR. -->
+<!-- Tool access. The orchestrator ALWAYS needs these base tools, independent of project:
+     `agent` (delegate to sub-agents — without it there is no task/delegation tool),
+     `execute` (shell: `gh`/`az` to read the spec, `git` to branch, `gh pr create --draft`
+     to open the PR), and `read`/`search`. The `github/*` read tools cover reading a GitHub
+     Issue via MCP; Azure DevOps has no MCP tool here, so ADO specs are read with `az` via
+     `execute`. Any *stack-specific* tooling (build/test/lint) still comes from the consuming
+     project's skills — add those before running so workers can build, test, and lint. -->
 
 # Orchestrator
 
