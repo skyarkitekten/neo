@@ -6,6 +6,15 @@ between the core harness and the stack plugins that extend it.
 **Status:** design. No files have been moved. The migration plan at the end is a plan, not a
 changelog.
 
+> **⚠️ Partly superseded by issue #34 (Copilot-only).** This document was written when neo
+> shipped for two harnesses. As of #34 the repo is **GitHub Copilot CLI only** — the Claude
+> Code tree (`agents/`, `skills/`, `hooks/hooks.json`, `.claude-plugin/`, `.claude/`) and the
+> dual-manifest / mirror rule described below were dropped. Copilot is the canonical, sole
+> source; a Claude mirror may be *generated* from it later if there is demand. Read the Claude
+> and mirror passages below as historical design context, not the current contract. The live,
+> normative contract is [`plugin-contract.md`](./plugin-contract.md); the mirror check is now
+> `scripts/validate-plugins.py` (Copilot-only), not `validate-mirrors.py`.
+
 ---
 
 ## Decisions

@@ -6,7 +6,7 @@ on:
   pull_request:
 
 jobs:
-  manifests-and-mirrors:
+  manifests-and-plugins:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,10 +23,9 @@ jobs:
             fi
           done < <(git ls-files \
             '.github/plugin/*.json' \
-            '.claude-plugin/*.json' \
-            'plugins/**/plugin.json' \
-            'plugins/**/hooks.json')
+            'plugins/**/.github/plugin/plugin.json' \
+            'plugins/**/.github/hooks/hooks.json')
           exit $fail
 
-      - name: Validate Copilot <-> Claude mirror parity
-        run: python3 scripts/validate-mirrors.py
+      - name: Validate Copilot plugins
+        run: python3 scripts/validate-plugins.py

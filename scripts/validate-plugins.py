@@ -1,17 +1,14 @@
 #!/usr/bin/env python3
-"""Validate that every shipped neo plugin mirrors correctly across harnesses.
+"""Validate every shipped neo plugin for the GitHub Copilot CLI harness.
 
-Neo ships each plugin twice — once per harness — from one source tree. The
-characteristic defect of this repo is one tree edited without the other. This
-script makes the mirror invariant executable:
+Neo ships for a single harness — GitHub Copilot CLI. (The Claude Code tree was
+dropped in issue #34; Copilot is the canonical, sole source. A Claude mirror may
+be regenerated later if there is demand.) This script makes the remaining
+invariants executable:
 
-  * every plugin has BOTH manifests (a missing Copilot manifest is an ERROR,
-    not a warning — Copilot silently falls back to the Claude manifest it can't
-    read correctly);
-  * the Copilot and Claude agent rosters match role-for-role;
-  * the Copilot and Claude skill sets match name-for-name;
-  * every Copilot agent's `agents:` allowlist references a real agent `name:`;
-  * every manifest is valid JSON.
+  * every plugin has its Copilot manifest AND hooks config, and both are valid JSON;
+  * the root Copilot marketplace manifest is valid JSON;
+  * every Copilot agent's `agents:` allowlist references a real agent `name:`.
 
 Exit code 0 = all good, 1 = at least one violation. No third-party deps.
 """
@@ -93,52 +90,20 @@ def copilot_agent_files(plugin: Path) -> list[Path]:
     return sorted(d.glob("neo.*.agent.md")) if d.is_dir() else []
 
 
-def copilot_agent_roles(plugin: Path) -> set[str]:
-    d = plugin / ".github" / "agents"
-    if not d.is_dir():
-        return set()
-    return {f.name[len("neo.") : -len(".agent.md")] for f in d.glob("neo.*.agent.md")}
-
-
-def claude_agent_roles(plugin: Path) -> set[str]:
-    d = plugin / "agents"
-    if not d.is_dir():
-        return set()
-    return {f.name[len("neo-") : -len(".md")] for f in d.glob("neo-*.md")}
-
-
-def skill_names(skills_dir: Path) -> set[str]:
-    if not skills_dir.is_dir():
-        return set()
-    return {p.parent.name for p in skills_dir.glob("*/SKILL.md")}
-
-
 def check_plugin(plugin: Path) -> None:
     name = plugin.name
 
-    # 1. Both manifests must exist and parse. Missing Copilot manifest is an error.
+    # 1. Copilot manifest + hooks config must exist and parse.
     check_json(plugin / ".github" / "plugin" / "plugin.json")
-    check_json(plugin / ".claude-plugin" / "plugin.json")
+    check_json(plugin / ".github" / "hooks" / "hooks.json")
 
-    # 2. Agent rosters must match role-for-role.
-    cop, cla = copilot_agent_roles(plugin), claude_agent_roles(plugin)
-    for role in sorted(cop - cla):
-        errors.append(f"[{name}] agent '{role}' has a Copilot file but no Claude mirror")
-    for role in sorted(cla - cop):
-        errors.append(f"[{name}] agent '{role}' has a Claude file but no Copilot mirror")
-
-    # 3. Skill sets must match name-for-name.
-    cop_sk = skill_names(plugin / ".github" / "skills")
-    cla_sk = skill_names(plugin / "skills")
-    for s in sorted(cop_sk - cla_sk):
-        errors.append(f"[{name}] skill '{s}' ships Copilot-only (no Claude mirror)")
-    for s in sorted(cla_sk - cop_sk):
-        errors.append(f"[{name}] skill '{s}' ships Claude-only (no Copilot mirror)")
-
-    # 4. Every Copilot agent's `agents:` allowlist must reference a real name:.
+    # 2. Every Copilot agent's `agents:` allowlist must reference a real name:.
     #    Copilot resolves delegated agents by their `name:` field, not filename,
     #    so a name/allowlist mismatch silently breaks delegation.
     files = copilot_agent_files(plugin)
+    if not files:
+        errors.append(f"[{name}] no Copilot agents found under .github/agents/")
+        return
     declared = {fm_name(f) for f in files} - {None}
     for f in files:
         refs = fm_agents(f)
@@ -165,17 +130,16 @@ def main() -> int:
     for plugin in plugins:
         check_plugin(plugin)
 
-    # Root marketplace manifests must also parse.
+    # Root Copilot marketplace manifest must also parse.
     check_json(REPO_ROOT / ".github" / "plugin" / "marketplace.json")
-    check_json(REPO_ROOT / ".claude-plugin" / "marketplace.json")
 
     if errors:
-        print("Mirror validation FAILED:", file=sys.stderr)
+        print("Plugin validation FAILED:", file=sys.stderr)
         for e in errors:
             print(f"  - {e}", file=sys.stderr)
         return 1
 
-    print(f"Mirror validation passed: {len(plugins)} plugin(s) in sync.")
+    print(f"Plugin validation passed: {len(plugins)} plugin(s) OK.")
     return 0
 
 
