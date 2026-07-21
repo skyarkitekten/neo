@@ -5,13 +5,13 @@
 ## 1. Overview
 
 - What this is: a spec-to-PR multi-agent coding system.
-- Target harness: GitHub Copilot (primary), Claude Code (backup/portable).
+- Target harness: GitHub Copilot CLI.
 - Repo it serves: React/TypeScript (Vite, Bun) `frontend/`, .NET 10 C# `backend/`.
 - Core loop: GitHub Issue / Azure DevOps story → research → plan → implement → review → draft PR.
 
 ## 2. Project context — `AGENTS.md`
 
-- Repo-root file both harnesses read; the source of truth for layout, commands, style.
+- Repo-root file the Copilot harness reads; the source of truth for layout, commands, style.
 - Layout map, per-layer commands (Bun frontend, dotnet backend), enforceable style rules.
 - Hard rules up top: never commit to `main`; work on a feature branch.
 - Finish gate: build + lint + tests pass before done.
@@ -50,7 +50,7 @@
 ## 7. Observability & tuning (hooks)
 
 - `log-event.sh` — fail-open JSONL logger; one record per lifecycle event.
-- Configs: Claude `hooks/hooks.json`, Copilot `.github/hooks/hooks.json` (both shipped in `plugins/neo-core/`).
+- Config: Copilot `.github/hooks/hooks.json` (shipped in `plugins/neo-core/`).
 - `analyze_agent_logs.py` — per-agent tool/event/time stats; per-run duration + review-round counts.
 - Tuning loop: log real runs → analyze → fix the worst-performing `.agent.md` → compare next batch.
 - Correlation via `AGENT_RUN_ID` (defaults to git branch).

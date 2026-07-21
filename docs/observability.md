@@ -5,7 +5,6 @@ Records what each agent does into a JSONL log so you can tune the `.agent.md` pr
 ## Files
 
 - `.agent-hooks/log-event.sh` — the logger. One record per lifecycle event.
-- `claude-code.settings.json` — Claude Code hook config. Place at `.claude/settings.json`.
 - `.github/hooks/hooks.json` — GitHub Copilot CLI hook config (v1 schema; shipped in `plugins/neo-core/`, verify against your version).
 - `analyze_agent_logs.py` — turns the log into per-agent and per-run stats.
 
@@ -14,8 +13,7 @@ Records what each agent does into a JSONL log so you can tune the `.agent.md` pr
 1. Copy `.agent-hooks/log-event.sh` into your repo and make it executable:
    `chmod +x .agent-hooks/log-event.sh`
 2. Requires `jq` on PATH.
-3. **Claude Code:** copy `claude-code.settings.json` to `.claude/settings.json`.
-4. **Copilot:** merge `plugins/neo-core/.github/hooks/hooks.json` into your Copilot CLI hook settings. Confirm the file location, key names, and event names against your installed Copilot version first — these vary.
+3. **Copilot:** merge `plugins/neo-core/.github/hooks/hooks.json` into your Copilot CLI hook settings. Confirm the file location, key names, and event names against your installed Copilot version first — these vary.
 
 ## What gets logged
 
@@ -36,4 +34,4 @@ Reports event/tool counts and approximate active time per agent, and per run the
 
 ## Verify before trusting the fields
 
-The `jq` paths in `log-event.sh` (`agent_name`, `tool_name`, etc.) are defensive guesses that cover both harnesses. Run one real session, look at `events.jsonl`, and trim the paths to what your harness actually emits. If `agent` is mostly null, the analyzer will warn you and agent-level stats won't be meaningful until attribution is fixed.
+The `jq` paths in `log-event.sh` (`agent_name`, `tool_name`, etc.) are defensive guesses at Copilot's event shape. Run one real session, look at `events.jsonl`, and trim the paths to what your harness actually emits. If `agent` is mostly null, the analyzer will warn you and agent-level stats won't be meaningful until attribution is fixed.
