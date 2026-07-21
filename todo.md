@@ -30,7 +30,7 @@ Run `gh issue list --state open` for the live backlog. Current shape:
 ## Untracked loose ends (no issue yet)
 
 - **`neo-feature-authoring` skill lacks the falsifiability gate.** The design is settled in
-  `docs/process-flow.md` § "Falsifiability is a gate on KPI authoring" (metric /
+  `docs/concepts/process-flow.md` § "Falsifiability is a gate on KPI authoring" (metric /
   instrumentation / window / falsifier), but `SKILL.md` still treats KPIs as optional and
   says nothing about instrumentation-in-scope or the captive-population rule. Fold it in.
 - **master-control model names unverified.** `neo.master-control.agent.md` recommends
@@ -50,14 +50,14 @@ Run `gh issue list --state open` for the live backlog. Current shape:
 
 These aren't issues because their home is the owning doc; listed here so they're findable:
 
-- Testing modeled two ways + Diagram 2 sub-box mislabel → `docs/process-flow.md`
+- Testing modeled two ways + Diagram 2 sub-box mislabel → `docs/concepts/process-flow.md`
   § "Drift to reconcile" and the drawing-bug note near the end.
 - Consumer `AGENTS.md` as a hard prerequisite + where the integration mode is declared →
-  `docs/packaging.md` (project tier) and its "Who authors the consuming repo's `AGENTS.md`?"
+  `docs/reference/stack-plugin-contract.md` (project tier) and its "Who authors the consuming repo's `AGENTS.md`?"
   open question.
-- KPI falsifiability gate (design) → `docs/process-flow.md` § "Falsifiability is a gate…".
+- KPI falsifiability gate (design) → `docs/concepts/process-flow.md` § "Falsifiability is a gate…".
 - Manual open items (pin skill names, trim `jq` field paths, confirm hook schema) →
-  `docs/neo-user-manual-outline.md` § 8.
+  `docs/guides/neo-user-manual-outline.md` § 8.
 
 ## Housekeeping
 

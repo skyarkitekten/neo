@@ -31,7 +31,7 @@ plugins/neo-core/                    The shipped plugin — a Copilot tree:
 .github/plugin/marketplace.json      Copilot marketplace (root, lists plugins[])
 .github/agents/neo.master-control.agent.md   DEV-TIME agent (Copilot), never shipped
 scripts/validate-plugins.py          CI plugin check (manifests + agents: allowlists)
-docs/                                Normative contracts, glossary, process flow, manuals
+docs/                                Grouped by genre — see docs/README.md for the map
 ```
 
 The shipped agents (in `plugins/neo-core/`): `technical-engineer` (orchestrator — start
@@ -41,7 +41,7 @@ root, never in a plugin.
 
 ## Naming
 
-All normative in `docs/plugin-contract.md` — don't restate it, conform to it.
+All normative in `docs/reference/plugin-contract.md` — don't restate it, conform to it.
 
 - Copilot agents: `neo.<role>.agent.md` (e.g. `neo.code-writer.agent.md`).
 - Kebab-case roles; each agent's frontmatter `name:` is `Neo <Role>`.
@@ -82,10 +82,11 @@ python3 scripts/validate-plugins.py
 
 ## Gotchas
 
-- `docs/plugin-contract.md` is the **normative** contract — folder shape, manifest fields,
-  naming. When in doubt, it wins.
-- `docs/glossary.md` owns the vocabulary; `docs/packaging.md` owns the core/stack split;
-  `docs/process-flow.md` owns the workflow and integration modes.
+- `docs/README.md` maps the docs by genre (concepts / reference / guides / archive).
+- `docs/reference/plugin-contract.md` is the **normative** contract — folder shape, manifest
+  fields, naming. When in doubt, it wins.
+- `docs/glossary.md` owns the vocabulary; `docs/reference/stack-plugin-contract.md` owns the
+  core/stack split; `docs/concepts/process-flow.md` owns the workflow and integration modes.
 - Don't restate rules across files — point to the owning doc.
 - **Repo-root agent trees are dev-time; `plugins/*/` is shipped.** `master-control` lives at
   the root (`.github/agents/`) so it's visible to neo devs but never packaged. A role ships
