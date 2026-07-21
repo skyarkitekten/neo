@@ -62,7 +62,7 @@ Interactive and collaborative between the **BE** and the `task-planner` agent �
 - **Sizing: one task ≈ one PR.** Too big → split; too small (can't stand as its own PR) → fold.
 - **Validation criteria are authored at task creation** and must be machine-checkable — an assertion a test or agent can run to a deterministic pass/fail.
 
-Governed by the `neo-task-authoring` skill (what a clean task _is_) and run by the `task-planner` agent (how to _carve_). Both ship for GitHub Copilot (`.github/`) and Claude Code (`.claude/`).
+Governed by the `neo-task-authoring` skill (what a clean task _is_) and run by the `task-planner` agent (how to _carve_). Both ship for GitHub Copilot (`.github/`).
 
 ### PRD → Feature
 
@@ -77,7 +77,7 @@ One step upstream of Feature→Task, and interactive with the BE in the same way
 
 ## Status
 
-- **Live:** Specification-loop design; `neo-task-authoring` skill + `task-planner` agent, and `neo-feature-authoring` skill + `feature-agent` (Copilot + Claude Code mirrors for both).
+- **Live:** Specification-loop design; `neo-task-authoring` skill + `task-planner` agent, and `neo-feature-authoring` skill + `feature-agent` (GitHub Copilot).
 - **Target (Diagram 2, not yet specced):** Coding loop, Verification / Operations loop, and the root `AGENTS.md` backbone.
 
 ## Open threads

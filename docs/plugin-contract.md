@@ -2,13 +2,18 @@
 
 Terms in **bold** are defined in the [glossary](./glossary.md).
 
-This is the **normative** contract for packaging this repo as plugins for two harnesses —
-**Claude Code** and **GitHub Copilot CLI** — from one source tree. It defines the monorepo
-layout, per-plugin folder shape, manifest fields, the dual-manifest rule, and the `neo-`
-naming convention.
+This is the **normative** contract for packaging this repo as plugins for **GitHub Copilot
+CLI** from one source tree. It defines the monorepo layout, per-plugin folder shape, manifest
+fields, and the `neo-` naming convention.
+
+> **Single harness (issue #34).** Neo ships for GitHub Copilot CLI only. Copilot is the
+> **canonical, sole source**. The Claude Code tree was dropped and deferred — a Claude mirror
+> may be regenerated from the Copilot source later if there is demand. Until then this repo
+> carries no `agents/`, `skills/`, `.claude/`, or `.claude-plugin/` trees, and there is no
+> mirror or dual-manifest rule to maintain.
 
 Neo is a **monorepo of plugins**. Shipped plugins live under `plugins/`; today there is one,
-`plugins/neo-core/`. The repo root holds the marketplace manifests, docs, and dev-time-only
+`plugins/neo-core/`. The repo root holds the marketplace manifest, docs, and dev-time-only
 tooling. Per-stack plugins (e.g. a hypothetical `plugins/neo-react/`) are added the same way
 `neo-core` is packaged — this contract governs all of them.
 
@@ -19,37 +24,30 @@ repo. Field names, filenames, and values are transcribed from those files, not i
 
 ```
 neo/
-├── .claude-plugin/
-│   └── marketplace.json              # Claude marketplace — lists plugins[], stays at root
 ├── .github/
 │   ├── plugin/
 │   │   └── marketplace.json          # Copilot marketplace — lists plugins[], stays at root
 │   └── agents/
 │       └── neo.master-control.agent.md   # DEV-TIME agent (Copilot), never shipped
-├── .claude/
-│   └── agents/
-│       └── neo-master-control.md         # DEV-TIME agent (Claude), never shipped
 ├── plugins/
 │   └── neo-core/                     # a shipped plugin (see §1 for its shape)
 ├── scripts/
-│   └── validate-mirrors.py           # CI: asserts each plugin's two trees stay in sync
+│   └── validate-plugins.py           # CI: asserts each plugin's Copilot manifests + allowlists are valid
 └── docs/                             # this spec, glossary, architecture, etc. — not shipped
 ```
 
 **Dev-time vs shipped.** Anything under `plugins/*/` is shipped to installers. The repo-root
-`.github/agents/` and `.claude/agents/` trees are **dev-time only** — they hold `master-control`,
-the agent that authors this harness config, which is visible to neo developers working inside
-the repo but never packaged into a plugin. There is no exclusion mechanism to maintain: a
-role is shipped iff its file lives under a `plugins/*/` tree.
+`.github/agents/` tree is **dev-time only** — it holds `master-control`, the agent that authors
+this harness config, which is visible to neo developers working inside the repo but never
+packaged into a plugin. There is no exclusion mechanism to maintain: a role is shipped iff its
+file lives under a `plugins/*/` tree.
 
 ## 1. Plugin folder shape
 
-Each plugin under `plugins/` is a self-contained dual-harness tree:
+Each plugin under `plugins/` is a self-contained Copilot tree:
 
 ```
 plugins/neo-core/
-├── .claude-plugin/
-│   └── plugin.json                   # Claude plugin metadata
 ├── .github/
 │   ├── plugin/
 │   │   └── plugin.json               # Copilot plugin metadata (adds agents/hooks paths)
@@ -57,26 +55,18 @@ plugins/neo-core/
 │   ├── hooks/
 │   │   └── hooks.json                # Copilot hook schema (v1, camelCase events, ${PLUGIN_ROOT})
 │   └── skills/                       # Copilot Agent Skills, e.g. neo-task-authoring/SKILL.md
-├── agents/                           # Claude subagents — kebab-case neo-<role>.md
-├── skills/                           # Claude Agent Skills, e.g. neo-task-authoring/SKILL.md
-├── hooks/
-│   └── hooks.json                    # Claude hook schema (PascalCase events, ${CLAUDE_PLUGIN_ROOT})
 ├── .agent-hooks/
-│   └── log-event.sh                  # one shared hook implementation, called by BOTH hooks.json
+│   └── log-event.sh                  # the hook implementation, called by hooks.json
 └── scripts/                          # plugin-local tooling, e.g. analyze_agent_logs.py
 ```
 
-| Path (within a plugin)       | Harness     | Purpose                                                                                          |
-| ---------------------------- | ----------- | ----------------------------------------------------------------------------------------------- |
-| `.claude-plugin/plugin.json` | Claude Code | Plugin metadata (name, version, author, keywords, …).                                           |
-| `.github/plugin/plugin.json` | Copilot CLI | Plugin metadata; superset of Claude's fields (adds `agents`, `hooks` paths).                    |
-| `agents/`                    | Claude Code | Subagent definitions, one kebab-case `neo-<role>.md` file per role.                             |
-| `.github/agents/`            | Copilot CLI | Subagent definitions, one dotted `neo.<role>.agent.md` file per role.                           |
-| `skills/`                    | Claude Code | Agent Skills, e.g. `neo-task-authoring/SKILL.md`.                                                |
-| `.github/skills/`            | Copilot CLI | Agent Skills, e.g. `neo-task-authoring/SKILL.md`.                                                |
-| `hooks/hooks.json`           | Claude Code | Lifecycle-logging hooks, Claude event names, `${CLAUDE_PLUGIN_ROOT}`.                           |
-| `.github/hooks/hooks.json`   | Copilot CLI | Lifecycle-logging hooks, Copilot event names, `${PLUGIN_ROOT}`, versioned schema (`"version": 1`). |
-| `.agent-hooks/log-event.sh`  | Both        | The one script both `hooks.json` files shell out to — config is per-harness, behavior is shared. |
+| Path (within a plugin)       | Purpose                                                                                          |
+| ---------------------------- | ----------------------------------------------------------------------------------------------- |
+| `.github/plugin/plugin.json` | Plugin metadata (name, version, author, keywords, …) plus `agents`/`hooks` paths.               |
+| `.github/agents/`            | Subagent definitions, one dotted `neo.<role>.agent.md` file per role.                           |
+| `.github/skills/`            | Agent Skills, e.g. `neo-task-authoring/SKILL.md`.                                                |
+| `.github/hooks/hooks.json`   | Lifecycle-logging hooks, Copilot event names, `${PLUGIN_ROOT}`, versioned schema (`"version": 1`). |
+| `.agent-hooks/log-event.sh`  | The script `hooks.json` shells out to.                                                           |
 
 **No cross-plugin file references.** A plugin is copied as a self-contained directory on
 install. A file under `plugins/neo-core/` cannot reference a path outside its own plugin
@@ -86,92 +76,73 @@ need must be duplicated into each.
 ## 2. Required manifest fields
 
 Field lists below are transcribed from the manifest files as they exist today. **Required**
-means the field is present and populated; **harness-specific** means the field exists only in
-that harness's manifest.
+means the field is present and populated.
 
-### 2.1 `plugins/neo-core/**/plugin.json`
+### 2.1 `plugins/neo-core/.github/plugin/plugin.json`
 
-| Field         | `.claude-plugin/plugin.json`                    | `.github/plugin/plugin.json` | Status                                             |
-| ------------- | ----------------------------------------------- | ---------------------------- | -------------------------------------------------- |
-| `name`        | `"neo-core"`                                    | `"neo-core"`                 | Required, both — must match.                       |
-| `version`     | `"0.1.0"`                                        | `"0.1.0"`                    | Required, both — must match.                       |
-| `description` | present ("Portable across …")                    | present ("… Copilot CLI manifest") | Required, both — harness-tailored; intent must match. |
-| `author.name` | `"Chad Thomas"`                                  | `"Chad Thomas"`              | Required, both — must match.                       |
-| `homepage`    | `"https://github.com/skyarkitekten/neo"`         | same                         | Required, both — must match.                       |
-| `repository`  | `"https://github.com/skyarkitekten/neo"`         | same                         | Required, both — must match.                       |
-| `license`     | `"MIT"`                                          | `"MIT"`                      | Required, both — must match.                       |
-| `keywords[]`  | 6 entries                                        | identical 6 entries          | Required, both — keep in sync.                     |
-| `agents`      | _absent_ (resolved from conventional `agents/`)  | `".github/agents"`           | **Copilot-specific**, required for Copilot.        |
-| `hooks`       | _absent_ (resolved from conventional `hooks/`)   | `".github/hooks/hooks.json"` | **Copilot-specific**, required for Copilot.        |
+| Field         | Value                                            | Status                                      |
+| ------------- | ------------------------------------------------ | ------------------------------------------- |
+| `name`        | `"neo-core"`                                     | Required.                                    |
+| `version`     | `"0.1.0"`                                        | Required.                                    |
+| `description` | present ("… Copilot CLI manifest")               | Required.                                    |
+| `author.name` | `"Chad Thomas"`                                  | Required.                                    |
+| `homepage`    | `"https://github.com/skyarkitekten/neo"`         | Required.                                    |
+| `repository`  | `"https://github.com/skyarkitekten/neo"`         | Required.                                    |
+| `license`     | `"MIT"`                                          | Required.                                    |
+| `keywords[]`  | 6 entries                                        | Required.                                    |
+| `agents`      | `".github/agents"`                               | Required — points at the plugin's agent tree. |
+| `hooks`       | `".github/hooks/hooks.json"`                     | Required — points at the plugin's hook config. |
 
-### 2.2 Root `marketplace.json`
+### 2.2 Root `.github/plugin/marketplace.json`
 
-The marketplace manifests stay at the repo root and list each shipped plugin under `plugins[]`.
+The marketplace manifest stays at the repo root and lists each shipped plugin under `plugins[]`.
 
-| Field                   | `.claude-plugin/marketplace.json`     | `.github/plugin/marketplace.json` | Status                                        |
-| ----------------------- | ------------------------------------- | --------------------------------- | --------------------------------------------- |
-| `name` (top-level)      | `"neo"`                               | `"neo"`                           | Required, both — the marketplace name.        |
-| `owner.name`            | `"skyarkitekten"`                     | `"skyarkitekten"`                 | Required, both — must match.                   |
-| `owner.url`             | `"https://github.com/skyarkitekten"`  | _absent_                          | Optional, currently Claude-only.              |
-| `metadata.description`  | present                               | present                           | Required, both — harness-tailored wording OK.  |
-| `metadata.version`      | `"0.1.0"`                             | `"0.1.0"`                         | Required, both — must match.                   |
-| `plugins[].name`        | `"neo-core"`                          | `"neo-core"`                      | Required, both — must match.                   |
-| `plugins[].source`      | `"./plugins/neo-core"`                | `"./plugins/neo-core"`            | Required, both — same value, `./` prefix.      |
-| `plugins[].description` | present                               | present                           | Required, both — harness-tailored wording OK.  |
-| `plugins[].version`     | `"0.1.0"`                             | `"0.1.0"`                         | Required, both — must match.                   |
-| `plugins[].author.name` | `"Chad Thomas"`                       | `"Chad Thomas"`                   | Required, both — must match.                   |
-| `plugins[].license`     | `"MIT"`                               | `"MIT"`                           | Required, both — must match.                   |
-| `plugins[].keywords[]`  | 4 entries                             | identical 4 entries               | Required, both — keep in sync.                 |
-| `plugins[].agents`      | _absent_                              | `".github/agents"`                | **Copilot-specific**, required for Copilot.    |
-| `plugins[].hooks`       | _absent_                              | `".github/hooks/hooks.json"`      | **Copilot-specific**, required for Copilot.    |
+| Field                   | Value                                 | Status                                    |
+| ----------------------- | ------------------------------------- | ----------------------------------------- |
+| `name` (top-level)      | `"neo"`                               | Required — the marketplace name.          |
+| `owner.name`            | `"skyarkitekten"`                     | Required.                                  |
+| `metadata.description`  | present                               | Required.                                  |
+| `metadata.version`      | `"0.1.0"`                             | Required.                                  |
+| `plugins[].name`        | `"neo-core"`                          | Required.                                  |
+| `plugins[].source`      | `"./plugins/neo-core"`                | Required — `./`-prefixed repo-root path.   |
+| `plugins[].description` | present                               | Required.                                  |
+| `plugins[].version`     | `"0.1.0"`                             | Required.                                  |
+| `plugins[].author.name` | `"Chad Thomas"`                       | Required.                                  |
+| `plugins[].license`     | `"MIT"`                               | Required.                                  |
+| `plugins[].keywords[]`  | 4 entries                             | Required.                                  |
+| `plugins[].agents`      | `".github/agents"`                    | Required.                                  |
+| `plugins[].hooks`       | `".github/hooks/hooks.json"`          | Required.                                  |
 
 **`source` rule:** always write the `./`-prefixed relative path from the repo root to the
-plugin directory (`"./plugins/neo-core"`). Claude requires the leading `./`; both manifests use
-the identical value — do not let the two spellings drift.
+plugin directory (`"./plugins/neo-core"`).
 
-## 3. The dual-manifest rule
+## 3. How Copilot loads the plugin
 
-Each harness reads **only its own manifest tree** and never the other's:
+Copilot CLI reads the root `.github/plugin/marketplace.json` → resolves each plugin's `source`
+→ reads that plugin's `.github/plugin/plugin.json` → agents from `.github/agents/`, skills from
+`.github/skills/`, hooks from `.github/hooks/hooks.json` (Copilot v1 schema, `${PLUGIN_ROOT}`).
 
-- **Claude Code** reads the root `.claude-plugin/marketplace.json` → resolves each plugin's
-  `source` → reads that plugin's `.claude-plugin/plugin.json` → agents from `agents/`, skills
-  from `skills/`, hooks from `hooks/hooks.json` (Claude event names, `${CLAUDE_PLUGIN_ROOT}`).
-- **Copilot CLI** reads the root `.github/plugin/marketplace.json` → the plugin's
-  `.github/plugin/plugin.json` → agents from `.github/agents/`, skills from `.github/skills/`,
-  hooks from `.github/hooks/hooks.json` (Copilot v1 schema, `${PLUGIN_ROOT}`).
-- **Copilot's `.github/plugin/` tree is checked _before_ `.claude-plugin/`.** A **missing
-  Copilot manifest is an error, not a warning**: Copilot silently falls back to the Claude
-  manifest, which it cannot read correctly. Every shipped plugin must carry both manifests.
-  `scripts/validate-mirrors.py` enforces this.
+Every shipped plugin must carry its Copilot `plugin.json` and `hooks.json`; a missing or
+invalid manifest breaks the plugin. `scripts/validate-plugins.py` enforces that both parse.
 
-**One source, two manifests, no cross-contamination:** one crew, one set of prompt intent, one
-hook implementation (`.agent-hooks/log-event.sh`), expressed twice — once per harness's
-manifest/agent/hook format. Neither harness reads or depends on the other's tree at runtime.
+### 3.1 What must stay consistent
 
-### What must stay in sync
+- `name` — `"neo"` (marketplace top-level) and `"neo-core"` (the plugin).
+- `version` (`"0.1.0"`) — the `plugin.json` and the marketplace's nested `metadata.version`
+  and `plugins[].version`.
+- `license`, `author.name` / `owner.name` — identity describes one project.
+- `keywords[]` — kept meaningful per manifest.
+- `plugins[].source` — the `./`-prefixed value pointing at the plugin directory.
 
-- `name` — `"neo"` (marketplace top-level) and `"neo-core"` (the plugin), consistent across both
-  harness manifests of each kind.
-- `version` (`"0.1.0"`) — every `plugin.json` and every `marketplace.json`'s nested
-  `metadata.version` and `plugins[].version`.
-- `license`, `author.name` / `owner.name` — identity describes one project, not two.
-- `keywords[]` — identical lists per manifest type.
-- `plugins[].source` — identical `./`-prefixed value in both marketplace files.
-- Description **intent** — literal text may be harness-tailored, but must describe the same crew.
-- **Agent rosters and skill sets** — each plugin's Copilot and Claude trees must mirror
-  role-for-role and skill-for-skill (see §4, enforced by `validate-mirrors.py`).
+### 3.2 Claude Code (deferred)
 
-### What is legitimately harness-specific
+The Claude Code harness was dropped in issue #34. If a Claude mirror is later revived, it would
+be **generated from the Copilot source** (Copilot's frontmatter is the richer, more granular
+form, so a Copilot→Claude projection collapses cleanly; the reverse cannot). This spec would
+then regain a generated-tree section and a "generated output is up to date" CI gate. Nothing in
+the repo depends on Claude today.
 
-- **`agents` / `hooks` path fields** — only Copilot's manifests declare these; Claude resolves
-  the same information from fixed conventional paths. Both point at the harness's own subtree.
-- **Agent file format** — Claude subagents are kebab-case `.md` in `agents/`; Copilot agents are
-  dotted `*.agent.md` in `.github/agents/` (see §4).
-- **Hook schema shape** — event-name casing (`SessionStart` vs `sessionStart`), the Copilot-only
-  `version`/`timeoutSec` fields, and the root-var name (`${CLAUDE_PLUGIN_ROOT}` vs
-  `${PLUGIN_ROOT}`) differ by design; both configs invoke the same script.
-
-## 4. `neo-` naming and the mirror rule
+## 4. `neo-` naming
 
 Every agent and skill identifier is namespaced under `neo-` to avoid collisions when a plugin
 sits in a marketplace alongside others.
@@ -183,30 +154,17 @@ sits in a marketplace alongside others.
   underscores, no camelCase, no spaces (`code-reviewer`, `task-authoring`,
   `implementation-planner`). This applies to the role segment of an agent identifier and to skill
   names.
-- **Claude agent filename:** `agents/neo-<role>.md`, and the frontmatter `name:` matches the
-  filename stem exactly (e.g. `agents/neo-code-reviewer.md` → `name: neo-code-reviewer`).
-- **Claude skill directory:** `skills/neo-<name>/SKILL.md`, and the frontmatter `name:` matches
-  the directory name (e.g. `skills/neo-feature-authoring/SKILL.md` → `name: neo-feature-authoring`).
 - **Copilot's dotted form** (`neo.<role>.agent.md`) is Copilot CLI's own agent-file convention
   (dot-separated namespace segment + a mandatory `.agent.md` suffix). The `<role>` segment stays
-  kebab-case; only the separator after `neo` and the file suffix differ from Claude's form. This
-  is an accepted harness-imposed grammar, not a violation of the per-word kebab-case rule.
-- **Copilot skill directory:** `.github/skills/neo-<name>/SKILL.md`, mirroring the Claude skill
-  name exactly.
+  kebab-case; only the separator after `neo` and the file suffix differ from a plain kebab name.
+  This is an accepted harness-imposed grammar, not a violation of the per-word kebab-case rule.
+- **Copilot skill directory:** `.github/skills/neo-<name>/SKILL.md`, and the frontmatter `name:`
+  matches the directory name (e.g. `.github/skills/neo-feature-authoring/SKILL.md` →
+  `name: neo-feature-authoring`).
 
-### The mirror rule
-
-Every shipped role and skill exists **twice** — once per harness — from one intent. Editing one
-side without the other is the characteristic defect of this repo. For each plugin:
-
-- every Copilot agent `neo.<role>.agent.md` has a Claude mirror `neo-<role>.md`, and vice versa;
-- every Copilot skill `.github/skills/neo-<name>/` has a Claude mirror `skills/neo-<name>/`, and
-  vice versa;
-- both `plugin.json` manifests are present and agree on the shared fields (§3).
-
-This invariant is executable: `scripts/validate-mirrors.py` walks every `plugins/*/`, compares
-the Copilot and Claude agent rosters and skill sets, and fails CI on any mismatch or missing
-manifest. Run it after any change to a plugin's agents, skills, or manifests.
+Copilot resolves delegated agents by their frontmatter `name:` field, not the filename, so an
+agent's `agents:` allowlist must reference real `name:` values. `scripts/validate-plugins.py`
+walks every `plugins/*/` and fails CI on any allowlist entry that doesn't resolve.
 
 ### Vendored skills
 
