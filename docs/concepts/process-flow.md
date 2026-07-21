@@ -1,7 +1,7 @@
 # Process Flow — Loop Boundaries
 
 How work crosses from the **Specification loop** to the **Coding loop** to the **Verification
-loop**, and back. Terms in **bold** are defined in the [glossary](./glossary.md); the loops
+loop**, and back. Terms in **bold** are defined in the [glossary](../glossary.md); the loops
 themselves are described in [architecture.md](./architecture.md).
 
 **Scope of this document.** This maps the *boundaries* — what artifact crosses, what gate it
@@ -59,7 +59,7 @@ already binding in `neo.task-planner.agent.md` and `neo-code-writer.md`.
 Azure DevOps story." The spec loop emits a **Task**. These need to be the same object: a neo
 Task should *be* the issue/story it is filed as, so the orchestrator's input contract and the
 task-planner's output contract describe one artifact rather than two. **Resolved** — this is
-now the carrier rule fixed in [`task-handoff-schema.md`](./task-handoff-schema.md) § 1.
+now the carrier rule fixed in [`task-handoff-schema.md`](../reference/task-handoff-schema.md) § 1.
 
 ---
 
@@ -339,4 +339,4 @@ setup; it cannot be reconstructed after the merge.
   propagates into docs.
 - `Operations Space` is drawn outside all three loops in Diagram 2, with no boundary defined
   between Deployment and Operations. Treated above as an implicit fourth boundary.
-- See [`todo.md`](../todo.md) for repo-level defects found alongside this mapping.
+- See [`todo.md`](../../todo.md) for repo-level defects found alongside this mapping.

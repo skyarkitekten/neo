@@ -1,6 +1,6 @@
 # Plugin Contract Spec
 
-Terms in **bold** are defined in the [glossary](./glossary.md).
+Terms in **bold** are defined in the [glossary](../glossary.md).
 
 This is the **normative** contract for packaging this repo as plugins for **GitHub Copilot
 CLI** from one source tree. It defines the monorepo layout, per-plugin folder shape, manifest

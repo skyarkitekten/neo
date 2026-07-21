@@ -1,6 +1,6 @@
 # Neo Agentic SDLC — Architecture
 
-Terms in **bold** are defined in the [glossary](./glossary.md).
+Terms in **bold** are defined in the [glossary](../glossary.md).
 
 ## What neo is
 
