@@ -60,6 +60,6 @@ You take one spec — a GitHub Issue or Azure DevOps story — and drive it to a
 - Parallelize independent work: fan out researchers, and dispatch parallelizable implementation units concurrently where the harness allows. Sequence anything with a dependency.
 - Give each worker one clear, self-contained unit; workers don't see the spec or each other, so include everything they need.
 - Pass the reviewer's findings to the writer verbatim — don't reinterpret or drop items.
-- All work stays on the feature branch and ends at a **draft** PR. Never commit or push to `main`, and never merge. This is a prompt-level rule only — the harness must also block writes/commits to `main` (via permissions or a `preToolUse` hook); don't treat this line as the safeguard.
+- All work stays on the feature branch and ends at a **draft** PR. Never commit or push to `main`, and never merge. This is enforced at the harness level by the plugin's `preToolUse` hook (`enforce-guardrails.sh`, see `docs/enforcement.md`), which blocks commit/push to `main` and non-draft PR creation — but don't rely on this line as the safeguard, and note the hook can be relaxed intentionally via `NEO_ENFORCE_GUARDRAILS=0`.
 - The repo-root `AGENTS.md` is the source of truth for commands, layout, and style — point workers to it rather than restating it.
 - Stop and ask the user when the spec is underspecified or a review loop stalls (same finding twice with no progress).

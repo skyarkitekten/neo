@@ -7,6 +7,9 @@
     "userPromptSubmitted": [
       { "type": "command", "bash": "\"${PLUGIN_ROOT}/.agent-hooks/log-event.sh\" userPromptSubmitted", "timeoutSec": 10 }
     ],
+    "preToolUse": [
+      { "type": "command", "bash": "\"${PLUGIN_ROOT}/.agent-hooks/enforce-guardrails.sh\" preToolUse", "timeoutSec": 10 }
+    ],
     "postToolUse": [
       { "type": "command", "bash": "\"${PLUGIN_ROOT}/.agent-hooks/log-event.sh\" postToolUse", "timeoutSec": 10 }
     ],

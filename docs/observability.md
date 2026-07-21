@@ -2,6 +2,10 @@
 
 Records what each agent does into a JSONL log so you can tune the `.agent.md` prompts from data, not guesses. Logging is fail-open and append-only — it never blocks or slows a turn.
 
+> This page covers the **fail-open observability** hook set. For the **fail-closed
+> `preToolUse` enforcement** hooks (block commit/push to `main`, draft-PR-only), see
+> [enforcement.md](enforcement.md). Both are wired from the same `.github/hooks/hooks.json`.
+
 ## Files
 
 - `.agent-hooks/log-event.sh` — the logger. One record per lifecycle event.
