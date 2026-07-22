@@ -68,8 +68,8 @@ plugins/neo-core/
 | `.github/agents/`            | Subagent definitions, one dotted `neo.<role>.agent.md` file per role.                           |
 | `.github/skills/`            | Agent Skills, e.g. `neo-task-authoring/SKILL.md`.                                                |
 | `.github/hooks/hooks.json`   | Lifecycle-logging **and** `preToolUse` enforcement hooks, Copilot event names, `${PLUGIN_ROOT}`, versioned schema (`"version": 1`). |
-| `.agent-hooks/log-event.sh`  | The observability logger `hooks.json` shells out to (fail-open). See [observability.md](observability.md). |
-| `.agent-hooks/enforce-guardrails.sh` | The `preToolUse` enforcement hook `hooks.json` shells out to on Unix (fail-closed): blocks commit/push to `main` and non-draft PRs. A `.ps1` sibling covers Windows. See [enforcement.md](enforcement.md). |
+| `.agent-hooks/log-event.sh`  | The observability logger `hooks.json` shells out to (fail-open). See [observability.md](../guides/observability.md). |
+| `.agent-hooks/enforce-guardrails.sh` | The `preToolUse` enforcement hook `hooks.json` shells out to on Unix (fail-closed): blocks commit/push to `main` and non-draft PRs. A `.ps1` sibling covers Windows. See [enforcement.md](../guides/enforcement.md). |
 
 **No cross-plugin file references.** A plugin is copied as a self-contained directory on
 install. A file under `plugins/neo-core/` cannot reference a path outside its own plugin

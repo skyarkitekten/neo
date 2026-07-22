@@ -41,6 +41,8 @@ Then dip into `reference/` and `guides/` as the task demands.
 ### `guides/` — the *how* (operational)
 - [`observability.md`](./guides/observability.md) — install the logging hooks and read the
   per-agent / per-run stats to tune prompts.
+- [`enforcement.md`](./guides/enforcement.md) — the `preToolUse` enforcement hooks that block
+  commit/push to `main` and non-draft PRs; their fail-closed contract and how to relax them.
 - [`agent-authoring-reference.md`](./guides/agent-authoring-reference.md) — the dev-time reference
   for the `master-control` forge: frontmatter fields, agent vs skill vs instruction vs hook.
 - [`neo-user-manual-outline.md`](./guides/neo-user-manual-outline.md) — skeleton for the future
@@ -62,6 +64,7 @@ Then dip into `reference/` and `guides/` as the task demands.
 | Core/stack split, tiers, stack-skill discovery | [`reference/stack-plugin-contract.md`](./reference/stack-plugin-contract.md) |
 | The Task handoff artifact | [`reference/task-handoff-schema.md`](./reference/task-handoff-schema.md) |
 | Logging & prompt tuning | [`guides/observability.md`](./guides/observability.md) |
+| `preToolUse` enforcement (block-on-main, draft-PR-only) | [`guides/enforcement.md`](./guides/enforcement.md) |
 | Authoring agents / skills / hooks | [`guides/agent-authoring-reference.md`](./guides/agent-authoring-reference.md) |
 
 Repo-level layout, checks, and guardrails for working on neo itself live in the root
