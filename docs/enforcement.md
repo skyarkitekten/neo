@@ -13,9 +13,12 @@ opposite reliability contract to — the fail-open observability logging in
 
 ## Files
 
-- `.agent-hooks/enforce-guardrails.sh` — the enforcement hook. Decisive (fail-closed) for
-  the operations it recognizes.
-- `.github/hooks/hooks.json` — wires the script to the `preToolUse` event (same file that
+- `.agent-hooks/enforce-guardrails.sh` — the enforcement hook for Unix (macOS/Linux).
+  Decisive (fail-closed) for the operations it recognizes.
+- `.agent-hooks/enforce-guardrails.ps1` — the Windows/PowerShell sibling, byte-for-byte
+  equivalent in behavior. The `bash` and `powershell` fields on the same hook entry let the
+  CLI pick the right one per platform, so enforcement runs on Windows too (not just Unix).
+- `.github/hooks/hooks.json` — wires both scripts to the `preToolUse` event (same file that
   wires the observability logger).
 
 ## Copilot `preToolUse` command-hook contract
@@ -44,9 +47,9 @@ Verified against GitHub's [Copilot hooks reference](https://docs.github.com/en/c
 ## What the hook enforces
 
 It inspects only the shell tool (`bash`/`powershell`); every other tool (`view`, `edit`,
-`grep`, …) is allowed immediately so enforcement never impedes normal work. The command
-string is parsed with `python3` (already a repo dependency) rather than `jq`, so a missing
-`jq` cannot brick every command.
+`grep`, …) is allowed immediately so enforcement never impedes normal work. The Unix hook
+parses the payload with `python3` (already a repo dependency) rather than `jq`, so a missing
+`jq` cannot brick every command; the PowerShell hook uses native `ConvertFrom-Json`.
 
 **Rule A — block commit/push to `main`/`master`:**
 - `git push` with an explicit refspec to `main`/`master` from any branch
@@ -65,11 +68,11 @@ string is parsed with `python3` (already a repo dependency) rather than `jq`, so
 | Recognized blocked operation | **deny** (with reason) |
 | Recognized safe operation | allow |
 | Non-shell tool | allow |
-| Payload unparseable / `python3` absent | allow + stderr warning |
+| Payload unparseable (or `python3` absent on Unix) | allow + stderr warning |
 | Hook times out | allow (harness fail-open) |
 
-The unparseable/`python3`-absent case is a **deliberate** fail-open: denying every tool
-call on a parser glitch would brick the session, and branch protection is the real backstop.
+The unparseable case is a **deliberate** fail-open: denying every tool call on a parser
+glitch would brick the session, and branch protection is the real backstop.
 
 ## Relaxing enforcement
 
