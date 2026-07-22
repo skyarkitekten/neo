@@ -146,6 +146,7 @@ directory (which disappears entirely).
 | `feature-authoring` skill | `neo-core` | |
 | `task-authoring` skill | `neo-core` | |
 | Lifecycle hooks + `log-event.sh` | `neo-core` | |
+| `preToolUse` enforcement + `enforce-guardrails.sh`/`.ps1` | `neo-core` | Blocks push/commit to `main` and non-draft PRs, cross-platform — see `docs/guides/enforcement.md` |
 | `analyze_agent_logs.py` | `neo-core` | Analyzes logs the core hooks emit — ships with them |
 | **`master-control`** | **nothing** | Dev-time only |
 | Stack skills (React, xUnit, Bicep, …) | `neo-<stack>` | Mostly not yet authored |

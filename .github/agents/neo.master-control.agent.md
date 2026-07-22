@@ -132,11 +132,11 @@ Standing rules the agent always follows — _how to behave_, not _how to build t
 
 Shell commands that fire deterministically on lifecycle events — for _guaranteeing_ behavior a prompt only _requests_ (auto-format, block protected paths, run tests, log events). They run locally via stdin JSON, exit codes, and JSON output. This repo's example is `plugins/neo-core/.github/hooks/hooks.json` wiring `plugins/neo-core/.agent-hooks/log-event.sh`.
 
-**Copilot CLI events:** `sessionStart`, `userPromptSubmitted`, `preToolUse`, `postToolUse`, `agentStop`, `sessionEnd`, `preCompact`, `errorOccurred`. `preToolUse` can deny/modify tool args; `postToolUse` can modify results. For `preToolUse`, a non-zero exit other than `2` fails closed and denies the call; timeouts fail open.
+**Copilot CLI events:** `sessionStart`, `userPromptSubmitted`, `preToolUse`, `postToolUse`, `agentStop`, `sessionEnd`, `preCompact`, `errorOccurred`. `preToolUse` can deny/modify tool args; `postToolUse` can modify results. A command `preToolUse` hook expresses its verdict via a stdout JSON object (`{"permissionDecision":"deny","permissionDecisionReason":"…"}`); it is **fail-closed on error** — any non-zero exit, **including `2`**, denies the call even if stdout says allow — so exit `0` and let the JSON decide. Command-hook **timeouts fail open**. (This repo's example: `plugins/neo-core/.agent-hooks/enforce-guardrails.sh`; see `docs/guides/enforcement.md`.)
 
 **Do:** reach for a hook when a rule must be _enforced_, not merely suggested; match event to intent (`preToolUse` to validate/block before, `postToolUse` to react after, `agentStop` as a final gate); return structured output explaining a denial so the agent can adapt; keep hooks fast and idempotent; scope with matchers; fail safe and log.
 
-**Don't:** put secrets or destructive commands in hooks (they run automatically with the user's permissions — validate/quote inputs); forget that Copilot `preToolUse` denies on non-zero except `2` — set the exit code deliberately; duplicate what a linter or CI already enforces; block silently; write long-running or network-heavy hooks on hot events; assume shell state carries between invocations — use absolute paths.
+**Don't:** put secrets or destructive commands in hooks (they run automatically with the user's permissions — validate/quote inputs); forget that a command `preToolUse` hook is fail-closed on any non-zero exit **including `2`** (exit `0` and decide via the stdout `permissionDecision` JSON), while timeouts fail open; duplicate what a linter or CI already enforces; block silently; write long-running or network-heavy hooks on hot events; assume shell state carries between invocations — use absolute paths.
 
 ---
 
