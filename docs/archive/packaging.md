@@ -1,4 +1,12 @@
-# Packaging — the core/stack split
+# Packaging — the core/stack split (ARCHIVED)
+
+> **📦 Archived — historical context only.** This is the pre-#34 dual-harness packaging design.
+> Its migration plan has since been executed (the monorepo of plugins exists) and its Claude /
+> mirror content was dropped when neo went Copilot-only (#34). **The live design moved to
+> [`../reference/stack-plugin-contract.md`](../reference/stack-plugin-contract.md)** (tiers,
+> core/stack split, stack-skill discovery) and the normative mechanical contract is
+> [`../reference/plugin-contract.md`](../reference/plugin-contract.md). Read this file only to
+> understand how the split was originally reasoned out; do not treat it as current.
 
 How neo is decomposed into distributable plugins, what ships, what doesn't, and the contract
 between the core harness and the stack plugins that extend it.
@@ -12,7 +20,7 @@ changelog.
 > dual-manifest / mirror rule described below were dropped. Copilot is the canonical, sole
 > source; a Claude mirror may be *generated* from it later if there is demand. Read the Claude
 > and mirror passages below as historical design context, not the current contract. The live,
-> normative contract is [`plugin-contract.md`](./plugin-contract.md); the mirror check is now
+> normative contract is [`plugin-contract.md`](../reference/plugin-contract.md); the mirror check is now
 > `scripts/validate-plugins.py` (Copilot-only), not `validate-mirrors.py`.
 
 ---
@@ -43,7 +51,7 @@ project 6             neo-core + neo-rust
 ## The three tiers
 
 Every rule in the system belongs to exactly one tier. Most defects logged in
-[`todo.md`](../todo.md) are tier violations — a rule living one tier away from where it
+[`todo.md`](../../todo.md) are tier violations — a rule living one tier away from where it
 belongs.
 
 | Tier | Owns | Ships as | Varies by |

@@ -57,7 +57,7 @@ You do not select the mode, and your task shapes should not vary by it. Two thin
 - **Do not author a task whose only purpose is integration plumbing** — merging, flag creation, or branch mechanics. That is the mode's job, not a unit of work.
 - **Under Mode B, flag-gating is not a task.** If the project runs Mode B, gating is a standing implementation convention for every task under a feature, not a separate task you carve.
 
-If you cannot tell which mode is in effect and it changes what you would propose, **ask the BE** rather than assuming. See `docs/process-flow.md` § Integration modes.
+If you cannot tell which mode is in effect and it changes what you would propose, **ask the BE** rather than assuming. See `docs/concepts/process-flow.md` § Integration modes.
 
 ## Shape, not layers
 
