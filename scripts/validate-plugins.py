@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Validate every shipped neo plugin for the GitHub Copilot CLI harness.
 
-Neo ships for a single harness — GitHub Copilot CLI. (The Claude Code tree was
-dropped in issue #34; Copilot is the canonical, sole source. A Claude mirror may
-be regenerated later if there is demand.) This script makes the remaining
-invariants executable:
+Neo ships for a single harness — GitHub Copilot CLI.
+Copilot is the canonical, sole source. 
+
+This script makes the remaining invariants executable:
 
   * every plugin has its Copilot manifest AND hooks config, and both are valid JSON;
   * the root Copilot marketplace manifest is valid JSON;
@@ -17,12 +17,15 @@ Exit code 0 = all good, 1 = at least one violation. No third-party deps.
 
 from __future__ import annotations
 
+import itertools
 import json
 import re
 import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+
+_LIST_ITEM_RE = re.compile(r"^\s*-\s+")
 PLUGINS_DIR = REPO_ROOT / "plugins"
 
 errors: list[str] = []
@@ -68,14 +71,14 @@ def _fm_list(path: Path, key: str) -> list[str] | None:
             return [_unquote(x) for x in inner.split(",") if x.strip()]
         if rest:  # single scalar or comma-separated string value
             return [_unquote(x) for x in rest.split(",") if x.strip()]
-        # block list on following indented `- item` lines
-        items = []
-        for ln2 in fm[idx + 1 :]:
-            if re.match(r"\s*-\s+", ln2):
-                items.append(_unquote(re.sub(r"^\s*-\s+", "", ln2)))
-            elif ln2.strip() and not ln2.startswith((" ", "\t")):
-                break
-        return items
+        # Block list on following indented `- item` lines. Take lines while they're
+        # still part of the block (a list item, blank, or indented continuation),
+        # stopping at the next unindented, non-list line (a new top-level key).
+        block = itertools.takewhile(
+            lambda ln2: bool(_LIST_ITEM_RE.match(ln2)) or not ln2.strip() or ln2.startswith((" ", "\t")),
+            fm[idx + 1 :],
+        )
+        return [_unquote(_LIST_ITEM_RE.sub("", ln2)) for ln2 in block if _LIST_ITEM_RE.match(ln2)]
     return None
 
 
