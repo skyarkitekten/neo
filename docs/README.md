@@ -29,6 +29,9 @@ Then dip into `reference/` and `guides/` as the task demands.
   hierarchy of work.
 - [`process-flow.md`](./concepts/process-flow.md) — the loop boundaries: what artifact crosses,
   what gate it clears, who owns it, where it goes on failure. Integration modes A/B; the two fits.
+- [`framework-gap-analysis.md`](./concepts/framework-gap-analysis.md) — neo measured against the
+  OODA / PDCA / Double-Diamond framework: where it holds, where it's ahead, and the G1–G5 gaps
+  reconciled against the live backlog.
 
 ### `reference/` — the *must* (normative contracts)
 - [`plugin-contract.md`](./reference/plugin-contract.md) — the mechanical contract: monorepo
@@ -60,6 +63,7 @@ Then dip into `reference/` and `guides/` as the task demands.
 | Vocabulary / term definitions | [`glossary.md`](./glossary.md) |
 | What neo is, the loops, the core rule | [`concepts/architecture.md`](./concepts/architecture.md) |
 | Loop boundaries, integration modes, KPI settlement | [`concepts/process-flow.md`](./concepts/process-flow.md) |
+| Framework gap analysis (OODA–PDCA baseline, G1–G5) | [`concepts/framework-gap-analysis.md`](./concepts/framework-gap-analysis.md) |
 | Plugin folder shape, manifest fields, `neo-` naming | [`reference/plugin-contract.md`](./reference/plugin-contract.md) |
 | Core/stack split, tiers, stack-skill discovery | [`reference/stack-plugin-contract.md`](./reference/stack-plugin-contract.md) |
 | The Task handoff artifact | [`reference/task-handoff-schema.md`](./reference/task-handoff-schema.md) |

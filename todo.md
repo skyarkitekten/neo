@@ -33,6 +33,9 @@ Run `gh issue list --state open` for the live backlog. Current shape:
   `docs/concepts/process-flow.md` § "Falsifiability is a gate on KPI authoring" (metric /
   instrumentation / window / falsifier), but `SKILL.md` still treats KPIs as optional and
   says nothing about instrumentation-in-scope or the captive-population rule. Fold it in.
+  This is the back-door slice of **G2** in
+  `docs/concepts/framework-gap-analysis.md`; that doc also flags the untracked front-door
+  question (should Boundary 1 carry a testability gate?) plus gaps G1, G3–G5.
 - **master-control model names unverified.** `neo.master-control.agent.md` recommends
   specific models ("per the Copilot learning hub") that were never confirmed. Verify
   against current docs, or replace names with selection *criteria* so they can't go stale.
@@ -56,6 +59,8 @@ These aren't issues because their home is the owning doc; listed here so they're
   `docs/reference/stack-plugin-contract.md` (project tier) and its "Who authors the consuming repo's `AGENTS.md`?"
   open question.
 - KPI falsifiability gate (design) → `docs/concepts/process-flow.md` § "Falsifiability is a gate…".
+- Framework gap analysis (OODA–PDCA baseline; gaps G1–G5 vs the backlog; strategic-reopen,
+  front-door-gate, and single-BE open questions) → `docs/concepts/framework-gap-analysis.md`.
 - Manual open items (pin skill names, trim `jq` field paths, confirm hook schema) →
   `docs/guides/neo-user-manual-outline.md` § 8.
 
