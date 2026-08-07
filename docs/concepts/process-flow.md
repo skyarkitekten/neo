@@ -87,6 +87,14 @@ the writer, re-reviewed, repeated until approved. This is an *internal* loop and
 cross the boundary. Only a stalled loop (the same finding twice with no progress) escalates
 to a human.
 
+**Commits.** The coding loop owns the commit step: `neo-code-writer` commits each completed
+unit to the feature branch once build/lint/tests are green, one commit per unit, in
+[Conventional Commits](https://www.conventionalcommits.org/) form (`<type>[scope]: <desc>`).
+These per-unit commits are what later squash to **one commit, one feature** (see
+[Mode A](#mode-a--feature-branch-squash-to-main-default) below). Conventional Commits is the
+required format; a consuming repo may define its own scopes and additional types in its
+`AGENTS.md`, but stays within Conventional Commits.
+
 **The fan-in.** One PR closes one task. **Verification is per-feature.** So crossing this
 boundary with a single PR is necessary but not sufficient — the verification loop cannot start
 until *every* task under the parent feature has landed. What performs that assembly is the
