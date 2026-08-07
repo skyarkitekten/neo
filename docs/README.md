@@ -1,75 +1,54 @@
 # neo docs
 
-The design record for the **Neo Agentic SDLC**. Docs are grouped by *genre* — concept, reference,
-guide, archive — so you can tell at a glance whether a file explains a design (**why**), fixes a
-contract (**must**), or walks you through a task (**how**).
+The design record and manual for the **Neo Agentic SDLC**. These docs serve two audiences — people
+who **use** neo and people who **contribute** to it. Pick a door below. The main docs speak to
+users; contributor material lives in one subtree so you never have to wade through it to get work
+done.
 
-One rule holds across all of them: **define a thing once, in its owning doc, and link to it.**
-Don't restate. The owner table below says who owns what.
+> **Status key:** `[live]` — built today · `[target]` — end-state design, not yet built. neo ships
+> more design than code right now; the markers keep the docs honest. See
+> [getting-started.md § What''s live vs. target](./getting-started.md#whats-live-vs-target).
 
-## Start here
+## Shared core — read first, whichever door you take
 
-New to neo? Read in this order:
+- [`glossary.md`](./glossary.md) — the canonical vocabulary. Everything assumes these terms.
+- [`concepts/architecture.md`](./concepts/architecture.md) — what neo is: task = spec, the three
+  loops, the verify/validate rule.
+- [`concepts/process-flow.md`](./concepts/process-flow.md) — the loop boundaries: what artifact
+  crosses each gate, who owns it, integration modes, KPI settlement.
 
-1. [`glossary.md`](./glossary.md) — the vocabulary. Everything else assumes these terms.
-2. [`concepts/architecture.md`](./concepts/architecture.md) — what neo is: spec-at-task-grain,
-   the verify/validate rule, the three loops.
-3. [`concepts/process-flow.md`](./concepts/process-flow.md) — how work crosses the loop
-   boundaries, plus integration modes and KPI settlement.
+## 🚪 I want to USE neo
 
-Then dip into `reference/` and `guides/` as the task demands.
+Start at **[`getting-started.md`](./getting-started.md)** — what neo is, what''s live, and the
+quickest path in. Then:
 
-## Map
+- [`guides/installing-neo.md`](./guides/installing-neo.md) — install `neo-core`, write your project''s
+  `AGENTS.md`, pick an integration mode, add a stack.
+- [`guides/using-neo.md`](./guides/using-neo.md) — invoke the crew and work the Specification loop
+  with the Business Engineer.
+- [`guides/filing-work.md`](./guides/filing-work.md) — what a well-formed Feature and Task look like
+  before they enter the pipeline.
 
-### Vocabulary
-- [`glossary.md`](./glossary.md) — canonical terms. Shared by every doc, agent, and skill.
+## 🔧 I want to work ON neo
 
-### `concepts/` — the *why* (design & rationale)
-- [`architecture.md`](./concepts/architecture.md) — the core bet (task = spec), the loops, the
-  hierarchy of work.
-- [`process-flow.md`](./concepts/process-flow.md) — the loop boundaries: what artifact crosses,
-  what gate it clears, who owns it, where it goes on failure. Integration modes A/B; the two fits.
-- [`framework-gap-analysis.md`](./concepts/framework-gap-analysis.md) — neo measured against the
-  OODA / PDCA / Double-Diamond framework: where it holds, where it's ahead, and the G1–G5 gaps
-  reconciled against the live backlog.
+Start at **[`contributing/README.md`](./contributing/README.md)** — the contributor hub. It covers:
 
-### `reference/` — the *must* (normative contracts)
-- [`plugin-contract.md`](./reference/plugin-contract.md) — the mechanical contract: monorepo
-  layout, per-plugin folder shape, manifest fields, `neo-` naming.
-- [`stack-plugin-contract.md`](./reference/stack-plugin-contract.md) — the core/stack split: the
-  three tiers, the late-binding rule, and the stack-skill discovery format.
-- [`task-handoff-schema.md`](./reference/task-handoff-schema.md) — the **Task** artifact that
-  crosses Boundary 1: its carrier (a Task *is* the issue/story), fields, and serialization.
+- **Contracts** (`contributing/reference/`) — plugin shape, core/stack split, task-handoff schema,
+  hook contract.
+- **Authoring & operations** (`contributing/guides/`) — agent authoring, observability,
+  enforcement.
+- **Design rationale** (`contributing/design/`) — the framework gap analysis.
 
-### `guides/` — the *how* (operational)
-- [`observability.md`](./guides/observability.md) — install the logging hooks and read the
-  per-agent / per-run stats to tune prompts.
-- [`enforcement.md`](./guides/enforcement.md) — the `preToolUse` enforcement hooks that block
-  commit/push to `main` and non-draft PRs; their fail-closed contract and how to relax them.
-- [`agent-authoring-reference.md`](./guides/agent-authoring-reference.md) — the dev-time reference
-  for the `master-control` forge: frontmatter fields, agent vs skill vs instruction vs hook.
-- [`neo-user-manual-outline.md`](./guides/neo-user-manual-outline.md) — skeleton for the future
-  end-user manual (stub, not yet fleshed out).
+## The one rule (both doors)
 
-### `archive/` — superseded, kept for history
-- [`packaging.md`](./archive/packaging.md) — the pre-#34 dual-harness packaging design. Its live
-  content moved to [`stack-plugin-contract.md`](./reference/stack-plugin-contract.md); read it only
-  for historical context.
-
-## Who owns what
+**Define a thing once, in its owning doc, and link to it.** Don''t restate. Each hub carries the
+owner table for its half; the shared-core owners are:
 
 | Topic | Owner |
 | --- | --- |
 | Vocabulary / term definitions | [`glossary.md`](./glossary.md) |
 | What neo is, the loops, the core rule | [`concepts/architecture.md`](./concepts/architecture.md) |
 | Loop boundaries, integration modes, KPI settlement | [`concepts/process-flow.md`](./concepts/process-flow.md) |
-| Framework gap analysis (OODA–PDCA baseline, G1–G5) | [`concepts/framework-gap-analysis.md`](./concepts/framework-gap-analysis.md) |
-| Plugin folder shape, manifest fields, `neo-` naming | [`reference/plugin-contract.md`](./reference/plugin-contract.md) |
-| Core/stack split, tiers, stack-skill discovery | [`reference/stack-plugin-contract.md`](./reference/stack-plugin-contract.md) |
-| The Task handoff artifact | [`reference/task-handoff-schema.md`](./reference/task-handoff-schema.md) |
-| Logging & prompt tuning | [`guides/observability.md`](./guides/observability.md) |
-| `preToolUse` enforcement (block-on-main, draft-PR-only) | [`guides/enforcement.md`](./guides/enforcement.md) |
-| Authoring agents / skills / hooks | [`guides/agent-authoring-reference.md`](./guides/agent-authoring-reference.md) |
 
 Repo-level layout, checks, and guardrails for working on neo itself live in the root
 [`AGENTS.md`](../AGENTS.md), not here. None of `docs/` ships in a plugin.

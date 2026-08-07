@@ -8,6 +8,12 @@ This script makes the remaining invariants executable:
 
   * every plugin has its Copilot manifest AND hooks config, and both are valid JSON;
   * the root Copilot marketplace manifest is valid JSON;
+  * every plugin's hooks.json conforms to the neo hook-manifest contract
+    (scripts/linting/schemas/hook-manifest.schema.json): version 1, known event
+    names, well-formed command entries, and the two neo-specific rules — a
+    `powershell` command must not reference the bare `${PLUGIN_ROOT}` placeholder
+    (it must use `$env:PLUGIN_ROOT`), and no event may be declared in both its
+    CLI-lowercase and PascalCase form (which would fire it twice);
   * every Copilot agent's `agents:` allowlist references a real agent `name:`;
   * any agent that delegates (non-empty `agents:`) also grants the `agent`/`Task`
     delegation tool in its `tools:` allowlist.
@@ -105,6 +111,94 @@ def check_json(path: Path) -> None:
         errors.append(f"invalid JSON: {path.relative_to(REPO_ROOT)} — {exc}")
 
 
+# Copilot CLI lifecycle event names, in their canonical camelCase form. VS Code
+# converts each to PascalCase at load time, so declaring both forms fires twice.
+HOOK_EVENTS = {
+    "sessionStart",
+    "sessionEnd",
+    "userPromptSubmit",
+    "userPromptSubmitted",
+    "preToolUse",
+    "postToolUse",
+    "preCompact",
+    "subagentStart",
+    "subagentStop",
+    "stop",
+    "agentStop",
+    "errorOccurred",
+}
+# Per-platform command keys allowed on a hook entry, plus the cross-platform one.
+HOOK_COMMAND_KEYS = {"command", "bash", "powershell", "windows", "linux", "osx"}
+HOOK_ENTRY_KEYS = HOOK_COMMAND_KEYS | {"type", "cwd", "env", "timeout", "timeoutSec"}
+# ${PLUGIN_ROOT} (and ${...} generally) is PowerShell's own variable syntax and
+# expands to an empty string; the env var must be read as $env:PLUGIN_ROOT.
+_PS_BAD_PLUGIN_ROOT = re.compile(r"\$\{\s*PLUGIN_ROOT\s*\}")
+
+
+def check_hooks_manifest(path: Path) -> None:
+    """Validate a plugin hooks.json against the neo hook-manifest contract.
+
+    Enforces the schema's structural invariants plus two neo-specific rules that
+    a plain JSON parse can't catch: no bare ${PLUGIN_ROOT} inside a `powershell`
+    command, and no event declared in both CLI-lowercase and PascalCase form.
+    """
+    rel = path.relative_to(REPO_ROOT)
+    try:
+        data = json.loads(path.read_text())
+    except (FileNotFoundError, json.JSONDecodeError):
+        return  # already reported by check_json
+
+    def err(msg: str) -> None:
+        errors.append(f"[hooks] {rel}: {msg}")
+
+    if not isinstance(data, dict):
+        err("manifest must be a JSON object")
+        return
+    extra = set(data) - {"version", "description", "hooks"}
+    if extra:
+        err(f"unknown top-level key(s): {sorted(extra)}")
+    if data.get("version") != 1:
+        err(f"version must be 1, got {data.get('version')!r}")
+    hooks = data.get("hooks")
+    if not isinstance(hooks, dict) or not hooks:
+        err("`hooks` must be a non-empty object")
+        return
+
+    # Detect events declared in both camelCase and PascalCase (double-fire).
+    seen_lower: dict[str, str] = {}
+    for event, entries in hooks.items():
+        low = event[:1].lower() + event[1:] if event else event
+        if low in seen_lower and seen_lower[low] != event:
+            err(f"event '{event}' duplicates '{seen_lower[low]}' (would fire twice)")
+        seen_lower[low] = event
+        if low not in HOOK_EVENTS:
+            err(f"unknown event name '{event}'")
+        if not isinstance(entries, list) or not entries:
+            err(f"event '{event}' must map to a non-empty array")
+            continue
+        for i, entry in enumerate(entries):
+            _check_hook_entry(entry, f"{event}[{i}]", err)
+
+
+def _check_hook_entry(entry: object, where: str, err) -> None:
+    if not isinstance(entry, dict):
+        err(f"{where}: entry must be an object")
+        return
+    unknown = set(entry) - HOOK_ENTRY_KEYS
+    if unknown:
+        err(f"{where}: unknown key(s) {sorted(unknown)}")
+    if entry.get("type") != "command":
+        err(f"{where}: type must be \"command\"")
+    if not (set(entry) & HOOK_COMMAND_KEYS):
+        err(f"{where}: needs at least one command key {sorted(HOOK_COMMAND_KEYS)}")
+    ps = entry.get("powershell")
+    if isinstance(ps, str) and _PS_BAD_PLUGIN_ROOT.search(ps):
+        err(
+            f"{where}: powershell command uses bare ${{PLUGIN_ROOT}}, which PowerShell "
+            f"expands to empty — use $env:PLUGIN_ROOT instead"
+        )
+
+
 def copilot_agent_files(plugin: Path) -> list[Path]:
     d = plugin / ".github" / "agents"
     return sorted(d.glob("neo.*.agent.md")) if d.is_dir() else []
@@ -115,7 +209,9 @@ def check_plugin(plugin: Path) -> None:
 
     # 1. Copilot manifest + hooks config must exist and parse.
     check_json(plugin / ".github" / "plugin" / "plugin.json")
-    check_json(plugin / ".github" / "hooks" / "hooks.json")
+    hooks_json = plugin / ".github" / "hooks" / "hooks.json"
+    check_json(hooks_json)
+    check_hooks_manifest(hooks_json)
 
     # 2. Every Copilot agent's `agents:` allowlist must reference a real name:.
     #    Copilot resolves delegated agents by their `name:` field, not filename,

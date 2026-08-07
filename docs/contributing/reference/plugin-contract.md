@@ -1,6 +1,6 @@
 # Plugin Contract Spec
 
-Terms in **bold** are defined in the [glossary](../glossary.md).
+Terms in **bold** are defined in the [glossary](../../glossary.md).
 
 This is the **normative** contract for packaging this repo as plugins for **GitHub Copilot
 CLI** from one source tree. It defines the monorepo layout, per-plugin folder shape, manifest
@@ -127,6 +127,10 @@ Copilot CLI reads the root `.github/plugin/marketplace.json` → resolves each p
 
 Every shipped plugin must carry its Copilot `plugin.json` and `hooks.json`; a missing or
 invalid manifest breaks the plugin. `scripts/validate-plugins.py` enforces that both parse.
+
+The **hook manifest + script contract** — the schema, the per-shell `${PLUGIN_ROOT}` rule
+(`$env:PLUGIN_ROOT` in PowerShell), and the stdin/`{"continue":true}` script contract — is
+owned by [`hook-contract.md`](./hook-contract.md).
 
 ### 3.1 What must stay consistent
 
