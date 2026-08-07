@@ -90,9 +90,10 @@ to a human.
 **Commits.** The coding loop owns the commit step: `neo-code-writer` commits each completed
 unit to the feature branch once build/lint/tests are green, one commit per unit, in
 [Conventional Commits](https://www.conventionalcommits.org/) form (`<type>[scope]: <desc>`).
-These per-task commits are what later squash to **one commit, one feature** (see
-[Mode A](#mode-a--feature-branch-squash-to-main-default) below). Consuming repos document their own
-commit-message conventions in their `AGENTS.md`; Conventional Commits is the neo default.
+These per-unit commits are what later squash to **one commit, one feature** (see
+[Mode A](#mode-a--feature-branch-squash-to-main-default) below). Conventional Commits is the
+required format; a consuming repo may define its own scopes and additional types in its
+`AGENTS.md`, but stays within Conventional Commits.
 
 **The fan-in.** One PR closes one task. **Verification is per-feature.** So crossing this
 boundary with a single PR is necessary but not sufficient — the verification loop cannot start

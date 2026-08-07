@@ -99,6 +99,7 @@ python3 scripts/validate-plugins.py
 - The **consuming** repo also needs its own `AGENTS.md` (commands, layout, style,
   integration mode, and **commit-message conventions**) — that is the user's artifact, distinct
   from this one, which describes how to work on neo itself. The coding loop commits one commit
-  per unit in [Conventional Commits](https://www.conventionalcommits.org/) form by default (owned
-  by `neo.code-writer.agent.md`; see `docs/concepts/process-flow.md` § Boundary 2); a consuming
-  repo can document a different convention in its own `AGENTS.md`.
+  per unit in [Conventional Commits](https://www.conventionalcommits.org/) form (owned by
+  `neo.code-writer.agent.md`; see `docs/concepts/process-flow.md` § Boundary 2). A consuming repo
+  may define its own scopes and extra types in its `AGENTS.md`, but stays within Conventional
+  Commits — it is the required format, not just a default.

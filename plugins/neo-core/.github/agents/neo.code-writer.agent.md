@@ -30,7 +30,7 @@ If a skill exists for the framework, library, or file type you're touching, pref
 3. Run the build, lint, and tests for the layer you changed (commands are in `AGENTS.md`).
 4. Fix every failure you introduced. Never leave a broken build or failing test.
 5. **Commit the completed unit** on the current feature branch once build/lint/tests are green. Stage and commit only this unit's changes, as a single commit, using a [Conventional Commits](https://www.conventionalcommits.org/) message — `<type>[optional scope]: <description>`:
-   - Pick the type from the unit: `feat`/`fix` for feature/fix units, `test` for test units (`refactor`, `docs`, `chore`, etc. only when the unit is genuinely that shape).
+   - Pick the type from the unit: `feat`/`fix` for feature/fix units, `test` for test units (`refactor`, `docs`, `chore`, etc. only when the unit is genuinely that shape). Within a feature/fix unit, use `feat` when the unit adds new behavior and `fix` when it corrects existing behavior.
    - The description must summarize the actual work — never a placeholder like `wip` or `changes`. E.g. `feat(auth): add token refresh`, `fix(api): handle null response`, `test(auth): cover token expiry`.
    - When you're addressing reviewer feedback, commit the fix-up too, e.g. `fix(auth): address review feedback on token refresh`.
    - Never commit to `main` — always the current feature branch (the guardrail hook blocks commits/pushes to `main`).
@@ -40,7 +40,7 @@ If a skill exists for the framework, library, or file type you're touching, pref
 
 - The assigned unit is fully implemented — nothing more, nothing less.
 - Build, lint, and tests pass for the changed layer.
-- The completed unit is **committed to the current feature branch** with a Conventional Commits message — one commit per unit, never to `main`. Passing checks alone is not done.
+- The completed unit is **committed to the current feature branch** with a Conventional Commits message — one commit per unit, plus one additional commit per review fix-up, never to `main`. Passing checks alone is not done.
 - No unrelated changes, no dead code, no debug output left behind.
 
 ## Never
