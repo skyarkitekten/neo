@@ -1,6 +1,6 @@
 # Stack Plugin Contract — the core/stack split
 
-Terms in **bold** are defined in the [glossary](../glossary.md).
+Terms in **bold** are defined in the [glossary](../../glossary.md).
 
 This is the **normative** design for how neo is decomposed into distributable plugins: what
 `neo-core` owns, what a stack plugin (`neo-react`, `neo-dotnet`, …) adds, and the contract
@@ -15,7 +15,7 @@ mechanical facts (paths, manifest keys) are `plugin-contract.md`'s; the design r
 > **Copilot-only (issue #34).** neo ships for GitHub Copilot CLI only. The dual-harness design
 > that first motivated this split — a Claude Code mirror, dual manifests, a `validate-mirrors.py`
 > check — was dropped. The pre-#34 reasoning, including the executed migration plan, is preserved
-> as historical context in [`../archive/packaging.md`](../archive/packaging.md). This document is
+> as historical context in [`../archive/packaging.md`](../../archive/packaging.md). This document is
 > the live contract.
 
 ---

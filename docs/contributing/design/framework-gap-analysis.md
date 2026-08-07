@@ -7,9 +7,9 @@ and where does it still leak?** It memorializes an extended design dialog that b
 against a process framework built on OODA, PDCA, and the Double Diamond, so the conclusions are
 findable rather than lost in chat history.
 
-Terms in **bold** are defined in the [glossary](../glossary.md). The loops are described in
-[architecture.md](./architecture.md); the loop *boundaries*, the **two fits**, and the
-captive-population rule are owned by [process-flow.md](./process-flow.md) — this document links
+Terms in **bold** are defined in the [glossary](../../glossary.md). The loops are described in
+[architecture.md](../../concepts/architecture.md); the loop *boundaries*, the **two fits**, and the
+captive-population rule are owned by [process-flow.md](../../concepts/process-flow.md) — this document links
 to them rather than restating them.
 
 **Scope.** This is a *concept* doc — the *why*, and a snapshot of a moving target. It is not a
@@ -64,30 +64,30 @@ principles. They are the measuring stick the rest of this doc applies to neo.
 
 Against principle 1 ("leaks live in soft handoffs"), neo is sharper than the dialog was: it
 already names the coupling artifact and exit criterion at every seam. See the boundary table in
-[process-flow.md](./process-flow.md#the-chain) — artifact / gate / owner / on-reject for each of
+[process-flow.md](../../concepts/process-flow.md#the-chain) — artifact / gate / owner / on-reject for each of
 the three loop boundaries. Specifically:
 
 - **Boundary 1 is a hard human gate.** The **BE** owns Specification → Coding, because "a bad
   split poisons everything downstream, so no agent may open it alone" — principle 1 made
-  concrete. See [process-flow.md § Boundary 1](./process-flow.md#boundary-1--specification--coding).
+  concrete. See [process-flow.md § Boundary 1](../../concepts/process-flow.md#boundary-1--specification--coding).
 - **The four-field kill condition already exists** — for KPIs. *Metric / instrumentation /
   window / falsifier* is nearly verbatim principle 3's testability gate. See
-  [process-flow.md § Falsifiability is a gate on KPI authoring](./process-flow.md#falsifiability-is-a-gate-on-kpi-authoring).
+  [process-flow.md § Falsifiability is a gate on KPI authoring](../../concepts/process-flow.md#falsifiability-is-a-gate-on-kpi-authoring).
 - **verify / validate is split by unit** — humans verify **features**, machines validate
-  **tasks**. See [architecture.md § The core rule](./architecture.md#the-core-rule).
+  **tasks**. See [architecture.md § The core rule](../../concepts/architecture.md#the-core-rule).
 
 ## Where neo is *ahead* of the framework (do not regress)
 
 - **The two fits.** Verification (**problem–solution fit**; human; non-prod; blocking) is a
   distinct check from KPI settlement (**value fit**; telemetry; prod; non-blocking). This is
   more correct than collapsing both into one "Falsify" step, because a feature can pass one and
-  fail the other. Owned by [process-flow.md § The two fits](./process-flow.md#the-two-fits).
+  fail the other. Owned by [process-flow.md § The two fits](../../concepts/process-flow.md#the-two-fits).
 - **The captive-population rule.** For internal LOB, engagement metrics (DAU, adoption, session
   length) are *inadmissible* — under captivity they measure compulsion, not value; only outcome
   metrics (cycle time, error/rework rate, cost per transaction, tickets, manual touches
   eliminated) are admissible, and they need a deliberate baseline/holdout designed at
   feature-definition time. Owned by
-  [process-flow.md § Internal line-of-business portfolios](./process-flow.md#internal-line-of-business-portfolios).
+  [process-flow.md § Internal line-of-business portfolios](../../concepts/process-flow.md#internal-line-of-business-portfolios).
 - **The verify/validate cut** is cleaner than the dialog's single gate, per the same reasoning.
 
 These are neo's contributions *back* to the framework. Any future work on G1–G5 must preserve
@@ -99,7 +99,7 @@ them.
 
 Each gap is a place the dialog is ahead of neo. Coverage is reconciled against the open GitHub
 backlog (`gh issue list --state open`) and the untracked loose ends in
-[`todo.md`](../../todo.md).
+[`todo.md`](../../../todo.md).
 
 | Gap | Where it bites | Tracked by | Coverage | What's missing |
 | --- | --- | --- | --- | --- |
@@ -115,7 +115,7 @@ backlog (`gh issue list --state open`) and the untracked loose ends in
 (the `—` row), with gate "Segment has a business justification," `[live]`. So this is a
 *weak-gate* problem, not a missing box: a "business justification" is not a binding-constraint
 test. The `feature-agent` and `neo-feature-authoring` skill are **live** (per
-[architecture.md § Status](./architecture.md#status)) — note that [glossary.md](../glossary.md)
+[architecture.md § Status](../../concepts/architecture.md#status)) — note that [glossary.md](../../glossary.md)
 still marks "Feature Skill / Feature Agent `[target]`", a stale inconsistency worth fixing. This
 is the ~50% leak region from principle 2, and it currently has no discipline attached to it.
 
@@ -131,7 +131,7 @@ this doc flags it for a decision, it does not presume one.
 **G3 — verification is confirmation-framed.** Boundary 3 asks "does the feature behave as
 expected?" Principle 6 says the terminal check should be adversarial. neo mitigates strongly with
 the mis-built / mis-specified / both triage
-([process-flow.md § Boundary 3](./process-flow.md#boundary-3--verification--deployment)), which
+([process-flow.md § Boundary 3](../../concepts/process-flow.md#boundary-3--verification--deployment)), which
 forces a diagnosis rather than a reflexive "write more code." But the default question and the
 word "verify" still lean confirmatory.
 
@@ -142,7 +142,7 @@ this gap: **what signal earns a strategic reopen?**
 
 **G5 — single-BE gate.** Principle 7 wants a team-held gate with single-member veto. neo
 deliberately uses a single human (the BE), which is the same design that removes the hand-off BA
-(see [glossary.md § Roles](../glossary.md#roles)). This tension is likely **by design**, not a
+(see [glossary.md § Roles](../../glossary.md#roles)). This tension is likely **by design**, not a
 defect — recorded here as an open question rather than a gap to close.
 
 ---
@@ -162,8 +162,8 @@ Carried forward from the dialog; none are settled:
 
 ## Related
 
-- [process-flow.md](./process-flow.md) — owns the boundaries, the two fits, the KPI falsifiability
+- [process-flow.md](../../concepts/process-flow.md) — owns the boundaries, the two fits, the KPI falsifiability
   gate, and the captive-population rule this analysis measures against.
-- [architecture.md](./architecture.md) — owns the loops and the verify/validate core rule.
-- [`todo.md`](../../todo.md) — the untracked loose ends, including the feature-authoring
+- [architecture.md](../../concepts/architecture.md) — owns the loops and the verify/validate core rule.
+- [`todo.md`](../../../todo.md) — the untracked loose ends, including the feature-authoring
   falsifiability fold that partially covers G2.

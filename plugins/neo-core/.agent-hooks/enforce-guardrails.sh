@@ -25,7 +25,7 @@
 # Relaxation: set NEO_ENFORCE_GUARDRAILS=0 (or "off"/"false") to disable. Other
 # levers live at the harness layer (disableAllHooks, settings.local.json,
 # --config-dir, prompt-mode GITHUB_COPILOT_PROMPT_MODE_REPO_HOOKS) — see
-# docs/enforcement.md.
+# docs/contributing/guides/enforcement.md.
 
 set -o pipefail
 

@@ -8,7 +8,7 @@
     Rule B - agents open DRAFT pull requests only.
 
 .NOTES
-  Contract (see docs/enforcement.md and GitHub's Copilot hooks reference):
+  Contract (see docs/contributing/guides/enforcement.md and GitHub's Copilot hooks reference):
     * Input: JSON on stdin - { sessionId, timestamp, cwd, toolName, toolArgs }
       (PascalCase PreToolUse uses tool_name / tool_input; both are read).
     * Output: a single JSON object on stdout describing the decision:
@@ -24,7 +24,7 @@
   tool call and bricking the session. Server-side branch protection is the real backstop.
 
   Relaxation: set NEO_ENFORCE_GUARDRAILS=0 (or "off"/"false"/"no") to disable. Other levers
-  live at the harness layer - see docs/enforcement.md.
+  live at the harness layer - see docs/contributing/guides/enforcement.md.
 #>
 
 $ErrorActionPreference = 'Stop'

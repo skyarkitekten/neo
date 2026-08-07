@@ -23,17 +23,21 @@ holds manifests, docs, and dev-time-only tooling.
   `plugins/neo-core`).
 - `scripts/validate-plugins.py` — CI check that every plugin's Copilot manifest, hooks, and
   `agents:` allowlists are valid.
-- `docs/` — the design record, grouped by genre (see `docs/README.md` for the map). Not shipped.
+- `docs/` — the design record and manual. Two doors: user docs at the top level
+  (`getting-started.md`, `guides/`), contributor docs under `docs/contributing/`. See
+  `docs/README.md`. Not shipped.
 
 ## Start
 
-Invoke the **technical-engineer** with an issue/story reference. See `docs/concepts/process-flow.md`
-for the workflow and `docs/guides/observability.md` for the logging/tuning setup.
+New here? Start at [`docs/getting-started.md`](docs/getting-started.md). To run the crew, invoke the
+**technical-engineer** with an issue/story reference; see
+[`docs/guides/using-neo.md`](docs/guides/using-neo.md) for the workflow and
+`docs/concepts/process-flow.md` for the loop boundaries.
 
 ## Install as a plugin
 
 The plugin is packaged for GitHub Copilot CLI. See
-[`docs/reference/plugin-contract.md`](docs/reference/plugin-contract.md) for the normative contract — folder
+[`docs/contributing/reference/plugin-contract.md`](docs/contributing/reference/plugin-contract.md) for the normative contract — folder
 shape, required manifest fields, and `neo-` naming. Copilot reads
 `.github/plugin/marketplace.json` → the `neo-core` plugin under `plugins/neo-core/` → agents
 from `.github/agents/` (`*.agent.md`), skills from `.github/skills/`, hooks from

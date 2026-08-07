@@ -3,9 +3,9 @@
 > **📦 Archived — historical context only.** This is the pre-#34 dual-harness packaging design.
 > Its migration plan has since been executed (the monorepo of plugins exists) and its Claude /
 > mirror content was dropped when neo went Copilot-only (#34). **The live design moved to
-> [`../reference/stack-plugin-contract.md`](../reference/stack-plugin-contract.md)** (tiers,
+> [`../reference/stack-plugin-contract.md`](../contributing/reference/stack-plugin-contract.md)** (tiers,
 > core/stack split, stack-skill discovery) and the normative mechanical contract is
-> [`../reference/plugin-contract.md`](../reference/plugin-contract.md). Read this file only to
+> [`../reference/plugin-contract.md`](../contributing/reference/plugin-contract.md). Read this file only to
 > understand how the split was originally reasoned out; do not treat it as current.
 
 How neo is decomposed into distributable plugins, what ships, what doesn't, and the contract
@@ -20,7 +20,7 @@ changelog.
 > dual-manifest / mirror rule described below were dropped. Copilot is the canonical, sole
 > source; a Claude mirror may be *generated* from it later if there is demand. Read the Claude
 > and mirror passages below as historical design context, not the current contract. The live,
-> normative contract is [`plugin-contract.md`](../reference/plugin-contract.md); the mirror check is now
+> normative contract is [`plugin-contract.md`](../contributing/reference/plugin-contract.md); the mirror check is now
 > `scripts/validate-plugins.py` (Copilot-only), not `validate-mirrors.py`.
 
 ---
@@ -146,7 +146,7 @@ directory (which disappears entirely).
 | `feature-authoring` skill | `neo-core` | |
 | `task-authoring` skill | `neo-core` | |
 | Lifecycle hooks + `log-event.sh` | `neo-core` | |
-| `preToolUse` enforcement + `enforce-guardrails.sh`/`.ps1` | `neo-core` | Blocks push/commit to `main` and non-draft PRs, cross-platform — see `docs/guides/enforcement.md` |
+| `preToolUse` enforcement + `enforce-guardrails.sh`/`.ps1` | `neo-core` | Blocks push/commit to `main` and non-draft PRs, cross-platform — see `docs/contributing/guides/enforcement.md` |
 | `analyze_agent_logs.py` | `neo-core` | Analyzes logs the core hooks emit — ships with them |
 | **`master-control`** | **nothing** | Dev-time only |
 | Stack skills (React, xUnit, Bicep, …) | `neo-<stack>` | Mostly not yet authored |
