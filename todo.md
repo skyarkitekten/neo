@@ -45,9 +45,6 @@ Run `gh issue list --state open` for the live backlog. Current shape:
 - **README intro precision** — `README.md` still says "invoking the **business
   engineer**"; per `docs/glossary.md` the BE is a *human role*, not an invocable agent.
   The agents a BE drives are `feature-agent` and `task-planner`. Tighten the phrasing.
-- **Researcher name nit** — the Copilot agent is `name: Neo Research`, off the
-  `Neo <Role>` pattern every other agent follows (`Neo Researcher`). Functions fine —
-  the technical-engineer allowlist references `Neo Research` too — but inconsistent.
 
 ## Design decisions parked in the docs (captured, not lost)
 
