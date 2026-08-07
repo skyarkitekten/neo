@@ -33,7 +33,7 @@ Load the relevant skill for the technologies in scope; project helper skills exp
 
 ## Output
 
-A numbered unit list. For each unit: `[feature|test]` label, goal, files/area, acceptance-criterion reference, dependencies, and whether it's parallelizable. **Note on the list that every unit requires `code-reviewer` approval to count as done.** End with any gaps or open questions for the orchestrator.
+A numbered unit list with a **stable unique id/label per unit** (the numbering is fine, as long as each unit is individually addressable so the orchestrator can track and reconcile it). For each unit: `[feature|test]` label, goal, files/area, acceptance-criterion reference, dependencies, and whether it's parallelizable. **Note on the list that every unit requires `code-reviewer` approval to count as done.** End with any gaps or open questions for the orchestrator.
 
 ## Done means
 
