@@ -22,13 +22,13 @@ safe-outputs:
 
 Audit this repository's documentation for drift against its actual structure and its own normative contract.
 
-1. Read `docs/reference/plugin-contract.md` — this is the **normative** source of truth for plugin folder shape, manifest fields, and naming (`neo.<role>.agent.md` files, `name: Neo <Role>` frontmatter, `neo-` skill prefixes).
+1. Read `docs/contributing/reference/plugin-contract.md` — this is the **normative** source of truth for plugin folder shape, manifest fields, and naming (`neo.<role>.agent.md` files, `name: Neo <Role>` frontmatter, `neo-` skill prefixes).
 2. Enumerate the actual contents of `plugins/*/` (agents, skills, plugin manifest, hooks config) using shell commands as needed.
 3. Compare the actual layout against the contract and flag:
    - Agent files that don't follow `neo.<role>.agent.md` naming, or whose `name:` frontmatter doesn't match `Neo <Role>`.
    - Skills that aren't `neo-` prefixed (excluding explicitly vendored/upstream skills that keep their upstream name).
    - Missing or malformed required fields in `plugin.json` / `hooks.json`.
-4. Cross-check top-level docs — `AGENTS.md`, `README.md`, `docs/README.md`, `docs/glossary.md`, `docs/concepts/*.md`, `docs/reference/stack-plugin-contract.md` — for statements that contradict the current repo layout, including:
+4. Cross-check top-level docs — `AGENTS.md`, `README.md`, `docs/README.md`, `docs/getting-started.md`, `docs/glossary.md`, `docs/concepts/*.md`, `docs/guides/*.md`, `docs/contributing/README.md`, `docs/contributing/reference/stack-plugin-contract.md` — for statements that contradict the current repo layout, including:
    - References to removed trees (`.claude/`, `.claude-plugin/`, or dev-time root `agents/`/`skills/` described as shipped).
    - File or folder paths mentioned in docs that no longer exist in the repo.
    - Internal markdown links (`[text](path)`) that point to files that don't exist.

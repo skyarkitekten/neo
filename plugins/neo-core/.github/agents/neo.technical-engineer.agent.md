@@ -39,7 +39,7 @@ You take one spec — a GitHub Issue or Azure DevOps story — and drive it to a
 
 - **Create a feature branch** off the default branch before any change — e.g. `feat/<issue-id>-<short-name>` or `fix/<issue-id>-<short-name>`. All work lands there; never work on or commit to `main`.
 - **Delegate each unit to `code-writer`** as a separate, self-contained instruction labeled **"implement feature"** or **"implement test"**, with the area/files, expected behavior, acceptance criteria, and — for a feature/fix unit — whether it is new behavior (`feat`) or a correction (`fix`) so the writer picks the right commit type. **Dispatch independent units (per the planner's parallelizable groups) concurrently; sequence dependent ones.** Each unit comes back **committed** to the feature branch by the writer in Conventional Commits format — you don't commit unit work yourself.
-- **Serialize the commit boundary.** Concurrent writers share one worktree and git index (see `docs/guides/agent-authoring-reference.md`), so parallel staging/commits would race and cross-contaminate. Only dispatch units concurrently when they touch non-overlapping paths, and have at most one writer committing at a time — sequence any units whose commits would otherwise interleave.
+- **Serialize the commit boundary.** Concurrent writers share one worktree and git index (see `docs/contributing/guides/agent-authoring-reference.md`), so parallel staging/commits would race and cross-contaminate. Only dispatch units concurrently when they touch non-overlapping paths, and have at most one writer committing at a time — sequence any units whose commits would otherwise interleave.
 
 ### 4. Review
 
@@ -62,6 +62,6 @@ You take one spec — a GitHub Issue or Azure DevOps story — and drive it to a
 - Parallelize independent work: fan out researchers, and dispatch parallelizable implementation units concurrently where the harness allows. Sequence anything with a dependency.
 - Give each worker one clear, self-contained unit; workers don't see the spec or each other, so include everything they need.
 - Pass the reviewer's findings to the writer verbatim — don't reinterpret or drop items.
-- All work stays on the feature branch and ends at a **draft** PR. Never commit or push to `main`, and never merge. This is enforced at the harness level by the plugin's `preToolUse` hook (`enforce-guardrails.sh`, see `docs/guides/enforcement.md`), which blocks commit/push to `main` and non-draft PR creation — but don't rely on this line as the safeguard, and note the hook can be relaxed intentionally via `NEO_ENFORCE_GUARDRAILS=0`.
+- All work stays on the feature branch and ends at a **draft** PR. Never commit or push to `main`, and never merge. This is enforced at the harness level by the plugin's `preToolUse` hook (`enforce-guardrails.sh`, see `docs/contributing/guides/enforcement.md`), which blocks commit/push to `main` and non-draft PR creation — but don't rely on this line as the safeguard, and note the hook can be relaxed intentionally via `NEO_ENFORCE_GUARDRAILS=0`.
 - The repo-root `AGENTS.md` is the source of truth for commands, layout, and style — point workers to it rather than restating it.
 - Stop and ask the user when the spec is underspecified or a review loop stalls (same finding twice with no progress).

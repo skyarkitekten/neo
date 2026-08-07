@@ -40,9 +40,11 @@ skills from `.github/skills/`, and hooks from `.github/hooks/hooks.json`.
 Invoke the **technical-engineer** with an issue/story reference and it drives the crew to a draft
 PR. See the repo docs for detail:
 
+- `docs/getting-started.md` — what neo is and the quickest path in.
+- `docs/guides/using-neo.md` — driving the crew through the Specification loop.
 - `docs/concepts/process-flow.md` — the workflow and integration modes.
-- `docs/guides/observability.md` — the logging/tuning setup.
-- `docs/reference/plugin-contract.md` — the normative folder shape, manifest fields, and naming.
+- `docs/contributing/guides/observability.md` — the logging/tuning setup.
+- `docs/contributing/reference/plugin-contract.md` — the normative folder shape, manifest fields, and naming.
 
 > Copilot is the canonical, sole harness (issue #34). A Claude Code mirror may be regenerated
 > from the Copilot source later if there is demand.

@@ -59,7 +59,7 @@ already binding in `neo.task-planner.agent.md` and `neo-code-writer.md`.
 Azure DevOps story." The spec loop emits a **Task**. These need to be the same object: a neo
 Task should *be* the issue/story it is filed as, so the orchestrator's input contract and the
 task-planner's output contract describe one artifact rather than two. **Resolved** — this is
-now the carrier rule fixed in [`task-handoff-schema.md`](../reference/task-handoff-schema.md) § 1.
+now the carrier rule fixed in [`task-handoff-schema.md`](../contributing/reference/task-handoff-schema.md) § 1.
 
 ---
 

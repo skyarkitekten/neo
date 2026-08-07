@@ -1,7 +1,7 @@
 # Hook contract
 
 Normative contract for **hook manifests and hook scripts** shipped in a neo plugin.
-The JSON Schema at [`scripts/linting/schemas/hook-manifest.schema.json`](../../scripts/linting/schemas/hook-manifest.schema.json)
+The JSON Schema at [`scripts/linting/schemas/hook-manifest.schema.json`](../../../scripts/linting/schemas/hook-manifest.schema.json)
 is the machine-checkable half; this page is the prose half. `scripts/validate-plugins.py`
 enforces both (CI runs it via `.github/workflows/validate.yml`).
 
