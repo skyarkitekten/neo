@@ -37,6 +37,28 @@ echo '{"tool_name":"t","success":true,"content":"hi"}' | .agent-hooks/log-event.
 
 Then check `~/.agent-logs/events.jsonl` for the new line.
 
+### Set the env quickly
+
+To run the hooks by hand you need `PLUGIN_ROOT` pointed at the plugin (the dir
+containing `.agent-hooks/`), plus the optional `AGENT_LOG_DIR` / `AGENT_RUN_ID`.
+`scripts/setup-hook-env.{ps1,sh}` set all three (and the `COPILOT_`/`CLAUDE_`
+aliases) and create the log dir; the `teardown-hook-env` siblings clear them.
+**Dot-source** them so the vars land in your current shell — running them
+normally only sets vars in a child process that then exits:
+
+```powershell
+. .\scripts\setup-hook-env.ps1                  # or pass a plugin root: . .\scripts\setup-hook-env.ps1 "C:\path\to\plugin"
+. .\scripts\teardown-hook-env.ps1
+```
+
+```bash
+source scripts/setup-hook-env.sh                # or: source scripts/setup-hook-env.sh /path/to/plugin
+source scripts/teardown-hook-env.sh
+```
+
+`AGENT_RUN_ID` defaults to the current git branch, matching the loggers' own
+fallback (see below).
+
 ## What gets logged
 
 Each line: `ts`, `run` (correlation id — defaults to git branch), `event`, `agent`, `tool`, `status`, and a truncated `prompt`. Default log path is `~/.agent-logs/events.jsonl` (override with `AGENT_LOG_DIR`).
