@@ -20,6 +20,21 @@ Records what each agent does into a JSONL log so you can tune the `.agent.md` pr
    - `.agent-hooks/log-event.ps1` — no external dependency (uses built-in PowerShell JSON).
 2. **Copilot:** merge `plugins/neo-core/.github/hooks/hooks.json` into your Copilot CLI hook settings. Each event carries both a `bash` and a `powershell` command, so Windows uses the `.ps1` and macOS/Linux use the `.sh` automatically. Confirm the file location, key names, and event names against your installed Copilot version first — these vary.
 
+### Manual test
+
+Both loggers read the payload from real stdin, so test them as a separate process with stdin actually redirected — not a same-session PowerShell pipe (`"json" | & script.ps1` hangs, because `[Console]::In` never sees pipeline objects):
+
+```powershell
+'{"toolName":"t","success":true,"content":"hi"}' | Out-File "$env:TEMP\p.json" -Encoding utf8 -NoNewline
+cmd /c "type `"$env:TEMP\p.json`" | powershell -NoProfile -File .agent-hooks\log-event.ps1 userPromptSubmitted"
+```
+
+```bash
+echo '{"tool_name":"t","success":true,"content":"hi"}' | .agent-hooks/log-event.sh userPromptSubmitted
+```
+
+Then check `~/.agent-logs/events.jsonl` for the new line.
+
 ## What gets logged
 
 Each line: `ts`, `run` (correlation id — defaults to git branch), `event`, `agent`, `tool`, `status`, and a truncated `prompt`. Default log path is `~/.agent-logs/events.jsonl` (override with `AGENT_LOG_DIR`).
