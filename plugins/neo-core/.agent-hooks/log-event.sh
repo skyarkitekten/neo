@@ -34,9 +34,11 @@ record="$(printf '%s' "$payload" | jq -c \
     event:  $event,
     agent:  (.agent_name // .agentName // .agent // null),
     tool:   (.tool_name  // .toolName  // .tool  // null),
-    status: ((.status // .result_status // (if (.error // null) != null then "error" else null end)) // null),
+    status: ((.status // .result_status
+              // (if (.success // null) != null then (if .success then "ok" else "error" end) else null end)
+              // (if (.error // null) != null then "error" else null end)) // null),
     session:(.session_id // .sessionId // null),
-    prompt: ((.prompt // .user_prompt // .input // null) | if type=="string" then .[0:500] else . end)
+    prompt: ((.prompt // .user_prompt // .content // .message // .input // null) | if type=="string" then .[0:500] else . end)
   }' 2>/dev/null)"
 
 # If the payload shape was unexpected and jq produced nothing, keep a minimal
