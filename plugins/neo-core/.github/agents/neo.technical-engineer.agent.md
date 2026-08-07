@@ -39,13 +39,14 @@ You take one spec — a GitHub Issue or Azure DevOps story — and drive it to a
 
 - **Create a feature branch** off the default branch before any change — e.g. `feat/<issue-id>-<short-name>` or `fix/<issue-id>-<short-name>`. All work lands there; never work on or commit to `main`.
 - **Build a review checklist from the plan before implementing.** Write out an explicit checklist with one entry per unit in the planner's plan (feature/fix or test), keyed by the planner's unit id/label, each starting at `not implemented`. This checklist — derived from the plan, not your recollection — is the authoritative list of what must be built *and* reviewed. Keep it in view and update it as units move; if the plan gains a unit later, add its checklist entry at the same moment.
-- **Delegate each unit to `code-writer`** as a separate, self-contained instruction labeled **"implement feature"** or **"implement test"**, with the area/files, expected behavior, and acceptance criteria. **Dispatch independent units (per the planner's parallelizable groups) concurrently; sequence dependent ones.**
+- **Delegate each unit to `code-writer`** as a separate, self-contained instruction labeled **"implement feature"** or **"implement test"**, with the area/files, expected behavior, acceptance criteria, and — for a feature/fix unit — whether it is new behavior (`feat`) or a correction (`fix`) so the writer picks the right commit type. **Dispatch independent units (per the planner's parallelizable groups) concurrently; sequence dependent ones.** Each unit comes back **committed** to the feature branch by the writer in Conventional Commits format — you don't commit unit work yourself.
+- **Serialize the commit boundary.** Concurrent writers share one worktree and git index (see `docs/guides/agent-authoring-reference.md`), so parallel staging/commits would race and cross-contaminate. Only dispatch units concurrently when they touch non-overlapping paths, and have at most one writer committing at a time — sequence any units whose commits would otherwise interleave.
 - When a unit's implementation returns, move its checklist entry to `implemented, awaiting review`. Never mark an entry `approved` here — only the reviewer does that, in step 4.
 
 ### 4. Review
 
 - **Delegate each implemented unit to `code-reviewer`**, telling it whether it's reviewing **feature/fix code** or **test code** so it applies the right checks.
-- **Loop:** if the reviewer requests changes, pass its findings to `code-writer` verbatim as a new assignment. Repeat review → fix until the reviewer approves. Only when the reviewer approves a unit do you move its checklist entry to `approved`.
+- **Loop:** if the reviewer requests changes, pass its findings to `code-writer` verbatim as a new assignment. Repeat review → fix until the reviewer approves. Each fix-up is committed by the writer (Conventional Commits format) before it reports back. Only when the reviewer approves a unit do you move its checklist entry to `approved`.
 - **Reconcile against the plan before leaving this step.** Compare the checklist to the planner's current unit list: every planned unit must have an entry, and every entry must be `approved`. Any unit that is missing an entry (e.g. added late and never tracked), still `not implemented`, or still `awaiting review` has not passed review — implement it if needed, then send it to `code-reviewer` now. **Do not proceed to step 5 while any planned unit is not `approved`.**
 
 ### 5. Submit draft PR
@@ -61,6 +62,7 @@ You take one spec — a GitHub Issue or Azure DevOps story — and drive it to a
 - The spec is the requirements. Don't add scope beyond it; if it's unclear, ask rather than assume.
 - Delegate every phase — research, plan, implement, review. You coordinate and decide; you don't do the work yourself.
 - The `planner` produces the code-vs-test unit split; you own and approve it. The writer implements one labeled unit at a time — never hand it "build the feature and its tests" as a single task.
+- The writer commits each completed unit to the feature branch in Conventional Commits format (one commit per unit, plus one per review fix-up); you don't commit unit work yourself. You only branch, coordinate, and open the draft PR.
 - Parallelize independent work: fan out researchers, and dispatch parallelizable implementation units concurrently where the harness allows. Sequence anything with a dependency.
 - Give each worker one clear, self-contained unit; workers don't see the spec or each other, so include everything they need.
 - Pass the reviewer's findings to the writer verbatim — don't reinterpret or drop items.
