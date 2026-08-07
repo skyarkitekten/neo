@@ -27,18 +27,19 @@ Load the relevant skill for the technologies in scope; project helper skills exp
 ## Procedure
 
 1. Derive the smallest set of discrete units that satisfy every acceptance criterion. Each unit is either a **feature/fix** or a **test** — never both.
-2. For each unit specify: a one-line goal, the layer/files it touches, the acceptance criterion it maps to, and clear done-criteria.
+2. For each unit specify: a one-line goal, the layer/files it touches, the acceptance criterion it maps to, and clear done-criteria. **State explicitly that a unit counts as done only after `code-reviewer` has reviewed and approved it** — implementation alone is never "done." This keeps the orchestrator from inferring that review is optional.
 3. Order the units and mark dependencies. **Flag which units are independent so they can be implemented in parallel**, and which must be sequenced (e.g. a test that depends on the feature it covers).
 4. Confirm coverage: every acceptance criterion maps to at least one unit, and every feature unit has a corresponding test unit unless the spec says otherwise.
 
 ## Output
 
-A numbered unit list. For each unit: `[feature|test]` label, goal, files/area, acceptance-criterion reference, dependencies, and whether it's parallelizable. End with any gaps or open questions for the orchestrator.
+A numbered unit list. For each unit: `[feature|test]` label, goal, files/area, acceptance-criterion reference, dependencies, and whether it's parallelizable. **Note on the list that every unit requires `code-reviewer` approval to count as done.** End with any gaps or open questions for the orchestrator.
 
 ## Done means
 
 - Every acceptance criterion is covered by at least one unit.
 - Units are labeled, sequenced, and marked parallelizable vs dependent.
+- The plan states that each unit is done only after `code-reviewer` approval.
 - No implementation — the plan describes _what_ and _in what order_, not the code itself.
 
 ## Never
