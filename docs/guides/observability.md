@@ -8,16 +8,17 @@ Records what each agent does into a JSONL log so you can tune the `.agent.md` pr
 
 ## Files
 
-- `.agent-hooks/log-event.sh` — the logger. One record per lifecycle event.
-- `.github/hooks/hooks.json` — GitHub Copilot CLI hook config (v1 schema; shipped in `plugins/neo-core/`, verify against your version).
-- `analyze_agent_logs.py` — turns the log into per-agent and per-run stats.
+- `.agent-hooks/log-event.sh` — the logger (bash/macOS/Linux). One record per lifecycle event. Needs `jq`.
+- `.agent-hooks/log-event.ps1` — the Windows/PowerShell sibling. Same record shape, native PowerShell JSON, **no `jq` dependency**.
+- `.github/hooks/hooks.json` — GitHub Copilot CLI hook config (v1 schema; shipped in `plugins/neo-core/`, verify against your version). Each entry wires **both** a `bash` and a `powershell` command; Copilot runs the one matching the OS.
+- `analyze_agent_logs.py` — turns the log into per-agent and per-run stats. Reads the log from either sibling identically.
 
 ## Install
 
-1. Copy `.agent-hooks/log-event.sh` into your repo and make it executable:
-   `chmod +x .agent-hooks/log-event.sh`
-2. Requires `jq` on PATH.
-3. **Copilot:** merge `plugins/neo-core/.github/hooks/hooks.json` into your Copilot CLI hook settings. Confirm the file location, key names, and event names against your installed Copilot version first — these vary.
+1. Copy **both** loggers into your repo:
+   - `.agent-hooks/log-event.sh` — `chmod +x` it; requires `jq` on PATH (macOS: `brew install jq`).
+   - `.agent-hooks/log-event.ps1` — no external dependency (uses built-in PowerShell JSON).
+2. **Copilot:** merge `plugins/neo-core/.github/hooks/hooks.json` into your Copilot CLI hook settings. Each event carries both a `bash` and a `powershell` command, so Windows uses the `.ps1` and macOS/Linux use the `.sh` automatically. Confirm the file location, key names, and event names against your installed Copilot version first — these vary.
 
 ## What gets logged
 
@@ -38,4 +39,12 @@ Reports event/tool counts and approximate active time per agent, and per run the
 
 ## Verify before trusting the fields
 
-The `jq` paths in `log-event.sh` (`agent_name`, `tool_name`, etc.) are defensive guesses at Copilot's event shape. Run one real session, look at `events.jsonl`, and trim the paths to what your harness actually emits. If `agent` is mostly null, the analyzer will warn you and agent-level stats won't be meaningful until attribution is fixed.
+Both loggers read the same fields via ordered fallbacks. These have been reconciled against Copilot's observed event vocabulary (camelCase — `toolName`, `sessionId`, boolean `success`, `content`), with the older snake_case names kept as fallbacks for other harnesses:
+
+- **`tool`** ← `tool_name` / `toolName` / `tool`
+- **`session`** ← `session_id` / `sessionId`
+- **`status`** ← `status` / `result_status` / boolean `success` (→ `ok`/`error`) / presence of `error`
+- **`prompt`** ← `prompt` / `user_prompt` / `content` / `message` / `input`
+- **`agent`** ← `agent_name` / `agentName` / `agent` — **not yet confirmed against a real payload.** Copilot's event stream doesn't expose an obvious agent name at the top level, so `agent` may come back null until you confirm the real field. The analyzer warns when most records are unattributed.
+
+The hook stdin payload can still differ from these guesses. Run one real session, look at `events.jsonl`, and trim the fallbacks to what your harness actually emits. **Update both siblings together** so Windows and macOS/Linux stay in sync.
