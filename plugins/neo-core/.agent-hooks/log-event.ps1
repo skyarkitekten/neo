@@ -101,4 +101,7 @@ try {
     # Fail-open: never surface an error to the harness.
 }
 
+# Emit the explicit continue signal so a logging hook never stalls a turn.
+# (Empty stdout also means "continue", but being explicit matches the contract.)
+Write-Output '{"continue":true}'
 exit 0

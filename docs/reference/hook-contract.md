@@ -1,0 +1,117 @@
+# Hook contract
+
+Normative contract for **hook manifests and hook scripts** shipped in a neo plugin.
+The JSON Schema at [`scripts/linting/schemas/hook-manifest.schema.json`](../../scripts/linting/schemas/hook-manifest.schema.json)
+is the machine-checkable half; this page is the prose half. `scripts/validate-plugins.py`
+enforces both (CI runs it via `.github/workflows/validate.yml`).
+
+For what the two shipped hook sets *do*, see the guides — this page owns the *shape*,
+not the behavior:
+
+- **fail-open observability logging** → [`guides/observability.md`](../guides/observability.md)
+- **fail-closed `preToolUse` enforcement** → [`guides/enforcement.md`](../guides/enforcement.md)
+
+## Layout
+
+A plugin's hooks live in two places, both under `plugins/<plugin>/`:
+
+| Path | Purpose |
+| --- | --- |
+| `.github/hooks/hooks.json` | The manifest — maps lifecycle events to commands. Copilot v1 schema. |
+| `.agent-hooks/*.sh`, `.agent-hooks/*.ps1` | The scripts the manifest shells out to, one bash + one PowerShell sibling each. |
+
+A plugin is self-contained: the manifest may only reference scripts inside its own
+directory. See [`plugin-contract.md`](./plugin-contract.md) for the wider folder shape.
+
+## The manifest
+
+```json
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      { "type": "command",
+        "bash": "\"${PLUGIN_ROOT}/.agent-hooks/log-event.sh\" sessionStart",
+        "powershell": "& \"$env:PLUGIN_ROOT/.agent-hooks/log-event.ps1\" sessionStart",
+        "timeoutSec": 10 }
+    ]
+  }
+}
+```
+
+- **`version` is `1`.** The only defined schema version.
+- **One CLI-lowercase block per event.** Copilot CLI reads the camelCase event key and
+  the `bash` / `powershell` command properties. VS Code converts the lowercase key to its
+  PascalCase form and maps `bash`→osx/linux, `powershell`→windows, so **one block covers
+  both surfaces**. Do **not** also declare a PascalCase copy of the same event — VS Code
+  would register and fire both, duplicating every invocation. The validator rejects it.
+- **Allowed events:** `sessionStart`, `sessionEnd`, `userPromptSubmit`,
+  `userPromptSubmitted`, `preToolUse`, `postToolUse`, `preCompact`, `subagentStart`,
+  `subagentStop`, `stop`, `agentStop`, `errorOccurred`.
+
+### The `${PLUGIN_ROOT}` placeholder — per shell
+
+Copilot exposes the plugin's install directory as the **`PLUGIN_ROOT` environment
+variable** (also `COPILOT_PLUGIN_ROOT` / `CLAUDE_PLUGIN_ROOT`). How you read it differs by
+shell, and getting it wrong is a silent break:
+
+| Field | Correct | Wrong | Why |
+| --- | --- | --- | --- |
+| `bash` | `${PLUGIN_ROOT}` | — | bash expands the env var |
+| `powershell` | `$env:PLUGIN_ROOT` | `${PLUGIN_ROOT}` | in PowerShell `${PLUGIN_ROOT}` is its *own* (undefined) variable and expands to empty, producing a bad path like `/.agent-hooks/log-event.ps1` |
+
+`scripts/validate-plugins.py` fails the build if a bare `${PLUGIN_ROOT}` appears in any
+`powershell` command string.
+
+## Script contract
+
+Every hook script — bash or PowerShell — follows the same rules:
+
+- **Read the event payload as JSON on stdin.** Field names vary across surfaces
+  (`toolName`/`tool_name`, etc.); read defensively.
+- **Emit `{"continue":true}` on stdout on the normal path.** Empty stdout also means
+  "continue", but a logging hook emits the signal explicitly so it can never stall a turn.
+- **Self-locate; never depend on `PLUGIN_ROOT` internally.** A script finds its siblings
+  from its own location (`$PSScriptRoot` in PowerShell, `$(dirname "${BASH_SOURCE[0]}")`
+  in bash), not from the manifest placeholder. The placeholder only tells the harness
+  which script to launch.
+- **Be fast and dependency-light.** Respect the manifest `timeoutSec`; a hook that times
+  out fails **open** (the tool call proceeds), so slow enforcement is no enforcement.
+- **Line endings: `.sh` scripts must be LF.** A CRLF `.sh` fails on Linux/macOS bash with
+  `$'\r': command not found`. The repo `.gitattributes` pins `*.sh text eol=lf`; do not
+  override it.
+
+### Fail-open vs fail-closed
+
+The two hook sets deliberately differ, and each guide owns the detail:
+
+- **Logging hooks fail *open*** — any error is swallowed and the script still exits 0.
+  Observability must never block a turn. See [`guides/observability.md`](../guides/observability.md).
+- **`preToolUse` enforcement hooks fail *closed* on crash** — a non-zero exit (including
+  exit code 2) denies the tool call. So the enforce scripts always `exit 0` and express
+  their verdict purely through stdout JSON
+  (`{"permissionDecision":"deny","permissionDecisionReason":"…"}` to block, empty to
+  allow). An **unparseable** payload is the one exception: it allows with a stderr warning
+  rather than bricking the session. See [`guides/enforcement.md`](../guides/enforcement.md).
+
+## Handling sensitive payloads
+
+Hook payloads can carry secrets: `preToolUse` inputs include full file contents and shell
+command strings; `userPromptSubmit` includes the whole prompt. If a hook persists a
+payload:
+
+- Store the minimum needed — prefer derived signals (keys, lengths, counts, truncated
+  previews) over verbatim values. The logger truncates `prompt` to 500 chars for this
+  reason.
+- Gate any verbatim capture behind its own explicit opt-in, defaulted off.
+- Write to local, gitignored paths (`~/.agent-logs/…` by default), never to committed
+  ones.
+
+## Validation checklist
+
+Before you open a PR that touches a hook:
+
+1. `python3 scripts/validate-plugins.py` — schema + neo-specific rules.
+2. `bash -n plugins/*/.agent-hooks/*.sh` — shell syntax, and it surfaces stray CRLF.
+3. Manually test both siblings with stdin redirected (see
+   [`guides/observability.md`](../guides/observability.md) § Manual test).

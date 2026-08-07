@@ -5,6 +5,8 @@ Records what each agent does into a JSONL log so you can tune the `.agent.md` pr
 > This page covers the **fail-open observability** hook set. For the **fail-closed
 > `preToolUse` enforcement** hooks (block commit/push to `main`, draft-PR-only), see
 > [enforcement.md](enforcement.md). Both are wired from the same `.github/hooks/hooks.json`.
+> The manifest + script contract they share is owned by
+> [`../reference/hook-contract.md`](../reference/hook-contract.md).
 
 ## Files
 

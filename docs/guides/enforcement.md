@@ -11,6 +11,10 @@ These are enforced by a blocking `preToolUse` hook. This is separate from — an
 opposite reliability contract to — the fail-open observability logging in
 [observability.md](observability.md).
 
+> The manifest shape and script contract these hooks share (schema, the per-shell
+> `${PLUGIN_ROOT}` rule, stdin/`{"continue":true}`) live in
+> [`../reference/hook-contract.md`](../reference/hook-contract.md).
+
 ## Files
 
 - `.agent-hooks/enforce-guardrails.sh` — the enforcement hook for Unix (macOS/Linux).

@@ -50,4 +50,8 @@ if [ -z "$record" ]; then
 fi
 
 printf '%s\n' "$record" >> "$LOG_FILE"
+
+# Emit the explicit continue signal so a logging hook never stalls a turn.
+# (Empty stdout also means "continue", but being explicit matches the contract.)
+printf '{"continue":true}\n'
 exit 0
