@@ -40,6 +40,8 @@ Then dip into `reference/` and `guides/` as the task demands.
   three tiers, the late-binding rule, and the stack-skill discovery format.
 - [`task-handoff-schema.md`](./reference/task-handoff-schema.md) — the **Task** artifact that
   crosses Boundary 1: its carrier (a Task *is* the issue/story), fields, and serialization.
+- [`hook-contract.md`](./reference/hook-contract.md) — the normative shape of plugin hooks:
+  manifest schema, the per-shell `${PLUGIN_ROOT}` rule, and the script contract.
 
 ### `guides/` — the *how* (operational)
 - [`observability.md`](./guides/observability.md) — install the logging hooks and read the
@@ -67,6 +69,7 @@ Then dip into `reference/` and `guides/` as the task demands.
 | Plugin folder shape, manifest fields, `neo-` naming | [`reference/plugin-contract.md`](./reference/plugin-contract.md) |
 | Core/stack split, tiers, stack-skill discovery | [`reference/stack-plugin-contract.md`](./reference/stack-plugin-contract.md) |
 | The Task handoff artifact | [`reference/task-handoff-schema.md`](./reference/task-handoff-schema.md) |
+| Plugin hook manifest + script contract | [`reference/hook-contract.md`](./reference/hook-contract.md) |
 | Logging & prompt tuning | [`guides/observability.md`](./guides/observability.md) |
 | `preToolUse` enforcement (block-on-main, draft-PR-only) | [`guides/enforcement.md`](./guides/enforcement.md) |
 | Authoring agents / skills / hooks | [`guides/agent-authoring-reference.md`](./guides/agent-authoring-reference.md) |

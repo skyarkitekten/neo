@@ -30,7 +30,8 @@ plugins/neo-core/                    The shipped plugin — a Copilot tree:
   scripts/analyze_agent_logs.py      per-agent / per-run log stats
 .github/plugin/marketplace.json      Copilot marketplace (root, lists plugins[])
 .github/agents/neo.master-control.agent.md   DEV-TIME agent (Copilot), never shipped
-scripts/validate-plugins.py          CI plugin check (manifests + agents: allowlists)
+scripts/validate-plugins.py          CI plugin check (manifests + hooks + agents: allowlists)
+scripts/linting/schemas/hook-manifest.schema.json   Hook-manifest JSON Schema (draft-07)
 docs/                                Grouped by genre — see docs/README.md for the map
 ```
 
@@ -58,9 +59,11 @@ This repo has nothing to compile, lint, or unit-test in the app sense. Do **not*
 - **Agent frontmatter is valid** — `name:`, `tools:`, `agents:` allowlists resolve to
   real agent names.
 - **Plugins validate** — run `python3 scripts/validate-plugins.py`. It walks every
-  `plugins/*/`, checks the Copilot manifest + hooks parse, and fails on any `agents:`
-  allowlist entry that doesn't resolve to a real agent `name:`. CI runs it via
-  `.github/workflows/validate.yml`.
+  `plugins/*/`, checks the Copilot manifest + hooks parse, validates each `hooks.json`
+  against the hook-manifest contract (`scripts/linting/schemas/hook-manifest.schema.json`
+  — including the rule that a `powershell` command must use `$env:PLUGIN_ROOT`, not the
+  bare `${PLUGIN_ROOT}`), and fails on any `agents:` allowlist entry that doesn't resolve
+  to a real agent `name:`. CI runs it via `.github/workflows/validate.yml`.
 
 Quick manifest sanity check:
 
