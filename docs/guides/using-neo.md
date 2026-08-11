@@ -38,9 +38,11 @@ a bad split poisons everything downstream.
    machine-checkable. "Done" is a **BE-approved** task set, not an agent-emitted one.
 
 3. **Task → draft PR** `[target for full autonomy]`. Invoke **Neo Technical Engineer** with a Task
-   (filed as a GitHub Issue or Azure DevOps story). It runs research → plan → implement → review and
-   opens a **draft** PR linked to the spec. Findings loop back to the writer until the reviewer
-   approves. All work stays on a feature branch; it never commits to `main` and never merges.
+   (filed as a GitHub Issue or Azure DevOps story). It branches from the spec (`feat/<issue-id>-<short-name>`),
+   then runs research → plan → implement → review and opens a **draft** PR linked to the spec. It
+   pauses twice for you: **`/fleet`** before research and planning, and **`/rubber-duck`** on the plan
+   before implementation. Findings loop back to the writer until the reviewer approves. All work stays
+   on that feature branch; it never commits to `main` and never merges.
 
 ## Your job at the gates
 
