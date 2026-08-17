@@ -14,9 +14,8 @@ mechanical facts (paths, manifest keys) are `plugin-contract.md`'s; the design r
 
 > **Copilot-only (issue #34).** neo ships for GitHub Copilot CLI only. The dual-harness design
 > that first motivated this split — a Claude Code mirror, dual manifests, a `validate-mirrors.py`
-> check — was dropped. The pre-#34 reasoning, including the executed migration plan, is preserved
-> as historical context in [`../archive/packaging.md`](../../archive/packaging.md). This document is
-> the live contract.
+> check — was dropped. The pre-#34 reasoning, including the executed migration plan, was removed
+> along with the archive doc that captured it. This document is the live contract.
 
 ---
 
