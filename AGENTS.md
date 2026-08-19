@@ -58,7 +58,8 @@ This repo has nothing to compile, lint, or unit-test in the app sense. Do **not*
   `hooks.json` under `plugins/*/.github/` parse and carry required fields.
 - **Agent frontmatter is valid** — `name:`, `tools:`, `agents:` allowlists resolve to
   real agent names.
-- **Plugins validate** — run `python3 scripts/validate-plugins.py`. It walks every
+- **Plugins validate** — run `python3 scripts/validate-plugins.py` (`uv run scripts/validate-plugins.py`
+  where `python3` isn't on PATH, e.g. Windows). It walks every
   `plugins/*/`, checks the Copilot manifest + hooks parse, validates each `hooks.json`
   against the hook-manifest contract (`scripts/linting/schemas/hook-manifest.schema.json`
   — including the rule that a `powershell` command must use `$env:PLUGIN_ROOT`, not the
