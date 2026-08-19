@@ -17,7 +17,7 @@ tools:
     github/search_pull_requests,
     azure/search,
   ]
-user-invokable: false
+user-invocable: false
 ---
 
 <!-- Tool access (reading the spec, MCP/CLI helpers) is provided per project via helper skills — a mix of MCP and CLI. Use whatever the project's skills expose; don't hardcode connector names. -->

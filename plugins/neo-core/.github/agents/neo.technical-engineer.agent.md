@@ -5,7 +5,7 @@ model: Claude Sonnet 5
 reasoningEffort: medium
 tools: [agent, read, azure-mcp/search, execute, web, github/issue_read, github/list_issues, github/search_issues, github/list_pull_requests, github/list_branches, github/list_commits]
 agents: ['Neo Researcher', 'Neo Implementation Planner', 'Neo Code Writer', 'Neo Code Reviewer']
-user-invokable: true
+user-invocable: true
 argument-hint: <issue or story URL/ID>
 ---
 
