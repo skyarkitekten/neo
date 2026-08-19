@@ -14,10 +14,17 @@ the **Copilot-only decision** (#34, PR #36/#37) that dropped the Claude agent tr
 
 Run `gh issue list --state open` for the live backlog. Current shape:
 
-- **Specialist stack (product, `phase: specialist`)** — #16 `neo-frontend` manifest,
+- **Specialist stack (product, `phase: specialist`)** — #16 `neo-frontend-react` manifest,
   #20 React + Tailwind skill, #19 TypeScript instructions, #21 Frontend agent,
-  #22 Coder→Frontend binding. This is the next milestone: neo ships the *process* today
-  but zero build *capability*. Now authored once (no Claude mirror).
+  #22 Coder→Frontend binding. This is the next milestone: `neo-core` alone builds and
+  runs the process fine, but ships no stack plugin yet — no language/framework skills for
+  `code-writer`/`code-reviewer` to select by description when the work is React,
+  TypeScript, or any other named technology. Now authored once (no Claude mirror).
+  `neo-core` itself stays language- and technology-agnostic; users can add or swap stack
+  plugins freely. Neo's own "bread-and-butter stack" — the plugins neo ships and
+  maintains out of the box — is: `neo-frontend-react` (#16), `neo-frontend-angular`
+  (#65), `neo-csharp-api` (#66), `neo-azure-platform` (#67), and `neo-ops` (#68, pairs
+  with #14 Verification agents).
 - **Safety / hooks** — #4 block-on-`main` pre-tool hook + exit-code policy (the logging
   hook set already ships; this is the missing enforcement).
 - **Verification agents** — #14 SRE / Platform Eng (`phase: core`, not built).
