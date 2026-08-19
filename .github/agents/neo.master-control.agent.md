@@ -78,7 +78,7 @@ Two rules the docs state and `scripts/validate-plugins.py` enforces, so getting 
 - An `agents:` allowlist must reference other agents' frontmatter `name:` values, not filenames — Copilot resolves delegation by `name:`.
 - Any agent with a non-empty `agents:` must also list `agent` in `tools:`. An allowlist without the delegation tool silently cannot delegate.
 
-Repo conventions the reference docs don't decide: spell it `user-invokable` (VS Code also accepts `user-invocable`; this repo doesn't use it), and prefer coordinator delegation over `handoffs`, which is VS Code-only and ignored elsewhere.
+Repo conventions the reference docs don't decide: spell it `user-invocable` — VS Code honors only that spelling, so it is the one this repo uses everywhere — and prefer coordinator delegation over `handoffs`, which is VS Code-only and ignored elsewhere.
 
 **Do:** one clear job per agent, reflected in its filename; a `description` naming a concrete trigger for picking it; a body shaped like its siblings — Scope → Use skills → Procedure → Output → Done means → Never; `tools` restricted to the role; `model` and `reasoningEffort` chosen deliberately.
 
@@ -89,7 +89,7 @@ Repo conventions the reference docs don't decide: spell it `user-invokable` (VS 
 When authoring an agent that delegates rather than does the work itself:
 
 - Give the coordinator the `agent` tool plus an `agents:` allowlist naming exactly the workers it may call.
-- Make workers non-selectable with `user-invokable: false`, and set `disable-model-invocation: true` on any worker that must only run when a coordinator invokes it.
+- Make workers non-selectable with `user-invocable: false`, and set `disable-model-invocation: true` on any worker that must only run when a coordinator invokes it.
 - Give each worker a tight role and its own `tools`/`model` — isolation and per-worker model choice are the point.
 - Design flat: one coordinator, one layer of workers. Nesting is off by default.
 - Have the coordinator dispatch independent work in parallel and sequence only true dependencies; it synthesizes results and owns what returns to the user.
@@ -106,6 +106,8 @@ A folder with `SKILL.md` (required `name` + `description` frontmatter plus instr
 ## Authoring: instruction / rules files
 
 Standing rules the agent always follows — _how to behave_, not _how to build the project_. Copilot: `.github/instructions/*.instructions.md`, scoped by an `applyTo` glob.
+
+**Placement is the first decision, and it is not free.** Instruction files **cannot ship in a plugin** — Copilot discovers them by location, and an install directory isn't a discovery location, so a `plugins/*/.github/instructions/` folder is never read. They live either in this repo (dev-time, for work on neo) or in the **consuming** repo, which makes them a project-tier artifact the consumer owns. If asked to author one for a consuming project, write it against that repo and say so in the report — never place it under `plugins/`.
 
 **Do:** scope each rule and say when it applies (`applyTo: "**/*.tsx"` so React rules don't fire on backend code); write positive, concrete directives ("Use `async/await`"); order by priority and keep the set small; make rules verifiable (ideally linter-checkable); add a one-line reason only when it aids generalization.
 
