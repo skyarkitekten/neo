@@ -20,6 +20,19 @@
       "keywords": ["agents", "orchestration", "code-review", "hooks"],
       "agents": ".github/agents",
       "hooks": ".github/hooks/hooks.json"
+    },
+    {
+      "name": "neo-product",
+      "source": "./plugins/neo-product",
+      "description": "Scaffold for a product-engineering agent crew — scope not yet defined; ships a non-invokable stub agent plus lifecycle-logging hooks.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Chad Thomas"
+      },
+      "license": "MIT",
+      "keywords": ["agents", "product", "hooks"],
+      "agents": ".github/agents",
+      "hooks": ".github/hooks/hooks.json"
     }
   ]
 }
