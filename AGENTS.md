@@ -44,7 +44,8 @@ root, never in a plugin.
 
 All normative in `docs/contributing/reference/plugin-contract.md` — don't restate it, conform to it.
 
-- Copilot agents: `neo.<role>.agent.md` (e.g. `neo.code-writer.agent.md`).
+- Copilot agents: `neo.<role>.agent.md` (e.g. `neo.code-writer.agent.md`), or
+  `neo.<domain>.<role>.agent.md` in a plugin that groups by discipline (e.g. `neo.design.ux.agent.md`).
 - Kebab-case roles; each agent's frontmatter `name:` is `Neo <Role>`.
 - Skills are `neo-` prefixed when neo-authored; vendored skills keep their upstream name.
 
