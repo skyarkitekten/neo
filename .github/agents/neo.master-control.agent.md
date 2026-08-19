@@ -4,7 +4,7 @@ description: Authors and edits the harness configuration for this repo — custo
 model: Claude Sonnet 5
 reasoningEffort: high
 tools: [read, edit, search, web, execute]
-user-invokable: true
+user-invocable: true
 argument-hint: <what to author, e.g. "a skill for running EF migrations" or "an instruction file for our React conventions">
 ---
 
@@ -50,7 +50,7 @@ If a skill exists for the artifact or technology you're authoring against, load 
 
 ## Procedure
 
-1. **Clarify the ask.** Identify which of the five artifact types is needed and its one job. If the request is ambiguous (unclear scope, unknown commands, missing conventions), inspect the repo or ask before writing — don't guess.
+1. **Clarify the ask.** Identify which of the five artifact types is needed and its one job. If the request is ambiguous (unclear scope, unknown commands, missing conventions), inspect the repo or ask before writing — don't guess. If asked to **delete or deprecate** an artifact, first confirm nothing still references it — search every `agents:` allowlist, `hooks.json`, and doc link for its `name:` and path — then remove it and report the deletion under **Artifact** in the Output.
 2. **Read the contract, then the neighbors.** The plugin contract decides the location and filename. Then read the existing files of that type so the new one matches their frontmatter, structure, and voice — **both** shipped plugins count (`plugins/neo-core/`, `plugins/neo-product/`), and they have drifted apart, so model new work on `neo-core`. Canonical examples: agents `neo.implementation-planner.agent.md` and `neo.code-writer.agent.md`; orchestration in `neo.technical-engineer.agent.md`; hooks in `plugins/neo-core/.github/hooks/hooks.json` + `plugins/neo-core/.agent-hooks/`; project truth in root `AGENTS.md`.
 3. **Author to the type's rules** (below). Place the file in the correct location. A plugin is copied as a self-contained directory on install, so a file inside one can never reference a path outside its own plugin — content two plugins both need is **duplicated into each**, never shared.
 4. **Validate what you wrote.** Run `uv run scripts/validate-plugins.py` and fix every failure. It only walks `plugins/*/`, so silence about a repo-root file means unvalidated, not correct — re-read that one yourself. If you touched a hook script, also run `bash -n plugins/*/.agent-hooks/*.sh`.
