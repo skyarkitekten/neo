@@ -1,6 +1,5 @@
 ---
-neo-version: 1.3.0
-name: Design Thinking Facilitator
+name: Neo Design Thinking Facilitator
 description: >-
   Use when facilitating human-centered design sessions, running empathy mapping, defining problem statements, ideating
   solutions, prototyping concepts, or testing assumptions with users. Applies design thinking methodology (empathize,

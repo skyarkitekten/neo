@@ -1,6 +1,5 @@
 ---
-neo-version: 1.3.0
-name: Systems Thinking Facilitator
+name: Neo Systems Thinking Facilitator
 description: >-
   Use when mapping system dynamics, identifying feedback loops, analyzing stocks and flows, finding leverage points,
   understanding upstream and downstream dependencies, synthesizing cross-platform knowledge, or facilitating systems

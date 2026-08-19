@@ -33,7 +33,7 @@ the PRD this loop emits is what the BE then segments into features.
 ## What's inside
 
 - **Agents** (`.github/agents/`, `neo.<role>.agent.md`):
-  - `neo.product-engineer.agent.md` — placeholder stub (`user-invokable: false`,
+  - `neo.product-engineer.agent.md` — placeholder stub (`user-invocable: false`,
     `disable-model-invocation: true`) pending the system prompt described above. See the
     file for what must be decided before it ships.
 - **Skills** (`.github/skills/`): none yet — the sub-capability agents/skills above are not

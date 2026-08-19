@@ -1,6 +1,5 @@
 ---
-neo-version: 1.3.0
-name: Product Coach
+name: Neo Product Coach
 description: >-
   Use when evaluating whether to build a feature, validating product-market fit, assessing system purpose, defining
   value propositions, creating product requirements documents, running Business Model Canvas exercises, or coaching on

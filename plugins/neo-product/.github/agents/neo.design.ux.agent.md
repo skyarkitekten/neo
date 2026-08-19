@@ -1,11 +1,7 @@
 ---
-neo-version: 1.3.0
-name: UX Designer
+name: Neo UX Designer
 description: Create UI/UX designs, component styling, design tokens, and design systems with full creative autonomy over aesthetic decisions, ensuring WCAG AA accessibility compliance.
-phase: Execute
-model:
-  - Gemini 2.5 Pro (copilot)
-  - Gemini 3 Flash (Preview) (copilot)
+model: Gemini 2.5 Pro
 tools:
   - read
   - search
