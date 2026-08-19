@@ -31,7 +31,7 @@ Two parts: YAML frontmatter + Markdown body (the system prompt).
 | `tools` | recommended | Allowlist of built-in tools + MCP servers. |
 | `agents` | optional | Allowlist of worker agents this one may launch (needs the `agent` tool). |
 | `handoffs` | optional | VS Code handoff buttons — **ignored on GitHub.com cloud agent**. |
-| `user-invokable` / `user-invocable` | optional | Whether a human can select it directly. |
+| `user-invocable` | optional | Whether a human can select it directly. Copilot also accepts the `user-invokable` spelling, but VS Code honors only `user-invocable` — neo standardizes on the `c` form everywhere. |
 | `disable-model-invocation` | optional | Prevent use as a subagent unless a coordinator allows it. |
 | `argument-hint` | optional | Hint for invocation args — **ignored on GitHub.com cloud agent**. |
 | `target` | optional | `vscode` or `github-copilot`; omit for both. |
@@ -39,6 +39,23 @@ Two parts: YAML frontmatter + Markdown body (the system prompt).
 Common built-in tools: `codebase`/`search`, `terminal`/`runCommands`, `edit`, `github`, `fetch`/`web`, `agent`. MCP tools are referenced by server name (e.g. `postgres`, `docker`).
 
 **Body:** structure it — role/expertise, a numbered procedure or checklist, guardrails ("never…"), and an explicit output format (show the format you expect).
+
+### Model selection
+
+`model` and `reasoningEffort` are chosen per role, never left to the default. What neo ships
+today, which is the reference for new agents:
+
+| Role shape | Model | `reasoningEffort` | Example |
+| --- | --- | --- | --- |
+| Planning and decomposition — the hardest reasoning | `Claude Opus 4.8` | `high` | `neo.implementation-planner` |
+| Review, authoring, spec work | `Claude Sonnet 5` | `high` | `neo.code-reviewer`, `neo.feature-agent` |
+| Orchestration and code generation | `Claude Sonnet 5` | `medium` | `neo.technical-engineer`, `neo.code-writer` |
+| Fast, wide, read-only gathering | `Claude Haiku 4.5` | `low` | `neo.researcher` |
+
+The rule behind the table: raise reasoning where a wrong answer is expensive to *detect*
+(review, planning), lower it where the work is mechanical or the output is checked immediately.
+Model names churn — verify against the target Copilot version, and prefer a name already in use
+in this repo over one from a blog post.
 
 ### Design patterns
 
@@ -49,7 +66,7 @@ Common built-in tools: `codebase`/`search`, `terminal`/`runCommands`, `edit`, `g
 ### Best practices & pitfalls
 
 - Be specific about expertise ("React 18+ with TypeScript", not "frontend dev"). Define working style (ask vs. assume; concise vs. thorough). Include guardrails. Show output examples.
-- Choose the model to fit the task; use higher reasoning for review/analysis, lighter models for formatting/simple tasks.
+- Choose the model and reasoning effort to fit the task — see [Model selection](#model-selection) above.
 - **One persona per file.** If an agent sprawls, split it or extract shared work into skills.
 - Start with 2–3 agents; typical teams run 3–8.
 - Pitfalls: too broad ("you are a software engineer"); no `tools` declared; **contradicting instruction files**; monolithic do-everything agents.
