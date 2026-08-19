@@ -1,0 +1,19 @@
+{
+  "name": "neo-product",
+  "version": "0.1.0",
+  "description": "Neo product — the upstream Product loop (Intake/Onboarding, System & Design -> PRD, Ingest Code & Docs) that produces the PRD consumed by neo-core's Specification loop. Shape confirmed, agent prompt not yet authored; see README and issue #69.",
+  "author": {
+    "name": "Chad Thomas"
+  },
+  "homepage": "https://github.com/skyarkitekten/neo",
+  "repository": "https://github.com/skyarkitekten/neo",
+  "license": "MIT",
+  "keywords": [
+    "agents",
+    "product",
+    "hooks",
+    "observability"
+  ],
+  "agents": ".github/agents",
+  "hooks": ".github/hooks/hooks.json"
+}
