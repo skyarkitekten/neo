@@ -38,10 +38,10 @@ Visualize which dependencies block which stories or milestones:
 
 ```mermaid
 graph LR
-    D001[API v2 Available] --> US003[Story: Submit Claim]
+    D001[API v2 Available] --> US003[Story: Submit Request]
     D002[Auth Service Updated] --> US001[Story: Login]
     D002 --> US004[Story: View History]
-    D003[Data Migration Complete] --> US005[Story: Search Past Claims]
+    D003[Data Migration Complete] --> US005[Story: Search Past Records]
 ```
 
 ### 4. Identify the Critical Path
