@@ -73,7 +73,9 @@ Build on existing artifacts rather than starting over.
 
 ### 3. Read the Activity Reference
 
-Load the appropriate reference file from the routing table and follow its procedure.
+Load the appropriate reference file from the routing table and follow its procedure. If the reference file cannot be
+found, notify the user that the reference is missing and proceed using general design thinking best practices for
+that activity, clearly labeling the output as based on defaults rather than the project reference.
 
 ### 4. Save the Output
 
@@ -85,11 +87,18 @@ specified in the reference file.
 After completing an activity, recommend the logical next step from the workflow sequence. Cross-reference the routing
 table to guide the user forward.
 
+### Handling Multiple Activities
+
+If the user requests multiple activities at once, execute them in the recommended workflow sequence, completing and
+saving each artifact before starting the next. Reference the prior artifact as input to the subsequent activity.
+
 ## Shared Rules
 
 - Ground all findings in evidence — label assumptions explicitly
-- One artifact per scope (per persona, per journey, per service, etc.)
+- Produce one artifact per distinct subject — one file per persona, one file per journey (per user type and
+  scenario), one file per service
 - All artifacts are living documents — update them as new evidence emerges
-- Never skip empathy — it is the foundation of every design activity
+- Approach every activity with empathy for the people affected — it is the foundation of design thinking, even when
+  the routing table sends you directly to an activity other than Empathy Mapping
 - Hand system structure questions to the `system-designer`
 - Escalate pivot/persevere decisions to the `product-coach`
