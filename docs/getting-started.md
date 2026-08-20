@@ -14,19 +14,21 @@ New to the vocabulary? Read the [glossary](./glossary.md) first, then
 
 ## What's live vs. target
 
-Neo is designed as three loops (see [architecture.md](./concepts/architecture.md)). Only the first
-is built:
+Neo is designed as four loops (see [architecture.md](./concepts/architecture.md)). The first two
+are built:
 
 | Loop | What it does | Status |
 | --- | --- | --- |
+| **Product loop** | Problem/opportunity → research → viability/desirability/feasibility → **PRD** | `[live]` |
 | **Specification loop** | PRD/requirements → **Feature** (business, human-signed) → **Task** (spec, ≈ 1 PR) | `[live]` |
 | **Coding loop** | Research → plan → implement → review → draft PR | `[target]` |
 | **Verification / Operations** | PR review, smoke/user test, CD, telemetry | `[target]` |
 
-So today you use Neo to **turn intent into a signed-off, machine-checkable task set**. The
-issue→PR pipeline is the direction of travel, not a claim about what runs end-to-end yet. The
-`code-writer`, `code-reviewer`, `researcher`, and `implementation-planner` agents ship, but the
-loop that orchestrates them autonomously is still `[target]`.
+So today you use Neo to **turn intent into a signed-off, machine-checkable task set** — and, if you
+don't already have a PRD, to produce one first. The issue→PR pipeline is the direction of travel,
+not a claim about what runs end-to-end yet. The `code-writer`, `code-reviewer`, `researcher`, and
+`implementation-planner` agents ship, but the loop that orchestrates them autonomously is still
+`[target]`.
 
 ## The 60-second model
 
@@ -43,9 +45,9 @@ is the thing you can actually automate.
 ## Pick your path
 
 - **I want to run Neo in my repo.** → [guides/installing-neo.md](./guides/installing-neo.md) —
-  install `neo-core`, write your project's `AGENTS.md`, add a stack.
-- **I want to drive the crew.** → [guides/using-neo.md](./guides/using-neo.md) — invoke the agents
-  and work the Specification loop with the BE.
+  install `neo-core`, write your project's `AGENTS.md`, add a loop or a stack.
+- **I want to drive the crew.** → [guides/using-neo.md](./guides/using-neo.md) — produce a PRD,
+  then work the Specification loop with the BE.
 - **I want to hand in a piece of work.** → [guides/filing-work.md](./guides/filing-work.md) — what a
   well-formed Feature and Task look like.
 - **I want to change Neo itself.** → [contributing/README.md](./contributing/README.md) — contracts,
@@ -58,6 +60,12 @@ Neo is packaged for GitHub Copilot CLI:
 ```
 copilot plugin marketplace add skyarkitekten/neo
 copilot plugin install neo-core@neo
+```
+
+`neo-core` is the baseline. If you don't have a PRD yet, add the optional Product loop:
+
+```
+copilot plugin install neo-product@neo
 ```
 
 Then invoke the crew from your project. Full setup — including the `AGENTS.md` your project needs

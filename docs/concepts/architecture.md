@@ -31,15 +31,26 @@ You can auto-validate a task-sized spec; you cannot reliably auto-validate a fea
 
 ## Hierarchy of work
 
-**PRD / Requirements** (segmented) → **Feature** (business, BE-signed) → **Task** (spec, ≈ 1 PR) → **Step** (≈ 1 commit).
+**Problem / opportunity** → **PRD / Requirements** (segmented) → **Feature** (business, BE-signed) → **Task** (spec, ≈ 1 PR) → **Step** (≈ 1 commit).
 
-## The three loops (Diagram 2, target end-state)
+The PRD is not an assumption. It is produced by the Product loop, which is where a problem
+becomes a documented requirement.
 
-Only the Specification loop is designed today; the rest is the end-state map.
+## The four loops (Diagram 2, target end-state)
 
-1. **Specification loop** `[designed]` — problem space → solution space. Human-gated at both ends.
-2. **Coding loop** `[target]` — `Research → Implementation Planner → Implement` across Build, Validation, and Verification spaces; ends at Review → Code Review → PR.
-3. **Verification / Operations** `[target]` — PR Review, Smoke Test, User Test, CD, Telemetry, run by the SRE and Platform Engineering agents.
+The Product and Specification loops are built; the rest is the end-state map.
+
+1. **Product loop** `[live]` — problem/opportunity → **PRD**. Research fan-out, then the
+   viability / desirability / feasibility lenses, then synthesis. Human-gated twice: the decision
+   to proceed past synthesis, and the BE's acceptance of the PRD. Shipped by the optional
+   `neo-product` plugin; the crew and its internals are documented in that plugin's README.
+2. **Specification loop** `[live]` — problem space → solution space. Human-gated at both
+   ends.
+3. **Coding loop** `[target]` — `Research → Implementation Planner → Implement` across Build, Validation, and Verification spaces; ends at Review → Code Review → PR.
+4. **Verification / Operations** `[target]` — PR Review, Smoke Test, User Test, CD, Telemetry, run by the SRE and Platform Engineering agents.
+
+The **artifact that crosses each boundary** — including Boundary 0, where the PRD leaves the
+Product loop — is owned by [process-flow.md](./process-flow.md).
 
 ## Specification loop in detail
 
@@ -77,7 +88,9 @@ One step upstream of Feature→Task, and interactive with the BE in the same way
 
 ## Status
 
-- **Live:** Specification-loop design; `neo-task-authoring` skill + `task-planner` agent, and `neo-feature-authoring` skill + `feature-agent` (GitHub Copilot).
+- **Live:** Product loop (`neo-product` — the Product Engineer, Product Researchers, and the three
+  lenses); Specification-loop design; `neo-task-authoring` skill + `task-planner` agent, and
+  `neo-feature-authoring` skill + `feature-agent` (GitHub Copilot).
 - **Target (Diagram 2, not yet specced):** Coding loop and Verification / Operations loop.
 
 ## Open threads

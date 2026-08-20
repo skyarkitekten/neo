@@ -12,7 +12,7 @@ done.
 ## Shared core — read first, whichever door you take
 
 - [`glossary.md`](./glossary.md) — the canonical vocabulary. Everything assumes these terms.
-- [`concepts/architecture.md`](./concepts/architecture.md) — what Neo is: task = spec, the three
+- [`concepts/architecture.md`](./concepts/architecture.md) — what Neo is: task = spec, the four
   loops, the verify/validate rule.
 - [`concepts/process-flow.md`](./concepts/process-flow.md) — the loop boundaries: what artifact
   crosses each gate, who owns it, integration modes, KPI settlement.
@@ -23,9 +23,9 @@ Start at **[`getting-started.md`](./getting-started.md)** — what Neo is, what'
 quickest path in. Then:
 
 - [`guides/installing-neo.md`](./guides/installing-neo.md) — install `neo-core`, write your project's
-  `AGENTS.md`, pick an integration mode, add a stack.
-- [`guides/using-neo.md`](./guides/using-neo.md) — invoke the crew and work the Specification loop
-  with the Business Engineer.
+  `AGENTS.md`, pick an integration mode, add a loop or a stack.
+- [`guides/using-neo.md`](./guides/using-neo.md) — produce a PRD with the Product loop, then invoke
+  the crew and work the Specification loop with the Business Engineer.
 - [`guides/filing-work.md`](./guides/filing-work.md) — what a well-formed Feature and Task look like
   before they enter the pipeline.
 

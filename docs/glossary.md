@@ -46,7 +46,7 @@ Canonical vocabulary for the Neo Agentic SDLC. Define a term once — here — a
 
 **Product loop** `[live]` — The loop *upstream* of the Specification loop, shipped by the `neo-product` plugin: research fan-out → viability/desirability/feasibility lenses → synthesis → **PRD**. It answers "what should exist, and why" and is the origin of the PRD that Neo previously assumed into being. Human-gated at two points: the decision to proceed past synthesis, and the BE's acceptance of the PRD at [Boundary 0](./concepts/process-flow.md#boundary-0--product--specification). It does **not** absorb or replace `feature-agent`/`task-planner`.
 
-**Specification loop** `[partly live]` — PRD→Feature and Feature→Task; problem space into solution space. Human-gated: _Start Human, Finish Human; Critical Thinking required._
+**Specification loop** `[live]` — PRD→Feature and Feature→Task; problem space into solution space. Human-gated: _Start Human, Finish Human; Critical Thinking required._
 
 **Coding loop** `[target]` — `Research → Planner → Implement` across Build, Validation, and Verification spaces. Ends at Review → Code Review → PR.
 

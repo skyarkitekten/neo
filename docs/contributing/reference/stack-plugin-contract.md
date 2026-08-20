@@ -3,9 +3,9 @@
 Terms in **bold** are defined in the [glossary](../../glossary.md).
 
 This is the **normative** design for how Neo is decomposed into distributable plugins: what
-`neo-core` owns, what a stack plugin (`neo-react`, `neo-dotnet`, …) adds, and the contract
-between them. It governs *which tier a rule belongs to* and *how stack skills are discovered at
-runtime*.
+`neo-core` owns, what a loop plugin (`neo-product`) or a stack plugin (`neo-react`,
+`neo-dotnet`, …) adds, and the contract between them. It governs *which tier a rule belongs to*
+and *how stack skills are discovered at runtime*.
 
 It is the companion to [`plugin-contract.md`](./plugin-contract.md), which owns the mechanical
 shape — folder layout, manifest fields, `neo-` naming. This doc owns the *split*: the tiers, the
@@ -24,7 +24,7 @@ mechanical facts (paths, manifest keys) are `plugin-contract.md`'s; the design r
 | # | Decision |
 | --- | --- |
 | 1 | **Monorepo.** One repo, one marketplace, many plugins. |
-| 2 | **`neo-core` + one plugin per stack.** Every project installs `neo-core`; stacks are additive. |
+| 2 | **`neo-core` is the baseline; loop plugins and stack plugins are additive.** Every project installs `neo-core`. A **loop plugin** (`neo-product`) adds a whole loop; a **stack plugin** (`neo-react`, `neo-dotnet`, …) adds tech-specific skills. Both are opt-in. |
 | 3 | **Stacks are generally skills, but not restricted to skills.** The IP is the harness; skills are what plug into it. |
 | 4 | **Many stack skills will be sourced from third-party OSS**, not authored here. |
 | 5 | **`master-control` stays in the repo and is not deployed.** It is the authoring prompt for building Neo, not a runtime agent. |
@@ -36,6 +36,7 @@ all projects          neo-core
 projects 1, 2, 5      neo-core + neo-react + neo-dotnet
 projects 3, 4         neo-core + neo-python + neo-agent-framework
 project 6             neo-core + neo-rust
+teams doing discovery neo-core + neo-product        (add a loop, not a stack)
 ```
 
 ---
@@ -47,13 +48,33 @@ belongs is the repo's characteristic defect.
 
 | Tier | Owns | Ships as | Varies by |
 | --- | --- | --- | --- |
-| **Process** | Loops, roles, proof mechanisms, orchestration, observability | `neo-core` | Nothing — identical everywhere |
+| **Process** | Loops, roles, proof mechanisms, orchestration, observability | `neo-core`, plus a **loop plugin** per optional loop (`neo-product`) | Which loops you run — never the stack or the project |
 | **Technology** | How to build, test, and review in a given stack | `neo-react`, `neo-dotnet`, … | Stack |
 | **Project** | Layout, exact commands, integration mode, gotchas, path-scoped rules | Consuming repo's `AGENTS.md` + `.github/instructions/` | Project |
 
 **Test for placement:** if it changes when you switch stacks, it isn't core. If it changes when
 you switch projects within the same stack, it isn't the stack plugin either — it belongs in the
 consuming repo's `AGENTS.md`.
+
+### Loop plugins
+
+The tier answers *what a rule is about*; packaging answers *what you install*. Those are separate
+axes, and the Process tier is the one place they come apart.
+
+A **loop plugin** is Process-tier content — loops, roles, orchestration, observability — packaged
+separately because the loop itself is optional. `neo-product` is the first: teams that already
+have a PRD don't need the Product loop, so making every installer carry it would be dead weight.
+What a loop plugin ships is still identical everywhere it *is* installed; only *whether* you run
+that loop varies.
+
+This is a packaging split, not a tier split. A loop plugin is still bound by every Process-tier
+rule: it is stack-agnostic, it ships no `AGENTS.md`, and its content must not vary by project. If
+something in a loop plugin would change per stack or per project, it is in the wrong tier and the
+placement test above still applies unchanged.
+
+The mechanical shape of a loop plugin is no different from any other — same folder layout, same
+manifests, same hook contract, all owned by
+[`plugin-contract.md`](./plugin-contract.md).
 
 **The project tier is the consumer's obligation.** `neo-core` ships no `AGENTS.md` and no template
 for one — Neo ships capability, not scaffolding. Every project installing `neo-core` must author
@@ -83,7 +104,15 @@ same route that repo gets its `AGENTS.md`.
 | `task-planner` | `neo-core` | |
 | `neo-feature-authoring` skill | `neo-core` | |
 | `neo-task-authoring` skill | `neo-core` | |
-| Lifecycle hooks + `log-event.sh` | `neo-core` | |
+| `product.engineer` (orchestrator) | `neo-product` | Entry point for the Product loop |
+| `product.researcher` | `neo-product` | Fanned out in parallel by the orchestrator |
+| `product.coach` | `neo-product` | Viability lens |
+| `design.thinking` | `neo-product` | Desirability lens |
+| `systems.thinking` | `neo-product` | Feasibility lens |
+| `neo-product-requirements` skill | `neo-product` | Owns the PRD artifact and template |
+| `neo-design-thinking` skill | `neo-product` | |
+| `neo-system-thinking` skill | `neo-product` | Directory name is singular; the agent is `systems.thinking` |
+| Lifecycle hooks + `log-event.sh` | `neo-core`, `neo-product` | Duplicated, not shared — a plugin cannot reference files outside its own directory |
 | `analyze_agent_logs.py` | `neo-core` | Analyzes logs the core hooks emit — ships with them |
 | **`master-control`** | **nothing** | Dev-time only |
 | Stack skills (React, xUnit, Bicep, …) | `neo-<stack>` | Mostly not yet authored |
@@ -93,7 +122,7 @@ same route that repo gets its `AGENTS.md`.
 ## master-control is not a runtime agent
 
 `master-control` authors agents, skills, instruction files, hooks, and `AGENTS.md` files. It
-participates in none of the three loops — it is the prompt used to *build* Neo. It lives at the
+participates in none of the loops — it is the prompt used to *build* Neo. It lives at the
 repo root (`.github/agents/neo.master-control.agent.md`), which Copilot CLI auto-discovers for
 anyone working *inside* this repo, while the plugin's agent path points at
 `plugins/neo-core/.github/agents/`. So it is visible to Neo developers and invisible to

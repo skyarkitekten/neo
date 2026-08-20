@@ -5,7 +5,8 @@ Specification loop. Assumes Neo is already installed (see
 [installing-neo.md](./installing-neo.md)). Terms in **bold** are in the
 [glossary](../glossary.md).
 
-> **Status:** the Specification loop (PRD → Feature → Task) is `[live]` and interactive. The Coding
+> **Status:** the Product loop (problem → PRD) and the Specification loop (PRD → Feature → Task)
+> are `[live]` and interactive. The Coding
 > loop that would then carry a Task to a draft PR autonomously is `[target]`; today the
 > orchestrator and worker agents exist, but you drive the spec work hands-on with the BE at the
 > gates. See [getting-started.md](../getting-started.md#whats-live-vs-target).
@@ -14,6 +15,8 @@ Specification loop. Assumes Neo is already installed (see
 
 | Agent (picker name) | Role | You invoke it? |
 | --- | --- | --- |
+| **Neo Product Engineer** (`product.engineer`) | Orchestrator for the Product loop — drives research → lenses → synthesis → **PRD** | Yes — if you need a PRD |
+| **Neo Product Researcher / Product Coach / Design Thinking Facilitator / Systems Thinking Facilitator** | Product-loop workers: research fan-out, then the viability, desirability, and feasibility lenses | No — the Product Engineer wires them |
 | **Neo Feature Agent** (`feature-agent`) | Drafts a **Feature** — What/Why/KPIs/verification — from a PRD segment, with you | Yes |
 | **Neo Task Planner** (`task-planner`) | Splits a signed feature into **Tasks**, with you | Yes |
 | **Neo Technical Engineer** (`technical-engineer`) | Orchestrator — takes a Task (issue/story) and drives research → plan → implement → review → draft PR | Yes |
@@ -22,12 +25,33 @@ Specification loop. Assumes Neo is already installed (see
 The workers are deliberately sharp and single-purpose; they don't know each other or the whole
 spec. The orchestrator (and you) wire them together.
 
+The Product agents ship in the optional `neo-product` plugin. If it isn't installed they won't
+appear in the picker — see [installing-neo.md](./installing-neo.md).
+
+## Step 0 — Produce a PRD
+
+The Specification loop starts from a **PRD/requirements segment**. If you already have one, skip
+to step 1.
+
+If you don't, that's the Product loop's job. Invoke **Neo Product Engineer** with the problem or
+opportunity — not a solution. It fans out Product Researchers, runs the **viability**,
+**desirability**, and **feasibility** lenses, synthesizes, and produces a PRD.
+
+It stops for you twice: once at synthesis, to decide whether the problem is worth pursuing at all,
+and once at the end, where you **accept the PRD**. That acceptance is
+[Boundary 0](../concepts/process-flow.md#boundary-0--product--specification) — the PRD is the
+artifact that crosses it, and it's what you segment in step 1.
+
+The loop is **upstream of**, not a replacement for, `feature-agent` and `task-planner`. It answers
+*what should exist, and why*; the Specification loop answers *what to build*.
+
 ## The Specification loop, step by step
 
 This is the part that's `[live]`. It is **interactive and human-gated** — never autonomous — because
 a bad split poisons everything downstream.
 
-1. **PRD → Feature.** Invoke **Neo Feature Agent** with a PRD/requirements segment. It drafts
+1. **PRD → Feature.** Invoke **Neo Feature Agent** with a PRD/requirements segment — from step 0,
+   or one you already had. It drafts
    **What**, **Why**, optional **KPIs**, and **verification steps**, working with you. It stops at a
    **BE-signed feature** — it does not decompose tasks. Entry to *ready-to-work* requires What + Why
    + verification steps **and** your sign-off. If you can't verify it, it can't ship.
