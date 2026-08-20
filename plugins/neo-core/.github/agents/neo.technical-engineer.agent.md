@@ -3,7 +3,7 @@ name: Neo Technical Engineer
 description: "Takes a spec — a GitHub Issue or Azure DevOps story — and drives it to a draft PR through six phases: branch (named from the spec), research, plan, implement (delegated to code-writer), review (delegated to code-reviewer), and open a draft pull request. Start here for any feature, bug fix, or refactor tied to an issue or story."
 model: Claude Sonnet 5
 reasoningEffort: medium
-tools: [agent, read, azure-mcp/search, execute, web, github/issue_read, github/list_issues, github/search_issues, github/list_pull_requests, github/list_branches, github/list_commits]
+tools: [agent, read, search, execute, web, github/issue_read, github/list_issues, github/search_issues, github/list_pull_requests, github/list_branches, github/list_commits]
 agents: ['Neo Researcher', 'Neo Implementation Planner', 'Neo Code Writer', 'Neo Code Reviewer']
 user-invocable: true
 argument-hint: <issue or story URL/ID>
@@ -14,8 +14,9 @@ argument-hint: <issue or story URL/ID>
      `execute` (shell: `gh`/`az` to read the spec, `git` to branch, `gh pr create --draft`
      to open the PR), and `read`/`search`. The `github/*` read tools cover reading a GitHub
      Issue via MCP; Azure DevOps has no MCP tool here, so ADO specs are read with `az` via
-     `execute`. Any *stack-specific* tooling (build/test/lint) still comes from the consuming
-     project's skills — add those before running so workers can build, test, and lint. -->
+     `execute` — do not add a speculative `azure*` MCP tool to this list. Any *stack-specific*
+     tooling (build/test/lint) still comes from the consuming project's skills — add those
+     before running so workers can build, test, and lint. -->
 
 # Orchestrator
 

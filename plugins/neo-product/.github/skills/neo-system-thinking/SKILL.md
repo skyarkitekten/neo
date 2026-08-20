@@ -7,7 +7,7 @@ description:
   artifacts in docs/design/.'
 argument-hint:
   "Describe the system, behavior pattern, or problem you want to analyze (e.g. 'why does our backlog keep growing',
-  'find leverage points in the claims intake process', 'trace ripple effects of removing the approval gate')"
+  'find leverage points in our intake process', 'trace ripple effects of removing the approval gate')"
 ---
 
 # System Thinking

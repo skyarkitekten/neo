@@ -16,7 +16,7 @@ and Verification loops remain `[target]` and are not specced here.
 
 | # | Boundary | Artifact that crosses | Gate | Gate owner | Status |
 | --- | --- | --- | --- | --- | --- |
-| — | PRD → Specification | PRD/requirements segment | Segment has a business justification | BE | `[live]` |
+| — | **Product → Specification** | A **PRD** | PRD is segmentable — each segment carries its own business justification | BE (human), on a `neo-product` PRD | `[live]` |
 | **1** | **Specification → Coding** | One **Task** | Task-authoring conformance + BE-approved task set | BE (human) | `[live]` |
 | **2** | **Coding → Verification** | One draft **PR** | **Validation** green + code review approved | Machine, then human | `[target]` |
 | **3** | **Verification → Deployment** | One verified **Feature** | **Verification** steps pass | BE (human judgment) | `[target]` |
@@ -27,6 +27,32 @@ the spec loop thinks in **features**, the coding loop thinks in **tasks**, and t
 verification loop thinks in **features** again. Boundary 2 is therefore not 1:1 — N task PRs
 fan in to one verifiable feature. How that assembly happens is the
 [integration mode](#integration-modes), a project-level choice with a neo default.
+
+---
+
+## Boundary 0 — Product → Specification
+
+`[live]`. Formerly written as "PRD → Specification" with an unspecified origin — neo assumed a
+PRD simply existed. The **Product loop** (`neo-product`) is what produces it.
+
+**What crosses.** One **PRD**, authored by the **Product Engineer** in `docs/design/requirements/`
+after research fan-out, the three lenses (viability, desirability, feasibility), and a human
+decision to proceed. Format is owned by the `neo-product-requirements` skill.
+
+**Entry gate.** The PRD must be **segmentable**: a reader can carve it into independent chunks,
+each carrying its own business justification. That is the contract — the Specification loop
+consumes *segments*, not whole documents, so a PRD that cannot be segmented cannot be consumed.
+Supporting criteria: measurable success criteria, explicit non-goals, prioritized requirements
+(P0/P1/P2), and honestly-stated open assumptions.
+
+**Gate owner.** The **BE** (human). The Product loop hands the PRD over and stops; it never
+invokes `feature-agent` or `task-planner` itself.
+
+**On failure.** Back into the Product loop — usually to the lens that produced the weak section,
+or to a fresh research fan-out when the gap is factual rather than analytical.
+
+**Note.** This boundary is numbered 0 because the loops it joins were specced in the other
+order; the chain reads Product → Specification → Coding → Verification.
 
 ---
 

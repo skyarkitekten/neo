@@ -1,49 +1,60 @@
 # neo-product
 
-**Status: scaffold, design confirmed.** Folder shape and manifests exist; the shape of the
-loop is decided (see below and [issue #69](https://github.com/skyarkitekten/neo/issues/69)),
-but the agent/skill files themselves are still stubs. Do not install for real use until
-`neo.product-engineer.agent.md` is replaced with a specced system prompt.
+**Status: live.** The Product loop's agents and skills are authored and invokable. Installable
+as a working crew.
 
 ## What this plugin is
 
-`neo-product` ships the **Product loop** — a new loop upstream of the existing Specification
-loop. Today neo's `PRD -> Specification` boundary
-([`process-flow.md`](../../docs/concepts/process-flow.md)) assumes a PRD/requirements
+`neo-product` ships the **Product loop** — a loop upstream of the existing Specification
+loop. neo's `PRD → Specification` boundary
+([`process-flow.md`](../../docs/concepts/process-flow.md)) used to assume a PRD/requirements
 document simply exists; this loop is what produces it. It is **upstream of**, not a
 replacement for, `neo-core`'s specification crew (`feature-agent`, `task-planner`, the BE) —
 the PRD this loop emits is what the BE then segments into features.
 
 ## Shape
 
-- **Orchestrator:** `neo.product-engineer.agent.md` — the Product Engineer agent.
-- **Phases** — not a strict pipeline; these run in parallel or on demand:
-  - **Intake / Onboarding**
-  - **System & Design -> PRD** — the phase that emits the PRD artifact
-  - **Ingest Code & Docs** — parallel/on-demand, not fixed first or last
-- **Sub-capabilities** — separate invokable agents/skills the Product Engineer calls, not
-  prompt sections of one agent:
-  - `Researcher` — invoked as parallel sub-agents (fan-out for research), not multiple
-    distinct researcher roles
-  - `Systems Thinking`
-  - `Product Thinking`
-  - `Design Thinking`
-- **Output:** a PRD, crossing the existing `PRD -> Specification` boundary unchanged.
+- **Orchestrator:** `neo.product.engineer.agent.md` — **Neo Product Engineer**.
+- **Phases** — a default sequence, not a rigid pipeline; research runs in parallel and on
+  demand throughout:
+  - **Phase 0 — Fan out research** (Intake / Ingest Code & Docs)
+  - **Phase 1–3 — The three lenses**: viability, desirability, feasibility
+  - **Phase 4 — Synthesize**, human gate
+  - **Phase 5 — Produce the PRD** — the artifact that leaves this loop
+- **Sub-capabilities** — separate invokable agents the orchestrator delegates to, not prompt
+  sections of one agent.
+- **Output:** a **PRD**, written to `docs/design/requirements/`, crossing the existing
+  `PRD → Specification` boundary. The PRD must be *segmentable* — that is the handoff
+  contract. The orchestrator does not invoke the Specification loop itself.
 
 ## What's inside
 
-- **Agents** (`.github/agents/`, `neo.<role>.agent.md`):
-  - `neo.product-engineer.agent.md` — placeholder stub (`user-invocable: false`,
-    `disable-model-invocation: true`) pending the system prompt described above. See the
-    file for what must be decided before it ships.
-- **Skills** (`.github/skills/`): none yet — the sub-capability agents/skills above are not
-  yet authored.
-- **Hooks** (`.github/hooks/hooks.json`, v1 schema, `${PLUGIN_ROOT}`): the same
-  fail-open observability logging and fail-closed guardrail enforcement as `neo-core`,
-  via this plugin's own `.agent-hooks/log-event.{sh,ps1}` and
-  `.agent-hooks/enforce-guardrails.{sh,ps1}` (duplicated, not shared — plugins cannot
-  reference files outside their own directory; see
-  [`plugin-contract.md`](../../docs/contributing/reference/plugin-contract.md#1-plugin-folder-shape)).
+**Agents** (`.github/agents/`, `neo.<domain>.<role>.agent.md`):
+
+| File | Agent `name:` | Role |
+| --- | --- | --- |
+| `neo.product.engineer.agent.md` | `Neo Product Engineer` | Orchestrates the loop; the entry point. `user-invocable` |
+| `neo.product.researcher.agent.md` | `Neo Product Researcher` | One scoped discovery question per invocation; fanned out in parallel |
+| `neo.product.coach.agent.md` | `Neo Product Coach` | Viability — *should we build this?* Drafts the PRD |
+| `neo.design.thinking.agent.md` | `Neo Design Thinking Facilitator` | Desirability — *do people need this?* |
+| `neo.systems.thinking.agent.md` | `Neo Systems Thinking Facilitator` | Feasibility & dynamics — *how does this behave?* |
+
+The agents are **domain-neutral**. Product, industry, and regulatory context come from the
+consuming repo's `AGENTS.md`, PRDs, ADRs, and design docs — never baked into a prompt.
+
+**Skills** (`.github/skills/`):
+
+| Skill | Owns |
+| --- | --- |
+| `neo-product-requirements` | PRD structure, the drafting procedure, and `assets/prd-template.md`. **Normative** — Phase 5 does not improvise a format |
+| `neo-design-thinking` | Stakeholder/empathy mapping, personas, problem framing, journey mapping, ideation, assumption testing, service blueprinting |
+| `neo-system-thinking` | Boundaries, stocks and flows, causal loops, delays, leverage points, archetypes, intervention design |
+
+**Hooks** (`.github/hooks/hooks.json`, v1 schema, `${PLUGIN_ROOT}`): the same fail-open
+observability logging and fail-closed guardrail enforcement as `neo-core`, via this plugin's
+own `.agent-hooks/log-event.{sh,ps1}` and `.agent-hooks/enforce-guardrails.{sh,ps1}`
+(duplicated, not shared — plugins cannot reference files outside their own directory; see
+[`plugin-contract.md`](../../docs/contributing/reference/plugin-contract.md#1-plugin-folder-shape)).
 
 ## Why a new plugin and not a `neo-core` addition
 
@@ -56,13 +67,12 @@ addition to `neo-core`'s specification crew.
 
 ## Install
 
-Not yet ready to install as a functioning crew. Once designed, packaging follows the same
-path as `neo-core`:
-
 ```
 copilot plugin marketplace add skyarkitekten/neo
 copilot plugin install neo-product@neo
 ```
+
+Pairs with `neo-core`, which consumes the PRD this loop produces.
 
 ## License
 
