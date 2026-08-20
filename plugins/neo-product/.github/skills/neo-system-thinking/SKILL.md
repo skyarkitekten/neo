@@ -42,9 +42,15 @@ boundary-definition → stock-and-flow-mapping → causal-loop-mapping
 ## How to Use This Skill
 
 1. **Identify the phase.** Match the user's request to a row in the routing table above.
-2. **Load the reference.** Read the linked reference file for the detailed procedure, output format, and rules.
-3. **Follow the procedure.** Execute each step in the reference, producing the specified output artifact.
-4. **Hand off.** Use the handoff guidance in each reference to feed outputs into the next phase.
+2. **Check the boundary.** If the matched phase is not boundary-definition and no prior boundary artifact exists in
+   `docs/design/system-boundaries/`, run boundary-definition first before proceeding to the requested phase.
+3. **Load the reference.** Read the linked reference file for the detailed procedure, output format, and rules. If the
+   reference file cannot be found, notify the user with the exact missing path and halt that phase until the file is
+   available. Do not attempt to infer the procedure without the reference.
+4. **Follow the procedure.** Execute each step in the reference, producing the specified output artifact.
+5. **Hand off.** Use the handoff guidance in each reference to feed outputs into the next phase.
+6. **Handle multi-phase requests.** If the user's request maps to more than one phase, execute them in the order
+   defined in the Recommended Workflow, completing each phase's artifact before starting the next.
 
 ## Output Locations
 
@@ -66,5 +72,4 @@ All systems analysis artifacts are written to `docs/design/`:
 - Only edit files under `docs/` — do not modify source code, infrastructure, or configuration files
 - Do not make source-code or infrastructure implementation decisions — this skill maps system dynamics and behavior, not code or deployment structure
 - Do not evaluate business viability — delegate to the `Neo Product Coach` agent
-- Never skip boundary definition — every analysis must start by defining what is inside and outside the system
 - Present leverage points as hypotheses, not certainties — they require validation
