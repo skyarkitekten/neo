@@ -42,6 +42,11 @@ artifact**, distinct from neo's own `AGENTS.md`. It should carry:
 - **Integration mode** — how neo work enters your repo (see below).
 - **Gotchas** — env vars, cross-layer wiring, codegen steps.
 
+For rules that should apply to *some* files rather than the whole repo, add
+`.github/instructions/<name>.instructions.md` with an `applyTo` glob. These are yours too — neo
+cannot ship them, because Copilot finds instruction files by location and a plugin's install
+directory isn't one of the places it looks.
+
 ## 3. Choose an integration mode
 
 neo attaches to your project in one of two modes (**A** or **B**). The choice changes how a Task

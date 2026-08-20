@@ -76,6 +76,16 @@ install. A file under `plugins/neo-core/` cannot reference a path outside its ow
 directory (`../neo-react/...` or a repo-root file won't be copied). Any content two plugins
 need must be duplicated into each.
 
+**A plugin has no `instructions/` slot — instruction files cannot ship.** Copilot discovers
+`*.instructions.md` by *location*: the repository root, the current working directory,
+intermediate directories between them, directories nested in the path of a file it is working
+on, `$HOME/.copilot/instructions/`, or a directory named in `COPILOT_CUSTOM_INSTRUCTIONS_DIRS`.
+A plugin's install directory is none of these, and `plugin.json` carries path keys only for
+`agents` and `hooks`. Putting an `instructions/` folder in a plugin therefore ships a directory
+Copilot never reads. Instruction files are a **project-tier** artifact authored into the
+consuming repo's `.github/instructions/` — see
+[`stack-plugin-contract.md`](./stack-plugin-contract.md).
+
 ## 2. Required manifest fields
 
 Field lists below are transcribed from the manifest files as they exist today. **Required**
@@ -86,7 +96,7 @@ means the field is present and populated.
 | Field         | Value                                            | Status                                      |
 | ------------- | ------------------------------------------------ | ------------------------------------------- |
 | `name`        | `"neo-core"`                                     | Required.                                    |
-| `version`     | `"0.1.0"`                                        | Required.                                    |
+| `version`     | semver, e.g. `"0.1.4"`                           | Required. Each plugin versions independently. |
 | `description` | present ("… Copilot CLI manifest")               | Required.                                    |
 | `author.name` | `"Chad Thomas"`                                  | Required.                                    |
 | `homepage`    | `"https://github.com/skyarkitekten/neo"`         | Required.                                    |
@@ -109,7 +119,7 @@ The marketplace manifest stays at the repo root and lists each shipped plugin un
 | `plugins[].name`        | `"neo-core"`                          | Required.                                  |
 | `plugins[].source`      | `"./plugins/neo-core"`                | Required — `./`-prefixed repo-root path.   |
 | `plugins[].description` | present                               | Required.                                  |
-| `plugins[].version`     | `"0.1.0"`                             | Required.                                  |
+| `plugins[].version`     | semver, matching that plugin's `plugin.json` | Required.                           |
 | `plugins[].author.name` | `"Chad Thomas"`                       | Required.                                  |
 | `plugins[].license`     | `"MIT"`                               | Required.                                  |
 | `plugins[].keywords[]`  | 4 entries                             | Required.                                  |
@@ -135,8 +145,9 @@ owned by [`hook-contract.md`](./hook-contract.md).
 ### 3.1 What must stay consistent
 
 - `name` — `"neo"` (marketplace top-level) and `"neo-core"` (the plugin).
-- `version` (`"0.1.0"`) — the `plugin.json` and the marketplace's nested `metadata.version`
-  and `plugins[].version`.
+- `version` — a plugin's `plugin.json` and its `plugins[].version` entry in the marketplace
+  must agree. Plugins version **independently** of each other and of `metadata.version`, so
+  `neo-core` and `neo-product` are expected to sit at different numbers.
 - `license`, `author.name` / `owner.name` — identity describes one project.
 - `keywords[]` — kept meaningful per manifest.
 - `plugins[].source` — the `./`-prefixed value pointing at the plugin directory.
@@ -165,6 +176,20 @@ sits in a marketplace alongside others.
   (dot-separated namespace segment + a mandatory `.agent.md` suffix). The `<role>` segment stays
   kebab-case; only the separator after `neo` and the file suffix differ from a plain kebab name.
   This is an accepted harness-imposed grammar, not a violation of the per-word kebab-case rule.
+- **An optional domain segment** is permitted where a plugin groups agents by discipline:
+  `neo.<domain>.<role>.agent.md` (e.g. `neo.design.ux.agent.md`, `neo.product.coach.agent.md`).
+  Both segments stay kebab-case. Use it only when the plugin has two or more domains; a
+  single-domain plugin like `neo-core` stays on the flat `neo.<role>` form.
+- **`name:` is the display identity**, always `Neo <Role>`. It need not be a mechanical
+  transform of the filename, but must unambiguously identify the same agent. The `Neo ` prefix
+  is what prevents collisions in a shared marketplace, so it is never omitted.
+- **No provenance keys in agent frontmatter.** Agent frontmatter has no free-form metadata slot,
+  so keys outside the documented set (`neo-version:`, `phase:`, and the like) are tolerated by
+  today's parsers rather than supported, and break silently if that changes. A plugin's version
+  lives in its `plugin.json`; workflow stage belongs in the agent's prose. Skills are different:
+  the Agent Skills spec defines a `metadata:` map for exactly this, alongside `name`,
+  `description`, `license`, `compatibility`, and `allowed-tools` — and on spec-conformant
+  packaging paths any *other* top-level key is a hard error, not an ignored field.
 - **Copilot skill directory:** `.github/skills/neo-<name>/SKILL.md`, and the frontmatter `name:`
   matches the directory name (e.g. `.github/skills/neo-feature-authoring/SKILL.md` →
   `name: neo-feature-authoring`).

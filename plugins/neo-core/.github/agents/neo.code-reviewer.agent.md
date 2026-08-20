@@ -4,7 +4,7 @@ description: Reviews a code change in this repo for correctness, style, and safe
 model: Claude Sonnet 5
 reasoningEffort: high
 tools: [read, search, execute]
-user-invokable: false
+user-invocable: false
 ---
 
 # Code Reviewer

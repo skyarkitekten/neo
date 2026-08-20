@@ -4,7 +4,7 @@ description: Coding-loop planner — turns a spec plus research findings into an
 model: Claude Opus 4.8
 reasoningEffort: high
 tools: ["search"]
-user-invokable: false
+user-invocable: false
 ---
 
 <!-- Tool access (reading the spec, MCP/CLI helpers) is provided per project via helper skills — a mix of MCP and CLI. Use whatever the project's skills expose; don't hardcode connector names. -->

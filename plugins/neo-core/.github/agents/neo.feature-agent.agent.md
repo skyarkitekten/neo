@@ -4,7 +4,7 @@ description: Use when translating a PRD/requirements segment into a business-lev
 model: Claude Sonnet 5
 reasoningEffort: high
 tools: [read, search, edit]
-user-invokable: true
+user-invocable: true
 argument-hint: <PRD segment, issue, or requirement reference>
 ---
 

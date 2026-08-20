@@ -65,6 +65,5 @@ says who owns what.
 
 ## Superseded — kept for history
 
-- [../archive/packaging.md](../archive/packaging.md) — the pre-#34 dual-harness packaging design. Its
-  live content moved to [reference/stack-plugin-contract.md](./reference/stack-plugin-contract.md);
-  read it only for historical context.
+- The pre-#34 dual-harness packaging design doc was removed when the Claude tree was dropped. Its
+  live content moved to [reference/stack-plugin-contract.md](./reference/stack-plugin-contract.md).

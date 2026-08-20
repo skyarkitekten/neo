@@ -16,7 +16,9 @@ This script makes the remaining invariants executable:
     CLI-lowercase and PascalCase form (which would fire it twice);
   * every Copilot agent's `agents:` allowlist references a real agent `name:`;
   * any agent that delegates (non-empty `agents:`) also grants the `agent`/`Task`
-    delegation tool in its `tools:` allowlist.
+    delegation tool in its `tools:` allowlist;
+  * no agent uses the `user-invokable:` spelling (VS Code honors only
+    `user-invocable:`, so neo standardizes on the `c` form).
 
 Exit code 0 = all good, 1 = at least one violation. No third-party deps.
 """
@@ -72,8 +74,15 @@ def _fm_list(path: Path, key: str) -> list[str] | None:
         if not ln.startswith(prefix):
             continue
         rest = ln[len(prefix) :].strip()
+        tail = fm[idx + 1 :]
+        # A flow sequence may open on the next line and wrap over several lines.
+        if not rest and tail and tail[0].lstrip().startswith("["):
+            rest, tail = tail[0].strip(), tail[1:]
         if rest.startswith("["):
-            inner = rest[rest.index("[") + 1 : rest.rindex("]")] if "]" in rest else rest[1:]
+            while "]" not in rest and tail:
+                rest += " " + tail[0].strip()
+                tail = tail[1:]
+            inner = rest[1 : rest.rindex("]")] if "]" in rest else rest[1:]
             return [_unquote(x) for x in inner.split(",") if x.strip()]
         if rest:  # single scalar or comma-separated string value
             return [_unquote(x) for x in rest.split(",") if x.strip()]
@@ -224,6 +233,11 @@ def check_plugin(plugin: Path) -> None:
     # Aliases that grant the sub-agent delegation ("Task") tool, case-insensitive.
     DELEGATION_TOOLS = {"agent", "custom-agent", "task"}
     for f in files:
+        if any(ln.startswith("user-invokable:") for ln in frontmatter_lines(f)):
+            errors.append(
+                f"[{name}] {f.name} uses `user-invokable:`; neo standardizes on "
+                f"`user-invocable:`, the only spelling VS Code honors"
+            )
         refs = fm_agents(f)
         if not refs:
             continue
@@ -249,6 +263,31 @@ def check_plugin(plugin: Path) -> None:
         )
 
 
+def check_marketplace(path: Path) -> None:
+    """Each plugins[] entry must resolve and agree with that plugin's own plugin.json version."""
+    try:
+        entries = json.loads(path.read_text()).get("plugins", [])
+    except (FileNotFoundError, json.JSONDecodeError):
+        return  # check_json already reported it
+
+    for entry in entries:
+        name = entry.get("name", "<unnamed>")
+        source = entry.get("source")
+        if not source:
+            errors.append(f"[marketplace] {name} has no source")
+            continue
+        manifest = REPO_ROOT / source / ".github" / "plugin" / "plugin.json"
+        if not manifest.is_file():
+            errors.append(f"[marketplace] {name} source '{source}' has no .github/plugin/plugin.json")
+            continue
+        declared = json.loads(manifest.read_text()).get("version")
+        if entry.get("version") != declared:
+            errors.append(
+                f"[marketplace] {name} version '{entry.get('version')}' disagrees with "
+                f"{source}/.github/plugin/plugin.json version '{declared}'"
+            )
+
+
 def main() -> int:
     if not PLUGINS_DIR.is_dir():
         print("no plugins/ directory found", file=sys.stderr)
@@ -263,7 +302,9 @@ def main() -> int:
         check_plugin(plugin)
 
     # Root Copilot marketplace manifest must also parse.
-    check_json(REPO_ROOT / ".github" / "plugin" / "marketplace.json")
+    marketplace = REPO_ROOT / ".github" / "plugin" / "marketplace.json"
+    check_json(marketplace)
+    check_marketplace(marketplace)
 
     if errors:
         print("Plugin validation FAILED:", file=sys.stderr)

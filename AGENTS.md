@@ -44,7 +44,8 @@ root, never in a plugin.
 
 All normative in `docs/contributing/reference/plugin-contract.md` — don't restate it, conform to it.
 
-- Copilot agents: `neo.<role>.agent.md` (e.g. `neo.code-writer.agent.md`).
+- Copilot agents: `neo.<role>.agent.md` (e.g. `neo.code-writer.agent.md`), or
+  `neo.<domain>.<role>.agent.md` in a plugin that groups by discipline (e.g. `neo.design.ux.agent.md`).
 - Kebab-case roles; each agent's frontmatter `name:` is `Neo <Role>`.
 - Skills are `neo-` prefixed when neo-authored; vendored skills keep their upstream name.
 
@@ -58,7 +59,8 @@ This repo has nothing to compile, lint, or unit-test in the app sense. Do **not*
   `hooks.json` under `plugins/*/.github/` parse and carry required fields.
 - **Agent frontmatter is valid** — `name:`, `tools:`, `agents:` allowlists resolve to
   real agent names.
-- **Plugins validate** — run `python3 scripts/validate-plugins.py`. It walks every
+- **Plugins validate** — run `python3 scripts/validate-plugins.py` (`uv run scripts/validate-plugins.py`
+  where `python3` isn't on PATH, e.g. Windows). It walks every
   `plugins/*/`, checks the Copilot manifest + hooks parse, validates each `hooks.json`
   against the hook-manifest contract (`scripts/linting/schemas/hook-manifest.schema.json`
   — including the rule that a `powershell` command must use `$env:PLUGIN_ROOT`, not the

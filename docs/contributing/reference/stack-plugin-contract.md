@@ -14,9 +14,8 @@ mechanical facts (paths, manifest keys) are `plugin-contract.md`'s; the design r
 
 > **Copilot-only (issue #34).** neo ships for GitHub Copilot CLI only. The dual-harness design
 > that first motivated this split — a Claude Code mirror, dual manifests, a `validate-mirrors.py`
-> check — was dropped. The pre-#34 reasoning, including the executed migration plan, is preserved
-> as historical context in [`../archive/packaging.md`](../../archive/packaging.md). This document is
-> the live contract.
+> check — was dropped. The pre-#34 reasoning, including the executed migration plan, was removed
+> along with the archive doc that captured it. This document is the live contract.
 
 ---
 
@@ -50,7 +49,7 @@ belongs is the repo's characteristic defect.
 | --- | --- | --- | --- |
 | **Process** | Loops, roles, proof mechanisms, orchestration, observability | `neo-core` | Nothing — identical everywhere |
 | **Technology** | How to build, test, and review in a given stack | `neo-react`, `neo-dotnet`, … | Stack |
-| **Project** | Layout, exact commands, integration mode, gotchas | Consuming repo's `AGENTS.md` | Project |
+| **Project** | Layout, exact commands, integration mode, gotchas, path-scoped rules | Consuming repo's `AGENTS.md` + `.github/instructions/` | Project |
 
 **Test for placement:** if it changes when you switch stacks, it isn't core. If it changes when
 you switch projects within the same stack, it isn't the stack plugin either — it belongs in the
@@ -62,6 +61,12 @@ its own, because the core agents treat it as the source of truth for commands, l
 Without it the crew does not error — it runs, and the build-and-test gate self-corrects against
 nothing. **This failure is silent**, so `neo-core` must state the requirement at install time
 rather than assume it.
+
+The same holds for **instruction files** (`.github/instructions/*.instructions.md`), and for them it
+is not a choice: Copilot discovers instruction files by *location*, and a plugin's install directory
+is not one of the discovery locations, so they **cannot** ship in a plugin at all. See
+[`plugin-contract.md`](./plugin-contract.md) § 1. They are authored into the consuming repo, by the
+same route that repo gets its `AGENTS.md`.
 
 ---
 
@@ -213,11 +218,14 @@ Prefer this where the upstream is healthy.
 
 ## Open questions
 
-**Who authors the consuming repo's `AGENTS.md`?** With `master-control` undeployed, no shipped
-artifact writes it — yet `neo-core` depends on it for commands, layout, and the integration mode.
-Options: (a) the neo team runs `master-control` during client onboarding as a service; (b)
-`neo-core` ships a thin setup skill that interviews the user and writes it; (c) it's documented as
-a manual prerequisite.
+**Who authors the consuming repo's project-tier files?** With `master-control` undeployed, no
+shipped artifact writes the consuming repo's `AGENTS.md` or its `.github/instructions/` — yet
+`neo-core` depends on `AGENTS.md` for commands, layout, and the integration mode, and instruction
+files have no other possible home. Options: (a) the neo team runs `master-control` during client
+onboarding as a service; (b) `neo-core` ships a thin setup skill that interviews the user and
+writes both; (c) they're documented as a manual prerequisite. Option (b) is the only one that
+scales, since a plugin can ship a skill that *writes into the working repo* even though it cannot
+ship the files themselves.
 
 **Stack plugin ↔ core version compatibility.** `neo-react` will assume core agent roles and skill
 contracts that may change. Copilot's plugin entry fields (`name`, `source`, `version`, `agents`,

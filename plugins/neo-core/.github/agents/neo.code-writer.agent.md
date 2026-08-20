@@ -4,7 +4,7 @@ description: Implements a single assigned unit of work in this repo, in whatever
 model: Claude Sonnet 5
 reasoningEffort: medium
 tools: [read, search, edit, execute]
-user-invokable: false
+user-invocable: false
 ---
 
 # Code Writer
