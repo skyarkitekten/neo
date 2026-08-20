@@ -1,8 +1,8 @@
-# Installing neo
+# Installing Neo
 
-For the **integrator** — the person dropping neo into a repo so a team can use the crew. If you
+For the **integrator** — the person dropping Neo into a repo so a team can use the crew. If you
 just want to drive agents that are already installed, see
-[using-neo.md](./using-neo.md); if you want to change neo itself, see
+[using-neo.md](./using-neo.md); if you want to change Neo itself, see
 [../contributing/README.md](../contributing/README.md).
 
 > **Status:** the plugin, its agents, and the authoring skills are `[live]`. The autonomous Coding
@@ -11,7 +11,7 @@ just want to drive agents that are already installed, see
 
 ## 1. Install the plugin
 
-neo ships for GitHub Copilot CLI as a marketplace plugin. The marketplace is `neo`; the shipped
+Neo ships for GitHub Copilot CLI as a marketplace plugin. The marketplace is `neo`; the shipped
 plugin is `neo-core`.
 
 ```
@@ -29,7 +29,7 @@ you only need it if something doesn't resolve.
 
 `neo-core` is stack-agnostic. It learns *your* project from a repo-root **`AGENTS.md`** — the file
 the Copilot harness reads as the source of truth for layout, commands, and style. This is **your
-artifact**, distinct from neo's own `AGENTS.md`. It should carry:
+artifact**, distinct from Neo's own `AGENTS.md`. It should carry:
 
 - **Layout** — where the code lives, per area.
 - **Commands** — how to build, lint, and test each layer (the finish gate: build + lint + tests
@@ -39,17 +39,17 @@ artifact**, distinct from neo's own `AGENTS.md`. It should carry:
 - **Commit conventions** — the coding loop commits one commit per unit in
   [Conventional Commits](https://www.conventionalcommits.org/) form. Your `AGENTS.md` may define its
   own scopes and extra types, but stays within that format.
-- **Integration mode** — how neo work enters your repo (see below).
+- **Integration mode** — how Neo work enters your repo (see below).
 - **Gotchas** — env vars, cross-layer wiring, codegen steps.
 
 For rules that should apply to *some* files rather than the whole repo, add
-`.github/instructions/<name>.instructions.md` with an `applyTo` glob. These are yours too — neo
+`.github/instructions/<name>.instructions.md` with an `applyTo` glob. These are yours too — Neo
 cannot ship them, because Copilot finds instruction files by location and a plugin's install
 directory isn't one of the places it looks.
 
 ## 3. Choose an integration mode
 
-neo attaches to your project in one of two modes (**A** or **B**). The choice changes how a Task
+Neo attaches to your project in one of two modes (**A** or **B**). The choice changes how a Task
 enters the repo and who owns the branch. The modes and the "two fits" that decide which suits your
 project are owned by
 [../concepts/process-flow.md § Integration modes](../concepts/process-flow.md). Record the chosen

@@ -72,7 +72,7 @@ if ($raw -and $raw.Trim()) {
     }
 }
 if ($null -eq $data) {
-    [Console]::Error.WriteLine('neo enforce-guardrails: unparseable preToolUse payload; allowing.')
+    [Console]::Error.WriteLine('Neo enforce-guardrails: unparseable preToolUse payload; allowing.')
     Allow
 }
 

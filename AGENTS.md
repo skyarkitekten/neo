@@ -47,7 +47,7 @@ All normative in `docs/contributing/reference/plugin-contract.md` — don't rest
 - Copilot agents: `neo.<role>.agent.md` (e.g. `neo.code-writer.agent.md`), or
   `neo.<domain>.<role>.agent.md` in a plugin that groups by discipline (e.g. `neo.design.ux.agent.md`).
 - Kebab-case roles; each agent's frontmatter `name:` is `Neo <Role>`.
-- Skills are `neo-` prefixed when neo-authored; vendored skills keep their upstream name.
+- Skills are `neo-` prefixed when Neo-authored; vendored skills keep their upstream name.
 
 ## Checks (there is no build)
 
@@ -96,7 +96,7 @@ python3 scripts/validate-plugins.py
   core/stack split; `docs/concepts/process-flow.md` owns the workflow and integration modes.
 - Don't restate rules across files — point to the owning doc.
 - **Repo-root agent trees are dev-time; `plugins/*/` is shipped.** `master-control` lives at
-  the root (`.github/agents/`) so it's visible to neo devs but never packaged. A role ships
+  the root (`.github/agents/`) so it's visible to Neo devs but never packaged. A role ships
   iff its file is under a `plugins/*/` tree.
 - **Copilot-only (issue #34).** The Claude tree was dropped; don't reintroduce `agents/`,
   `skills/`, `.claude/`, or `.claude-plugin/` unless a Claude mirror is deliberately revived.
@@ -105,7 +105,7 @@ python3 scripts/validate-plugins.py
   be duplicated into each plugin.
 - The **consuming** repo also needs its own `AGENTS.md` (commands, layout, style,
   integration mode, and **commit-message conventions**) — that is the user's artifact, distinct
-  from this one, which describes how to work on neo itself. The coding loop commits one commit
+  from this one, which describes how to work on Neo itself. The coding loop commits one commit
   per unit in [Conventional Commits](https://www.conventionalcommits.org/) form (owned by
   `neo.code-writer.agent.md`; see `docs/concepts/process-flow.md` § Boundary 2). A consuming repo
   may define its own scopes and extra types in its `AGENTS.md`, but stays within Conventional

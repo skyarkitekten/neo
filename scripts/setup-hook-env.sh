@@ -28,7 +28,7 @@ AGENT_RUN_ID="$(git -C "$_neo_repo_root" rev-parse --abbrev-ref HEAD 2>/dev/null
 [ -n "$AGENT_RUN_ID" ] || AGENT_RUN_ID="unknown"
 export AGENT_RUN_ID
 
-printf 'neo hook env set:\n'
+printf 'Neo hook env set:\n'
 printf '  PLUGIN_ROOT   = %s\n' "$PLUGIN_ROOT"
 printf '  AGENT_LOG_DIR = %s\n' "$AGENT_LOG_DIR"
 printf '  AGENT_RUN_ID  = %s\n' "$AGENT_RUN_ID"

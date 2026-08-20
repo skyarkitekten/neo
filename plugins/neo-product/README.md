@@ -6,7 +6,7 @@ as a working crew.
 ## What this plugin is
 
 `neo-product` ships the **Product loop** — a loop upstream of the existing Specification
-loop. neo's `PRD → Specification` boundary
+loop. Neo's `PRD → Specification` boundary
 ([`process-flow.md`](../../docs/concepts/process-flow.md)) used to assume a PRD/requirements
 document simply exists; this loop is what produces it. It is **upstream of**, not a
 replacement for, `neo-core`'s specification crew (`feature-agent`, `task-planner`, the BE) —

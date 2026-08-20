@@ -31,7 +31,7 @@ Two parts: YAML frontmatter + Markdown body (the system prompt).
 | `tools` | recommended | Allowlist of built-in tools + MCP servers. |
 | `agents` | optional | Allowlist of worker agents this one may launch (needs the `agent` tool). |
 | `handoffs` | optional | VS Code handoff buttons — **ignored on GitHub.com cloud agent**. |
-| `user-invocable` | optional | Whether a human can select it directly. Copilot also accepts the `user-invokable` spelling, but VS Code honors only `user-invocable` — neo standardizes on the `c` form everywhere. |
+| `user-invocable` | optional | Whether a human can select it directly. Copilot also accepts the `user-invokable` spelling, but VS Code honors only `user-invocable` — Neo standardizes on the `c` form everywhere. |
 | `disable-model-invocation` | optional | Prevent use as a subagent unless a coordinator allows it. |
 | `argument-hint` | optional | Hint for invocation args — **ignored on GitHub.com cloud agent**. |
 | `target` | optional | `vscode` or `github-copilot`; omit for both. |
@@ -42,7 +42,7 @@ Common built-in tools: `codebase`/`search`, `terminal`/`runCommands`, `edit`, `g
 
 ### Model selection
 
-`model` and `reasoningEffort` are chosen per role, never left to the default. What neo ships
+`model` and `reasoningEffort` are chosen per role, never left to the default. What Neo ships
 today, which is the reference for new agents:
 
 | Role shape | Model | `reasoningEffort` | Example |

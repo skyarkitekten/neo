@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Neo Hook Manifest",
-  "description": "Schema for neo plugin hook manifests at plugins/<plugin>/.github/hooks/hooks.json. Event keys use the Copilot CLI lowercase form; VS Code converts them to PascalCase at load time and maps `bash` to osx/linux and `powershell` to windows. Declaring an event in both CLI-lowercase and PascalCase form fires it twice and is rejected by scripts/validate-plugins.py.",
+  "description": "Schema for Neo plugin hook manifests at plugins/<plugin>/.github/hooks/hooks.json. Event keys use the Copilot CLI lowercase form; VS Code converts them to PascalCase at load time and maps `bash` to osx/linux and `powershell` to windows. Declaring an event in both CLI-lowercase and PascalCase form fires it twice and is rejected by scripts/validate-plugins.py.",
   "type": "object",
   "required": ["version", "hooks"],
   "additionalProperties": false,

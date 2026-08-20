@@ -1,7 +1,7 @@
-# Using neo
+# Using Neo
 
 For the **operator** — usually the **Business Engineer (BE)** — driving the crew through the
-Specification loop. Assumes neo is already installed (see
+Specification loop. Assumes Neo is already installed (see
 [installing-neo.md](./installing-neo.md)). Terms in **bold** are in the
 [glossary](../glossary.md).
 
@@ -46,7 +46,7 @@ a bad split poisons everything downstream.
 
 ## Your job at the gates
 
-neo puts the human where judgment is irreplaceable and lets machines handle the rest:
+Neo puts the human where judgment is irreplaceable and lets machines handle the rest:
 
 - **Author proof when you define the unit.** Verification steps at feature time; validation criteria
   at task time. Don't retrofit them.

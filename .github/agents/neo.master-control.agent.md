@@ -107,7 +107,7 @@ A folder with `SKILL.md` (required `name` + `description` frontmatter plus instr
 
 Standing rules the agent always follows — _how to behave_, not _how to build the project_. Copilot: `.github/instructions/*.instructions.md`, scoped by an `applyTo` glob.
 
-**Placement is the first decision, and it is not free.** Instruction files **cannot ship in a plugin** — Copilot discovers them by location, and an install directory isn't a discovery location, so a `plugins/*/.github/instructions/` folder is never read. They live either in this repo (dev-time, for work on neo) or in the **consuming** repo, which makes them a project-tier artifact the consumer owns. If asked to author one for a consuming project, write it against that repo and say so in the report — never place it under `plugins/`.
+**Placement is the first decision, and it is not free.** Instruction files **cannot ship in a plugin** — Copilot discovers them by location, and an install directory isn't a discovery location, so a `plugins/*/.github/instructions/` folder is never read. They live either in this repo (dev-time, for work on Neo) or in the **consuming** repo, which makes them a project-tier artifact the consumer owns. If asked to author one for a consuming project, write it against that repo and say so in the report — never place it under `plugins/`.
 
 **Do:** scope each rule and say when it applies (`applyTo: "**/*.tsx"` so React rules don't fire on backend code); write positive, concrete directives ("Use `async/await`"); order by priority and keep the set small; make rules verifiable (ideally linter-checkable); add a one-line reason only when it aids generalization.
 

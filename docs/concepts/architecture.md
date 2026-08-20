@@ -2,11 +2,11 @@
 
 Terms in **bold** are defined in the [glossary](../glossary.md).
 
-## What neo is
+## What Neo is
 
-neo is spec-driven development with the spec unit shrunk from feature-sized to task-sized. Traditional spec-driven development treats a whole feature as one spec — too coarse a unit of work to reason about cleanly or to validate automatically. neo keeps the business contract at the feature level and moves the _spec_ down to the **task**: bite-sized, technical, and machine-checkable.
+Neo is spec-driven development with the spec unit shrunk from feature-sized to task-sized. Traditional spec-driven development treats a whole feature as one spec — too coarse a unit of work to reason about cleanly or to validate automatically. Neo keeps the business contract at the feature level and moves the _spec_ down to the **task**: bite-sized, technical, and machine-checkable.
 
-Its second departure is one of emphasis. Spec-driven development centers the specification — but a specification is only instructions for humans and agents to follow while building code. The build is not the point; the proof is. **Specifications produce code; verification proves that code has value.** A spec that yields running code nobody needed has produced nothing. neo treats verification — the business's judgment that a feature delivers what it promised — as the work that matters, and the specification as merely the means to it.
+Its second departure is one of emphasis. Spec-driven development centers the specification — but a specification is only instructions for humans and agents to follow while building code. The build is not the point; the proof is. **Specifications produce code; verification proves that code has value.** A spec that yields running code nobody needed has produced nothing. Neo treats verification — the business's judgment that a feature delivers what it promised — as the work that matters, and the specification as merely the means to it.
 
 > Spec-driven development is dead. Long live specifications and verifications.
 
@@ -82,4 +82,4 @@ One step upstream of Feature→Task, and interactive with the BE in the same way
 
 ## Open threads
 
-- **Root `AGENTS.md`** — the portable project backbone now exists and describes neo itself (layout, the single-harness rule, checks). See the repo-root `AGENTS.md`.
+- **Root `AGENTS.md`** — the portable project backbone now exists and describes Neo itself (layout, the single-harness rule, checks). See the repo-root `AGENTS.md`.

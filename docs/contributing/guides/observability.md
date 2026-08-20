@@ -1,4 +1,4 @@
-# neo observability logging
+# Neo observability logging
 
 Records what each agent does into a JSONL log so you can tune the `.agent.md` prompts from data, not guesses. Logging is fail-open and append-only — it never blocks or slows a turn.
 
