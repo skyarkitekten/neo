@@ -2,7 +2,7 @@
 
 A concept-to-spec-to-PR multi-agent coding system for GitHub Copilot CLI.
 
-Initiate a new product platform (greenfield) or an existing codebase (brownfield) by invoking the **product orchestrator**. It drives it through research → plan → implement → review → draft PR.
+Initiate a new product platform (greenfield) or an existing codebase (brownfield) by invoking the **Neo Product Engineer**. It drives research → viability/desirability/feasibility lenses → synthesis → a PRD, which the Specification loop then segments into features and tasks.
 
 Initiate a new feature and taskset. Given a GitHub Issue or Azure DevOps story, an orchestrator drives it through
 research → plan → implement → review → draft PR.

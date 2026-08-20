@@ -14,7 +14,7 @@ the PRD this loop emits is what the BE then segments into features.
 
 ## Shape
 
-- **Orchestrator:** `neo.product.engineer.agent.md` — **Neo Product Orchestrator**.
+- **Orchestrator:** `neo.product.engineer.agent.md` — **Neo Product Engineer**.
 - **Phases** — a default sequence, not a rigid pipeline; research runs in parallel and on
   demand throughout:
   - **Phase 0 — Fan out research** (Intake / Ingest Code & Docs)
@@ -33,7 +33,7 @@ the PRD this loop emits is what the BE then segments into features.
 
 | File | Agent `name:` | Role |
 | --- | --- | --- |
-| `neo.product.engineer.agent.md` | `Neo Product Orchestrator` | Orchestrates the loop; the entry point. `user-invocable` |
+| `neo.product.engineer.agent.md` | `Neo Product Engineer` | Orchestrates the loop; the entry point. `user-invocable` |
 | `neo.product.researcher.agent.md` | `Neo Product Researcher` | One scoped discovery question per invocation; fanned out in parallel |
 | `neo.product.coach.agent.md` | `Neo Product Coach` | Viability — *should we build this?* Drafts the PRD |
 | `neo.design.thinking.agent.md` | `Neo Design Thinking Facilitator` | Desirability — *do people need this?* |

@@ -35,7 +35,7 @@ fan in to one verifiable feature. How that assembly happens is the
 `[live]`. Formerly written as "PRD → Specification" with an unspecified origin — neo assumed a
 PRD simply existed. The **Product loop** (`neo-product`) is what produces it.
 
-**What crosses.** One **PRD**, authored by the **Product Orchestrator** in `docs/design/requirements/`
+**What crosses.** One **PRD**, authored by the **Product Engineer** in `docs/design/requirements/`
 after research fan-out, the three lenses (viability, desirability, feasibility), and a human
 decision to proceed. Format is owned by the `neo-product-requirements` skill.
 
