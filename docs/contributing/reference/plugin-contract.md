@@ -12,8 +12,9 @@ fields, and the `neo-` naming convention.
 > carries no `agents/`, `skills/`, `.claude/`, or `.claude-plugin/` trees, and there is no
 > mirror or dual-manifest rule to maintain.
 
-Neo is a **monorepo of plugins**. Shipped plugins live under `plugins/`; today there is one,
-`plugins/neo-core/`. The repo root holds the marketplace manifest, docs, and dev-time-only
+Neo is a **monorepo of plugins**. Shipped plugins live under `plugins/`; today there are two,
+`plugins/neo-core/` (the coding and specification crew) and `plugins/neo-product/` (the
+Product loop). The repo root holds the marketplace manifest, docs, and dev-time-only
 tooling. Per-stack plugins (e.g. a hypothetical `plugins/neo-react/`) are added the same way
 `neo-core` is packaged — this contract governs all of them.
 
@@ -30,7 +31,8 @@ neo/
 │   └── agents/
 │       └── neo.master-control.agent.md   # DEV-TIME agent (Copilot), never shipped
 ├── plugins/
-│   └── neo-core/                     # a shipped plugin (see §1 for its shape)
+│   ├── neo-core/                     # a shipped plugin (see §1 for its shape)
+│   └── neo-product/                  # a shipped plugin — the Product loop
 ├── scripts/
 │   └── validate-plugins.py           # CI: asserts each plugin's Copilot manifests + allowlists are valid
 └── docs/                             # this spec, glossary, architecture, etc. — not shipped
@@ -91,7 +93,10 @@ consuming repo's `.github/instructions/` — see
 Field lists below are transcribed from the manifest files as they exist today. **Required**
 means the field is present and populated.
 
-### 2.1 `plugins/neo-core/.github/plugin/plugin.json`
+### 2.1 A plugin's `.github/plugin/plugin.json`
+
+Values below are transcribed from `plugins/neo-core/`; `plugins/neo-product/` carries the same
+fields with its own values.
 
 | Field         | Value                                            | Status                                      |
 | ------------- | ------------------------------------------------ | ------------------------------------------- |
@@ -115,8 +120,8 @@ The marketplace manifest stays at the repo root and lists each shipped plugin un
 | `name` (top-level)      | `"neo"`                               | Required — the marketplace name.          |
 | `owner.name`            | `"skyarkitekten"`                     | Required.                                  |
 | `metadata.description`  | present                               | Required.                                  |
-| `metadata.version`      | `"0.1.0"`                             | Required.                                  |
-| `plugins[].name`        | `"neo-core"`                          | Required.                                  |
+| `metadata.version`      | `"0.1.4"`                             | Required.                                  |
+| `plugins[].name`        | `"neo-core"`, `"neo-product"`         | Required — one entry per shipped plugin.   |
 | `plugins[].source`      | `"./plugins/neo-core"`                | Required — `./`-prefixed repo-root path.   |
 | `plugins[].description` | present                               | Required.                                  |
 | `plugins[].version`     | semver, matching that plugin's `plugin.json` | Required.                           |
@@ -144,7 +149,8 @@ owned by [`hook-contract.md`](./hook-contract.md).
 
 ### 3.1 What must stay consistent
 
-- `name` — `"neo"` (marketplace top-level) and `"neo-core"` (the plugin).
+- `name` — `"neo"` (marketplace top-level) and the per-plugin names (`"neo-core"`,
+  `"neo-product"`).
 - `version` — a plugin's `plugin.json` and its `plugins[].version` entry in the marketplace
   must agree. Plugins version **independently** of each other and of `metadata.version`, so
   `neo-core` and `neo-product` are expected to sit at different numbers.
