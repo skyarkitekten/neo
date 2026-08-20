@@ -24,7 +24,7 @@
     {
       "name": "neo-product",
       "source": "./plugins/neo-product",
-      "description": "Upstream product-engineering crew — a Business Engineer orchestrator coordinating Product Coach (viability), Design Thinking (desirability), and Systems Thinking (feasibility) specialists, plus a UX Designer, with lifecycle-logging hooks.",
+      "description": "Upstream product-engineering crew — a Product Orchestrator coordinating Product Coach (viability), Design Thinking (desirability), and Systems Thinking (feasibility) specialists, plus a UX Designer, with lifecycle-logging hooks.",
       "version": "0.1.0",
       "author": {
         "name": "Chad Thomas"

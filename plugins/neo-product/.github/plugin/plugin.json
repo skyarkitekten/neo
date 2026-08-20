@@ -1,7 +1,7 @@
 {
   "name": "neo-product",
-  "version": "0.1.0",
-  "description": "Neo product — the upstream Product loop (Intake/Onboarding, System & Design -> PRD, Ingest Code & Docs) that produces the PRD consumed by neo-core's Specification loop. Ships the Business Engineer orchestrator plus Product Coach, Design Thinking, Systems Thinking, and UX Designer specialists, with lifecycle-logging hooks.",
+  "version": "0.1.1",
+  "description": "Neo product — the upstream Product loop (Intake/Onboarding, System & Design -> PRD, Ingest Code & Docs) that produces the PRD consumed by neo-core's Specification loop. Ships the Product Orchestrator plus Product Coach, Design Thinking, Systems Thinking, and UX Designer specialists, with lifecycle-logging hooks.",
   "author": {
     "name": "Chad Thomas"
   },
