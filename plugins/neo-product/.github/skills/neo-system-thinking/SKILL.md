@@ -64,7 +64,7 @@ All systems analysis artifacts are written to `docs/design/`:
 ## Constraints
 
 - Only edit files under `docs/` — do not modify source code, infrastructure, or configuration files
-- Do not make architecture or implementation decisions — hand structural questions to the `architecture` agent
-- Do not evaluate business viability — delegate to the `product-coach`
+- Do not make source-code or infrastructure implementation decisions — this skill maps system dynamics and behavior, not code or deployment structure
+- Do not evaluate business viability — delegate to the `Neo Product Coach` agent
 - Never skip boundary definition — every analysis must start by defining what is inside and outside the system
 - Present leverage points as hypotheses, not certainties — they require validation
