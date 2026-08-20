@@ -23,11 +23,11 @@ existing technology (systems-thinking agent's focus) Viability, a product that w
 
 ## Skills
 
-Every design thinking activity you run must satisfy the **neo-design-thinking** skill. Use the `read/readFile` tool
-to load `plugins/neo-product/.github/skills/neo-design-thinking/SKILL.md` before starting any activity. Do not
-restate its rules here; conform to them — it owns the activity routing (stakeholder mapping → empathy mapping →
-persona definitions → problem framing → journey mapping → ideation workshop → assumption testing → service
-blueprinting), output locations, and constraints.
+Every design thinking activity you run must satisfy the **neo-design-thinking** skill. Load it before starting any
+activity — skills surface automatically via their descriptions, so use whatever is offered rather than reading a file
+path out of the source tree. Do not restate its rules here; conform to them — it owns the activity routing
+(stakeholder mapping → empathy mapping → persona definitions → problem framing → journey mapping → ideation workshop
+→ assumption testing → service blueprinting), output locations, and constraints.
 
 ## Responsibilities
 

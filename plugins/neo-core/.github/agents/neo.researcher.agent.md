@@ -5,7 +5,7 @@ model: Claude Haiku 4.5
 reasoningEffort: low
 tools:
   [
-    read/readFile,
+    read,
     search,
     web,
     github/issue_read,
@@ -15,7 +15,6 @@ tools:
     github/list_pull_requests,
     github/search_issues,
     github/search_pull_requests,
-    azure/search,
   ]
 user-invocable: false
 ---
