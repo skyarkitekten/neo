@@ -371,6 +371,6 @@ setup; it cannot be reconstructed after the merge.
 - Diagram 2's expanded sub-box is labeled "Specification Loop" but contains the Coding loop
   phases (Research → Planner → Implement → Testing → Review → PR). Drawing bug; fix before it
   propagates into docs.
-- `Operations Space` is drawn outside all three loops in Diagram 2, with no boundary defined
+- `Operations Space` is drawn outside all the loops in Diagram 2, with no boundary defined
   between Deployment and Operations. Treated above as an implicit fourth boundary.
 - See [`todo.md`](../../todo.md) for repo-level defects found alongside this mapping.

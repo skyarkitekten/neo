@@ -25,7 +25,7 @@ says who owns what.
 - [reference/plugin-contract.md](./reference/plugin-contract.md) — the mechanical contract: monorepo
   layout, per-plugin folder shape, manifest fields, `neo.<role>.agent.md` and `neo-` naming.
 - [reference/stack-plugin-contract.md](./reference/stack-plugin-contract.md) — the core/stack split:
-  the three tiers, the late-binding rule, stack-skill discovery.
+  the three tiers, loop plugins, the late-binding rule, stack-skill discovery.
 - [reference/task-handoff-schema.md](./reference/task-handoff-schema.md) — the **Task** artifact that
   crosses Boundary 1: its carrier, fields, and serialization. (User-facing recipe:
   [../guides/filing-work.md](../guides/filing-work.md).)
@@ -56,7 +56,7 @@ says who owns what.
 | Loop boundaries, integration modes, KPI settlement | [../concepts/process-flow.md](../concepts/process-flow.md) |
 | Framework gap analysis (OODA–PDCA baseline, G1–G5) | [design/framework-gap-analysis.md](./design/framework-gap-analysis.md) |
 | Plugin folder shape, manifest fields, `neo-` naming | [reference/plugin-contract.md](./reference/plugin-contract.md) |
-| Core/stack split, tiers, stack-skill discovery | [reference/stack-plugin-contract.md](./reference/stack-plugin-contract.md) |
+| Core/stack split, tiers, loop plugins, stack-skill discovery | [reference/stack-plugin-contract.md](./reference/stack-plugin-contract.md) |
 | The Task handoff artifact | [reference/task-handoff-schema.md](./reference/task-handoff-schema.md) |
 | Plugin hook manifest + script contract | [reference/hook-contract.md](./reference/hook-contract.md) |
 | Authoring agents / skills / hooks | [guides/agent-authoring-reference.md](./guides/agent-authoring-reference.md) |

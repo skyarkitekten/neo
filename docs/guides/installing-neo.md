@@ -11,7 +11,7 @@ just want to drive agents that are already installed, see
 
 ## 1. Install the plugin
 
-Neo ships for GitHub Copilot CLI as a marketplace plugin. The marketplace is `neo`; the shipped
+Neo ships for GitHub Copilot CLI as a marketplace plugin. The marketplace is `neo`; the baseline
 plugin is `neo-core`.
 
 ```
@@ -55,7 +55,24 @@ project are owned by
 [../concepts/process-flow.md § Integration modes](../concepts/process-flow.md). Record the chosen
 mode in your `AGENTS.md` so every agent reads it the same way.
 
-## 4. Add a stack (optional)
+## 4. Add the Product loop (optional)
+
+`neo-core` starts at a PRD. If your team doesn't have one — or wants to work the problem before
+committing to a solution — install the Product loop:
+
+```
+copilot plugin install neo-product@neo
+```
+
+It adds the **Neo Product Engineer** orchestrator plus Product Researchers and the viability /
+desirability / feasibility lenses, and it ends at a PRD the BE accepts. It is **upstream of**, not
+a replacement for, `feature-agent` and `task-planner`. Skip it if a PRD already exists.
+
+This is a **loop plugin** — Process-tier capability packaged separately because the loop itself is
+optional. See
+[../contributing/reference/stack-plugin-contract.md](../contributing/reference/stack-plugin-contract.md).
+
+## 5. Add a stack (optional)
 
 `neo-core` handles the process; **stack plugins** (e.g. a React or .NET plugin) carry the
 tech-specific skills a coder uses *inside* a task. Every project installs `neo-core`; stacks are
@@ -63,7 +80,7 @@ additive and late-bound. The core/stack split — the three tiers and how stack 
 at runtime — is owned by
 [../contributing/reference/stack-plugin-contract.md](../contributing/reference/stack-plugin-contract.md).
 
-## 5. Verify the install
+## 6. Verify the install
 
 - The agents appear in Copilot's agent picker (look for `Neo <Role>` names, e.g. **Neo Technical
   Engineer**).
