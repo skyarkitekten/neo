@@ -60,7 +60,7 @@ Canonical vocabulary for the Neo Agentic SDLC. Define a term once — here — a
 
 **Task Planner** `[live]` — The agent (`task-planner`) that runs interactive Feature→Task decomposition with the BE. Named for what it produces (tasks), matching **Implementation Planner**.
 
-**Feature Skill / Feature Agent** `[target]` — The level above `neo-task-authoring` / `task-planner`: PRD-segment → Feature.
+**Feature Skill / Feature Agent** `[live]` — The level above `neo-task-authoring` / `task-planner`: PRD-segment → Feature. The `neo-feature-authoring` skill defines what a clean feature is; the `feature-agent` runs the interactive drafting with the BE.
 
 ---
 

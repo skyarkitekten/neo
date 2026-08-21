@@ -21,13 +21,19 @@ marketplace manifests, docs, and dev-time-only tooling. Anything under `plugins/
 shipped; the repo-root agent trees are **dev-time only**.
 
 ```javascript
-plugins/neo-core/                    The shipped plugin — a Copilot tree:
+plugins/neo-core/                    The coding + specification crew — a Copilot tree:
   .github/agents/                    Copilot agents — neo.<role>.agent.md
   .github/skills/                    Copilot skills — neo-<name>/SKILL.md
   .github/plugin/plugin.json         Copilot plugin manifest
   .github/hooks/hooks.json           Copilot hook config (v1 schema, ${PLUGIN_ROOT})
   .agent-hooks/log-event.sh          the observability logger
   scripts/analyze_agent_logs.py      per-agent / per-run log stats
+plugins/neo-product/                 The Product loop — same shape, grouped by discipline:
+  .github/agents/                    neo.<domain>.<role>.agent.md
+  .github/skills/                    Copilot skills — neo-<name>/SKILL.md
+  .github/plugin/plugin.json         Copilot plugin manifest
+  .github/hooks/hooks.json           Copilot hook config (v1 schema, ${PLUGIN_ROOT})
+  .agent-hooks/log-event.sh          its own copy — plugins can't share files
 .github/plugin/marketplace.json      Copilot marketplace (root, lists plugins[])
 .github/agents/neo.master-control.agent.md   DEV-TIME agent (Copilot), never shipped
 scripts/validate-plugins.py          CI plugin check (manifests + hooks + agents: allowlists)
@@ -35,10 +41,12 @@ scripts/linting/schemas/hook-manifest.schema.json   Hook-manifest JSON Schema (d
 docs/                                Grouped by genre — see docs/README.md for the map
 ```
 
-The shipped agents (in `plugins/neo-core/`): `technical-engineer` (orchestrator — start
+The shipped agents, in `plugins/neo-core/`: `technical-engineer` (orchestrator — start
 here), `researcher`, `implementation-planner`, `code-writer`, `code-reviewer`,
-`feature-agent`, `task-planner`. `master-control` is dev-time only and lives at the repo
-root, never in a plugin.
+`feature-agent`, `task-planner`. In `plugins/neo-product/`: `product.engineer`
+(orchestrator — start here), `product.researcher`, `product.coach`, `design.thinking`,
+`systems.thinking`. `master-control` is dev-time only and lives at the repo root, never
+in a plugin.
 
 ## Naming
 

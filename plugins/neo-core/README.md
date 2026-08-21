@@ -1,7 +1,7 @@
 # neo-core
 
-The shipped Neo plugin — a coordinated crew of coding agents for GitHub Copilot CLI that drives
-a spec from concept to a draft PR.
+The shipped Neo plugin for the coding and specification loops — a coordinated crew of coding
+agents for GitHub Copilot CLI that drives a spec from concept to a draft PR.
 
 ## What's inside
 

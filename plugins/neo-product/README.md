@@ -7,7 +7,7 @@ as a working crew.
 
 `neo-product` ships the **Product loop** — a loop upstream of the existing Specification
 loop. Neo's `PRD → Specification` boundary
-([`process-flow.md`](../../docs/concepts/process-flow.md)) used to assume a PRD/requirements
+([`process-flow.md`](https://github.com/skyarkitekten/neo/blob/main/docs/concepts/process-flow.md)) used to assume a PRD/requirements
 document simply exists; this loop is what produces it. It is **upstream of**, not a
 replacement for, `neo-core`'s specification crew (`feature-agent`, `task-planner`, the BE) —
 the PRD this loop emits is what the BE then segments into features.
@@ -54,7 +54,7 @@ consuming repo's `AGENTS.md`, PRDs, ADRs, and design docs — never baked into a
 observability logging and fail-closed guardrail enforcement as `neo-core`, via this plugin's
 own `.agent-hooks/log-event.{sh,ps1}` and `.agent-hooks/enforce-guardrails.{sh,ps1}`
 (duplicated, not shared — plugins cannot reference files outside their own directory; see
-[`plugin-contract.md`](../../docs/contributing/reference/plugin-contract.md#1-plugin-folder-shape)).
+[`plugin-contract.md`](https://github.com/skyarkitekten/neo/blob/main/docs/contributing/reference/plugin-contract.md#1-plugin-folder-shape)).
 
 ## Why a new plugin and not a `neo-core` addition
 
