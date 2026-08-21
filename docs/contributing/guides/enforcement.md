@@ -1,4 +1,4 @@
-# neo enforcement hooks
+# Neo enforcement hooks
 
 Two AGENTS.md guardrails must hold at the **harness** level, not merely in a prompt —
 prompt rules are advisory and real enforcement lives outside the model:
@@ -82,7 +82,7 @@ glitch would brick the session, and branch protection is the real backstop.
 
 Interaction with the per-session enablement levers from the observability set (#4):
 
-- **neo escape hatch:** set `NEO_ENFORCE_GUARDRAILS=0` (also `off`/`false`/`no`) to make the
+- **Neo escape hatch:** set `NEO_ENFORCE_GUARDRAILS=0` (also `off`/`false`/`no`) to make the
   hook allow everything. Use it for legitimate exceptions (e.g. a maintenance task that must
   touch `main`).
 - **`disableAllHooks`** — turns off all repo/user/plugin hooks for the session (policy hooks

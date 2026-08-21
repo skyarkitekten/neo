@@ -1,4 +1,4 @@
-# neo Glossary
+# Neo Glossary
 
 Canonical vocabulary for the Neo Agentic SDLC. Define a term once — here — and link to it from other docs, agents, and skills rather than restating it.
 
@@ -6,7 +6,7 @@ Canonical vocabulary for the Neo Agentic SDLC. Define a term once — here — a
 
 ## Roles
 
-**Business Engineer (BE)** `[live]` — The single human who owns a feature from business intent through decomposition. Same seat as "the business", "business analyst", and the scrum "product owner". Explicitly **not** the hand-off BA who transcribes a PO and passes notes to engineers — neo removes that hand-off. The BE authors and signs the feature contract _and_ co-owns Feature→Task decomposition, so intent is never laundered through a middleman.
+**Business Engineer (BE)** `[live]` — The single human who owns a feature from business intent through decomposition. Same seat as "the business", "business analyst", and the scrum "product owner". Explicitly **not** the hand-off BA who transcribes a PO and passes notes to engineers — Neo removes that hand-off. The BE authors and signs the feature contract _and_ co-owns Feature→Task decomposition, so intent is never laundered through a middleman.
 
 **Product Engineer** `[live]` — The agent (`neo.product.engineer`, `neo-product`) that runs the **Product loop**: fans out **Product Researchers**, sequences the three lenses (**Product Coach**, **Design Thinking Facilitator**, **Systems Thinking Facilitator**), and drives the result to a **PRD**. It orchestrates rather than authors — the analysis belongs to the lenses, the PRD drafting to the Product Coach. Canonical `name:` is **Neo Product Engineer**.
 
@@ -28,7 +28,7 @@ Canonical vocabulary for the Neo Agentic SDLC. Define a term once — here — a
 
 **Feature** `[live]` — The business-level unit. Carries What, Why, optional KPIs, and verification steps; signed off by the BE. A feature is **not** the spec.
 
-**Task** `[live]` — The spec-level unit; the spec analog. Derives from exactly one feature, sized to ≈ one pull request, and carries machine-checkable validation criteria. Shrinking the spec to task grain is neo's central move.
+**Task** `[live]` — The spec-level unit; the spec analog. Derives from exactly one feature, sized to ≈ one pull request, and carries machine-checkable validation criteria. Shrinking the spec to task grain is Neo's central move.
 
 **Step** `[target]` — A unit inside the Coding loop, ≈ one commit. Authored during implementation, not during decomposition.
 
@@ -44,7 +44,7 @@ Canonical vocabulary for the Neo Agentic SDLC. Define a term once — here — a
 
 ## Loops & spaces (Diagram 2)
 
-**Product loop** `[live]` — The loop *upstream* of the Specification loop, shipped by the `neo-product` plugin: research fan-out → viability/desirability/feasibility lenses → synthesis → **PRD**. It answers "what should exist, and why" and is the origin of the PRD that neo previously assumed into being. Human-gated at two points: the decision to proceed past synthesis, and the BE's acceptance of the PRD at [Boundary 0](./concepts/process-flow.md#boundary-0--product--specification). It does **not** absorb or replace `feature-agent`/`task-planner`.
+**Product loop** `[live]` — The loop *upstream* of the Specification loop, shipped by the `neo-product` plugin: research fan-out → viability/desirability/feasibility lenses → synthesis → **PRD**. It answers "what should exist, and why" and is the origin of the PRD that Neo previously assumed into being. Human-gated at two points: the decision to proceed past synthesis, and the BE's acceptance of the PRD at [Boundary 0](./concepts/process-flow.md#boundary-0--product--specification). It does **not** absorb or replace `feature-agent`/`task-planner`.
 
 **Specification loop** `[partly live]` — PRD→Feature and Feature→Task; problem space into solution space. Human-gated: _Start Human, Finish Human; Critical Thinking required._
 

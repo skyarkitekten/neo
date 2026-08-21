@@ -9,7 +9,7 @@ Terms in **bold** are in the [glossary](../glossary.md).
 
 ## Two units, two bars
 
-neo works with two units. They enter at different points and clear different gates.
+Neo works with two units. They enter at different points and clear different gates.
 
 | Unit | What it is | Gate to pass | Who signs |
 | --- | --- | --- | --- |

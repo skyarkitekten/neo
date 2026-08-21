@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate every shipped neo plugin for the GitHub Copilot CLI harness.
+"""Validate every shipped Neo plugin for the GitHub Copilot CLI harness.
 
 Neo ships for a single harness — GitHub Copilot CLI.
 Copilot is the canonical, sole source. 
@@ -8,9 +8,9 @@ This script makes the remaining invariants executable:
 
   * every plugin has its Copilot manifest AND hooks config, and both are valid JSON;
   * the root Copilot marketplace manifest is valid JSON;
-  * every plugin's hooks.json conforms to the neo hook-manifest contract
+  * every plugin's hooks.json conforms to the Neo hook-manifest contract
     (scripts/linting/schemas/hook-manifest.schema.json): version 1, known event
-    names, well-formed command entries, and the two neo-specific rules — a
+    names, well-formed command entries, and the two Neo-specific rules — a
     `powershell` command must not reference the bare `${PLUGIN_ROOT}` placeholder
     (it must use `$env:PLUGIN_ROOT`), and no event may be declared in both its
     CLI-lowercase and PascalCase form (which would fire it twice);
@@ -18,7 +18,7 @@ This script makes the remaining invariants executable:
   * any agent that delegates (non-empty `agents:`) also grants the `agent`/`Task`
     delegation tool in its `tools:` allowlist;
   * no agent uses the `user-invokable:` spelling (VS Code honors only
-    `user-invocable:`, so neo standardizes on the `c` form).
+    `user-invocable:`, so Neo standardizes on the `c` form).
 
 Exit code 0 = all good, 1 = at least one violation. No third-party deps.
 """
@@ -145,9 +145,9 @@ _PS_BAD_PLUGIN_ROOT = re.compile(r"\$\{\s*PLUGIN_ROOT\s*\}")
 
 
 def check_hooks_manifest(path: Path) -> None:
-    """Validate a plugin hooks.json against the neo hook-manifest contract.
+    """Validate a plugin hooks.json against the Neo hook-manifest contract.
 
-    Enforces the schema's structural invariants plus two neo-specific rules that
+    Enforces the schema's structural invariants plus two Neo-specific rules that
     a plain JSON parse can't catch: no bare ${PLUGIN_ROOT} inside a `powershell`
     command, and no event declared in both CLI-lowercase and PascalCase form.
     """
@@ -235,7 +235,7 @@ def check_plugin(plugin: Path) -> None:
     for f in files:
         if any(ln.startswith("user-invokable:") for ln in frontmatter_lines(f)):
             errors.append(
-                f"[{name}] {f.name} uses `user-invokable:`; neo standardizes on "
+                f"[{name}] {f.name} uses `user-invokable:`; Neo standardizes on "
                 f"`user-invocable:`, the only spelling VS Code honors"
             )
         refs = fm_agents(f)

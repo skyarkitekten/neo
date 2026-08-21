@@ -37,7 +37,7 @@ $branch = ("$branch").Trim()
 if (-not $branch) { $branch = 'unknown' }
 $env:AGENT_RUN_ID = $branch
 
-Write-Host 'neo hook env set:'
+Write-Host 'Neo hook env set:'
 Write-Host "  PLUGIN_ROOT   = $env:PLUGIN_ROOT"
 Write-Host "  AGENT_LOG_DIR = $env:AGENT_LOG_DIR"
 Write-Host "  AGENT_RUN_ID  = $env:AGENT_RUN_ID"

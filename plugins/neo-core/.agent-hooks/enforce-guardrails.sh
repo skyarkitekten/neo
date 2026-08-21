@@ -33,7 +33,7 @@ allow() { exit 0; }  # empty stdout == allow
 
 deny() {
   # $1 = human-readable reason (shown to the agent)
-  python3 - "$1" <<'PY' 2>/dev/null || printf '{"permissionDecision":"deny","permissionDecisionReason":"blocked by neo guardrail"}\n'
+  python3 - "$1" <<'PY' 2>/dev/null || printf '{"permissionDecision":"deny","permissionDecisionReason":"blocked by Neo guardrail"}\n'
 import json, sys
 print(json.dumps({"permissionDecision": "deny", "permissionDecisionReason": sys.argv[1]}))
 PY
@@ -50,7 +50,7 @@ payload="$(cat)"
 # Need python3 to parse JSON reliably. If it's missing we cannot evaluate the
 # command safely, so fail OPEN with a warning (see deliberate failure behavior).
 if ! command -v python3 >/dev/null 2>&1; then
-  printf 'neo enforce-guardrails: python3 not found; skipping enforcement.\n' >&2
+  printf 'Neo enforce-guardrails: python3 not found; skipping enforcement.\n' >&2
   allow
 fi
 
@@ -99,7 +99,7 @@ PY
 
 # python3 produced nothing -> unparseable payload -> fail open with a warning.
 if [ -z "$parsed" ]; then
-  printf 'neo enforce-guardrails: unparseable preToolUse payload; allowing.\n' >&2
+  printf 'Neo enforce-guardrails: unparseable preToolUse payload; allowing.\n' >&2
   allow
 fi
 

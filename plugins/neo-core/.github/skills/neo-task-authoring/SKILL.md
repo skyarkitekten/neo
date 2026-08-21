@@ -49,7 +49,7 @@ A task must be **independently validatable**: its criteria pass or fail on their
 
 The project chooses one of two integration modes. Both preserve one-task-one-PR; they differ only in what the PR targets.
 
-- **Mode A (neo default)** — each task PRs into a long-lived **feature branch**; the feature branch squash-merges to the default branch once verified.
+- **Mode A (Neo default)** — each task PRs into a long-lived **feature branch**; the feature branch squash-merges to the default branch once verified.
 - **Mode B** — each task PRs directly to the **default branch** behind a feature flag.
 
 You do not select the mode, and your task shapes should not vary by it. Two things follow for decomposition:

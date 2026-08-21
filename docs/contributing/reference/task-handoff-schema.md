@@ -20,7 +20,7 @@ each field lives on a GitHub Issue and an Azure DevOps story).
 
 ## 1. The carrier rule
 
-**One Task = one GitHub Issue = one Azure DevOps story.** A neo **Task** has no existence
+**One Task = one GitHub Issue = one Azure DevOps story.** A Neo **Task** has no existence
 separate from the issue/story it is filed as. The issue/story *is* the task; there is no second
 document.
 
@@ -39,9 +39,9 @@ Consequences:
 
 ### Naming caution (Azure DevOps)
 
-A neo **Task** maps to the project's chosen **story-grade** work item — typically a *User Story*
+A Neo **Task** maps to the project's chosen **story-grade** work item — typically a *User Story*
 or *Product Backlog Item*. It does **not** map to the Azure DevOps work-item type literally
-named *Task* (which is a sub-story checklist item, closer to a neo **Step**). Pick the
+named *Task* (which is a sub-story checklist item, closer to a Neo **Step**). Pick the
 story-grade type at project setup and use it consistently.
 
 ---

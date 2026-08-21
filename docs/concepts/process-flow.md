@@ -26,13 +26,13 @@ The unit changes at every boundary. That is the point, and it is also where the 
 the spec loop thinks in **features**, the coding loop thinks in **tasks**, and the
 verification loop thinks in **features** again. Boundary 2 is therefore not 1:1 — N task PRs
 fan in to one verifiable feature. How that assembly happens is the
-[integration mode](#integration-modes), a project-level choice with a neo default.
+[integration mode](#integration-modes), a project-level choice with a Neo default.
 
 ---
 
 ## Boundary 0 — Product → Specification
 
-`[live]`. Formerly written as "PRD → Specification" with an unspecified origin — neo assumed a
+`[live]`. Formerly written as "PRD → Specification" with an unspecified origin — Neo assumed a
 PRD simply existed. The **Product loop** (`neo-product`) is what produces it.
 
 **What crosses.** One **PRD**, authored by the **Product Engineer** in `docs/design/requirements/`
@@ -82,7 +82,7 @@ the `feature-agent`. Downstream agents never invent scope to fill a hole — tha
 already binding in `neo.task-planner.agent.md` and `neo-code-writer.md`.
 
 **Drift to reconcile.** `neo-technical-engineer` declares its input as "a GitHub Issue or
-Azure DevOps story." The spec loop emits a **Task**. These need to be the same object: a neo
+Azure DevOps story." The spec loop emits a **Task**. These need to be the same object: a Neo
 Task should *be* the issue/story it is filed as, so the orchestrator's input contract and the
 task-planner's output contract describe one artifact rather than two. **Resolved** — this is
 now the carrier rule fixed in [`task-handoff-schema.md`](../contributing/reference/task-handoff-schema.md) § 1.
@@ -243,7 +243,7 @@ to "omit rather than invent one with no credible basis." Credible is now testabl
 
 ### Internal line-of-business portfolios
 
-Many neo clients are not in a true market. They build and maintain internal LOB applications
+Many Neo clients are not in a true market. They build and maintain internal LOB applications
 and are increasingly applying a product mindset to the app portfolio. The second fit still
 applies, but two adjustments are required.
 
@@ -350,7 +350,7 @@ un-cleaned flags accumulate into a second, undocumented configuration surface.
 | Fan-in mechanism | Structural | Tracker + flag state |
 | Best fit | Most LOB work; teams without flag infrastructure | Trunk-based teams with mature flags |
 
-Mode A is neo's default because it matches revert to verification for free, and because the
+Mode A is Neo's default because it matches revert to verification for free, and because the
 flag infrastructure Mode B requires is not present in many internal LOB shops. Choose Mode B
 deliberately, with its entry conditions met — not by drift.
 

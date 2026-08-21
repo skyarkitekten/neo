@@ -38,7 +38,7 @@ neo/
 
 **Dev-time vs shipped.** Anything under `plugins/*/` is shipped to installers. The repo-root
 `.github/agents/` tree is **dev-time only** — it holds `master-control`, the agent that authors
-this harness config, which is visible to neo developers working inside the repo but never
+this harness config, which is visible to Neo developers working inside the repo but never
 packaged into a plugin. There is no exclusion mechanism to maintain: a role is shipped iff its
 file lives under a `plugins/*/` tree.
 
@@ -203,4 +203,4 @@ walks every `plugins/*/` and fails CI on any allowlist entry that doesn't resolv
 Neo-authored skills carry the `neo-` prefix. A skill **vendored** from an upstream source keeps
 its upstream name unchanged (no `neo-` prefix), since its identity is owned elsewhere. There are
 no vendored skills in `neo-core` today; both current skills (`neo-feature-authoring`,
-`neo-task-authoring`) are neo-authored.
+`neo-task-authoring`) are Neo-authored.

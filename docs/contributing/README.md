@@ -1,7 +1,7 @@
-# Contributing to neo
+# Contributing to Neo
 
-You're here to **change neo itself** — author or edit agents, skills, hooks, or the plugin
-contracts. If you instead want to *use* neo in your own repo, go back up to
+You're here to **change Neo itself** — author or edit agents, skills, hooks, or the plugin
+contracts. If you instead want to *use* Neo in your own repo, go back up to
 [getting-started.md](../getting-started.md).
 
 Before anything else, read the **shared core** (same for users and contributors):
@@ -12,7 +12,7 @@ Before anything else, read the **shared core** (same for users and contributors)
 - [../concepts/process-flow.md](../concepts/process-flow.md) — loop boundaries, integration modes,
   KPI settlement.
 
-Repo-level layout, checks, and guardrails for working on neo live in the root
+Repo-level layout, checks, and guardrails for working on Neo live in the root
 [`AGENTS.md`](../../AGENTS.md), not here. Nothing under `docs/` ships in a plugin.
 
 ## The one rule
@@ -44,7 +44,7 @@ says who owns what.
 
 ## design/ — the *why* (rationale, not a contract)
 
-- [design/framework-gap-analysis.md](./design/framework-gap-analysis.md) — neo measured against the
+- [design/framework-gap-analysis.md](./design/framework-gap-analysis.md) — Neo measured against the
   OODA / PDCA / Double-Diamond baseline: where it holds, where it's ahead, and the G1–G5 gaps.
 
 ## Who owns what
@@ -52,7 +52,7 @@ says who owns what.
 | Topic | Owner |
 | --- | --- |
 | Vocabulary / term definitions | [../glossary.md](../glossary.md) |
-| What neo is, the loops, the core rule | [../concepts/architecture.md](../concepts/architecture.md) |
+| What Neo is, the loops, the core rule | [../concepts/architecture.md](../concepts/architecture.md) |
 | Loop boundaries, integration modes, KPI settlement | [../concepts/process-flow.md](../concepts/process-flow.md) |
 | Framework gap analysis (OODA–PDCA baseline, G1–G5) | [design/framework-gap-analysis.md](./design/framework-gap-analysis.md) |
 | Plugin folder shape, manifest fields, `neo-` naming | [reference/plugin-contract.md](./reference/plugin-contract.md) |

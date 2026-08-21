@@ -1,6 +1,6 @@
 # Hook contract
 
-Normative contract for **hook manifests and hook scripts** shipped in a neo plugin.
+Normative contract for **hook manifests and hook scripts** shipped in a Neo plugin.
 The JSON Schema at [`scripts/linting/schemas/hook-manifest.schema.json`](../../../scripts/linting/schemas/hook-manifest.schema.json)
 is the machine-checkable half; this page is the prose half. `scripts/validate-plugins.py`
 enforces both (CI runs it via `.github/workflows/validate.yml`).
@@ -111,7 +111,7 @@ payload:
 
 Before you open a PR that touches a hook:
 
-1. `python3 scripts/validate-plugins.py` — schema + neo-specific rules.
+1. `python3 scripts/validate-plugins.py` — schema + Neo-specific rules.
 2. `bash -n plugins/*/.agent-hooks/*.sh` — shell syntax, and it surfaces stray CRLF.
 3. Manually test both siblings with stdin redirected (see
    [`guides/observability.md`](../guides/observability.md) § Manual test).

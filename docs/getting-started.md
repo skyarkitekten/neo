@@ -1,6 +1,6 @@
-# Getting started with neo
+# Getting started with Neo
 
-neo is a **concept-to-spec-to-PR multi-agent coding system** for GitHub Copilot CLI. You hand it
+Neo is a **concept-to-spec-to-PR multi-agent coding system** for GitHub Copilot CLI. You hand it
 business intent; a crew of agents turns that intent into a machine-checkable **spec** and drives it
 toward a draft pull request — with a human in the loop at every gate that matters.
 
@@ -9,12 +9,12 @@ New to the vocabulary? Read the [glossary](./glossary.md) first, then
 (**task = spec**). This page is the on-ramp; the two guides below are where the work happens.
 
 > **Status key:** `[live]` — built and usable today · `[target]` — part of the end-state design,
-> not yet built. neo ships more design than code right now; these markers tell you which is which so
+> not yet built. Neo ships more design than code right now; these markers tell you which is which so
 > nothing here overclaims.
 
 ## What's live vs. target
 
-neo is designed as three loops (see [architecture.md](./concepts/architecture.md)). Only the first
+Neo is designed as three loops (see [architecture.md](./concepts/architecture.md)). Only the first
 is built:
 
 | Loop | What it does | Status |
@@ -23,7 +23,7 @@ is built:
 | **Coding loop** | Research → plan → implement → review → draft PR | `[target]` |
 | **Verification / Operations** | PR review, smoke/user test, CD, telemetry | `[target]` |
 
-So today you use neo to **turn intent into a signed-off, machine-checkable task set**. The
+So today you use Neo to **turn intent into a signed-off, machine-checkable task set**. The
 issue→PR pipeline is the direction of travel, not a claim about what runs end-to-end yet. The
 `code-writer`, `code-reviewer`, `researcher`, and `implementation-planner` agents ship, but the
 loop that orchestrates them autonomously is still `[target]`.
@@ -42,18 +42,18 @@ is the thing you can actually automate.
 
 ## Pick your path
 
-- **I want to run neo in my repo.** → [guides/installing-neo.md](./guides/installing-neo.md) —
+- **I want to run Neo in my repo.** → [guides/installing-neo.md](./guides/installing-neo.md) —
   install `neo-core`, write your project's `AGENTS.md`, add a stack.
 - **I want to drive the crew.** → [guides/using-neo.md](./guides/using-neo.md) — invoke the agents
   and work the Specification loop with the BE.
 - **I want to hand in a piece of work.** → [guides/filing-work.md](./guides/filing-work.md) — what a
   well-formed Feature and Task look like.
-- **I want to change neo itself.** → [contributing/README.md](./contributing/README.md) — contracts,
+- **I want to change Neo itself.** → [contributing/README.md](./contributing/README.md) — contracts,
   authoring, hooks.
 
 ## Install (quickest path)
 
-neo is packaged for GitHub Copilot CLI:
+Neo is packaged for GitHub Copilot CLI:
 
 ```
 copilot plugin marketplace add skyarkitekten/neo

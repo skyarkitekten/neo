@@ -2,7 +2,7 @@
 
 Terms in **bold** are defined in the [glossary](../../glossary.md).
 
-This is the **normative** design for how neo is decomposed into distributable plugins: what
+This is the **normative** design for how Neo is decomposed into distributable plugins: what
 `neo-core` owns, what a stack plugin (`neo-react`, `neo-dotnet`, …) adds, and the contract
 between them. It governs *which tier a rule belongs to* and *how stack skills are discovered at
 runtime*.
@@ -12,7 +12,7 @@ shape — folder layout, manifest fields, `neo-` naming. This doc owns the *spli
 late-binding rule, and the skill-description discovery format. When the two overlap, the
 mechanical facts (paths, manifest keys) are `plugin-contract.md`'s; the design rationale is here.
 
-> **Copilot-only (issue #34).** neo ships for GitHub Copilot CLI only. The dual-harness design
+> **Copilot-only (issue #34).** Neo ships for GitHub Copilot CLI only. The dual-harness design
 > that first motivated this split — a Claude Code mirror, dual manifests, a `validate-mirrors.py`
 > check — was dropped. The pre-#34 reasoning, including the executed migration plan, was removed
 > along with the archive doc that captured it. This document is the live contract.
@@ -27,7 +27,7 @@ mechanical facts (paths, manifest keys) are `plugin-contract.md`'s; the design r
 | 2 | **`neo-core` + one plugin per stack.** Every project installs `neo-core`; stacks are additive. |
 | 3 | **Stacks are generally skills, but not restricted to skills.** The IP is the harness; skills are what plug into it. |
 | 4 | **Many stack skills will be sourced from third-party OSS**, not authored here. |
-| 5 | **`master-control` stays in the repo and is not deployed.** It is the authoring prompt for building neo, not a runtime agent. |
+| 5 | **`master-control` stays in the repo and is not deployed.** It is the authoring prompt for building Neo, not a runtime agent. |
 
 Example installs:
 
@@ -56,7 +56,7 @@ you switch projects within the same stack, it isn't the stack plugin either — 
 consuming repo's `AGENTS.md`.
 
 **The project tier is the consumer's obligation.** `neo-core` ships no `AGENTS.md` and no template
-for one — neo ships capability, not scaffolding. Every project installing `neo-core` must author
+for one — Neo ships capability, not scaffolding. Every project installing `neo-core` must author
 its own, because the core agents treat it as the source of truth for commands, layout, and style.
 Without it the crew does not error — it runs, and the build-and-test gate self-corrects against
 nothing. **This failure is silent**, so `neo-core` must state the requirement at install time
@@ -93,10 +93,10 @@ same route that repo gets its `AGENTS.md`.
 ## master-control is not a runtime agent
 
 `master-control` authors agents, skills, instruction files, hooks, and `AGENTS.md` files. It
-participates in none of the three loops — it is the prompt used to *build* neo. It lives at the
+participates in none of the three loops — it is the prompt used to *build* Neo. It lives at the
 repo root (`.github/agents/neo.master-control.agent.md`), which Copilot CLI auto-discovers for
 anyone working *inside* this repo, while the plugin's agent path points at
-`plugins/neo-core/.github/agents/`. So it is visible to neo developers and invisible to
+`plugins/neo-core/.github/agents/`. So it is visible to Neo developers and invisible to
 installers, with no exclusion mechanism to maintain: a role is shipped iff its file lives under a
 `plugins/*/` tree.
 
@@ -164,7 +164,7 @@ design reason it matters here:
 
 | Skill origin | Name | Example |
 | --- | --- | --- |
-| **Authored by neo** | `neo-` prefix | `neo-task-authoring`, `neo-react-components` |
+| **Authored by Neo** | `neo-` prefix | `neo-task-authoring`, `neo-react-components` |
 | **Vendored from another plugin** | Keep the upstream name unchanged | `react-hooks` |
 
 Bare skill names resolve by precedence, and Copilot ranks plugin skills near the **bottom** of its
@@ -185,15 +185,15 @@ Many stack skills are vendored rather than authored here (decision 4).
 
 **Scope: other coding-agent plugins only** — `SKILL.md` files and their bundled `scripts/`,
 `references/`, `assets/`. Not general OSS libraries, application code, or anything that becomes a
-runtime dependency. neo vendors *instructions*, not software. A `SKILL.md` is still a copyrighted
+runtime dependency. Neo vendors *instructions*, not software. A `SKILL.md` is still a copyrighted
 work.
 
 **Provenance.** Every vendored skill carries a `PROVENANCE.md` recording: upstream repo URL,
 license, version or commit SHA, date vendored, and **every local modification made**. Without the
-last field, no one can tell neo's adaptations from upstream behavior, and re-syncing becomes
+last field, no one can tell Neo's adaptations from upstream behavior, and re-syncing becomes
 guesswork.
 
-**License compatibility.** neo is MIT; vendoring is redistribution, so the upstream license must
+**License compatibility.** Neo is MIT; vendoring is redistribution, so the upstream license must
 permit it:
 
 | License | Vendor? |
@@ -221,7 +221,7 @@ Prefer this where the upstream is healthy.
 **Who authors the consuming repo's project-tier files?** With `master-control` undeployed, no
 shipped artifact writes the consuming repo's `AGENTS.md` or its `.github/instructions/` — yet
 `neo-core` depends on `AGENTS.md` for commands, layout, and the integration mode, and instruction
-files have no other possible home. Options: (a) the neo team runs `master-control` during client
+files have no other possible home. Options: (a) the Neo team runs `master-control` during client
 onboarding as a service; (b) `neo-core` ships a thin setup skill that interviews the user and
 writes both; (c) they're documented as a manual prerequisite. Option (b) is the only one that
 scales, since a plugin can ship a skill that *writes into the working repo* even though it cannot

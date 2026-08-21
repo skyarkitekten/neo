@@ -40,7 +40,7 @@ skills from `.github/skills/`, and hooks from `.github/hooks/hooks.json`.
 Invoke the **technical-engineer** with an issue/story reference and it drives the crew to a draft
 PR. See the repo docs for detail:
 
-- `docs/getting-started.md` — what neo is and the quickest path in.
+- `docs/getting-started.md` — what Neo is and the quickest path in.
 - `docs/guides/using-neo.md` — driving the crew through the Specification loop.
 - `docs/concepts/process-flow.md` — the workflow and integration modes.
 - `docs/contributing/guides/observability.md` — the logging/tuning setup.

@@ -21,7 +21,7 @@ Run `gh issue list --state open` for the live backlog. Current shape:
   `code-writer`/`code-reviewer` to select by description when the work is React,
   TypeScript, or any other named technology. Now authored once (no Claude mirror).
   `neo-core` itself stays language- and technology-agnostic; users can add or swap stack
-  plugins freely. Neo's own "bread-and-butter stack" — the plugins neo ships and
+  plugins freely. Neo's own "bread-and-butter stack" — the plugins Neo ships and
   maintains out of the box — is: `neo-frontend-react` (#16), `neo-frontend-angular`
   (#65), `neo-csharp-api` (#66), `neo-azure-platform` (#67), and `neo-ops` (#68, pairs
   with #14 Verification agents).
