@@ -103,7 +103,7 @@ backlog (`gh issue list --state open`) and the untracked loose ends in
 
 | Gap | Where it bites | Tracked by | Coverage | What's missing |
 | --- | --- | --- | --- | --- |
-| **G1** — problem identification / **binding constraint** | PRD → Feature | none (#41/#39 are spec *intake*, not framing) | **Untracked** | No "is this the *binding constraint*?" test. The home is live (`feature-agent`), but its gate is only "segment has a business justification." |
+| **G1** — problem identification / **binding constraint** | PRD → Feature | none (#41/#39 are spec *intake*, not framing) | **Untracked** | No "is this the *binding constraint*?" test. The home is live (`feature-agent`), but its gate is only "segment has a business justification." `neo-product` adds constraint *analysis* upstream (see the note below); it is not a gate here. |
 | **G2** — kill-condition gate at **build entry** | Boundary 1 | `todo.md` loose end only (back-door / KPI slice) | **Partial** | The loose end folds the *existing* KPI gate into the skill. The stronger move — a testability gate at the **front door** — is untracked, and is a genuine open design question. |
 | **G3** — **falsification-framed** verification | Boundary 3 | none (#14 is SRE/Platform-Eng ops agents) | **Untracked** | The default question is confirmatory ("does the feature behave as expected?"). Mitigated by the mis-built / mis-specified / both triage, but the word and the default still ask "does it work." |
 | **G4** — **strategic vs tactical** framing | whole spec loop | none | **Untracked** | Neo has one framing cadence (PRD → Feature → Task). No concept of a signal big enough to reopen the *system* vs spawn a *feature*. Includes the unresolved "what earns a strategic reopen?" |
@@ -111,13 +111,22 @@ backlog (`gh issue list --state open`) and the untracked loose ends in
 
 ### Notes on each
 
-**G1 — no named home for the binding constraint.** PRD → Feature *is* in the boundary table
-(the `—` row), with gate "Segment has a business justification," `[live]`. So this is a
-*weak-gate* problem, not a missing box: a "business justification" is not a binding-constraint
-test. The `feature-agent` and `neo-feature-authoring` skill are **live** (per
-[architecture.md § Status](../../concepts/architecture.md#status)) — note that [glossary.md](../../glossary.md)
-still marks "Feature Skill / Feature Agent `[target]`", a stale inconsistency worth fixing. This
-is the ~50% leak region from principle 2, and it currently has no discipline attached to it.
+**G1 — no named home for the binding constraint.** PRD → Feature is a step *inside* the
+Specification loop, not one of the numbered boundaries — the boundary table's unnumbered row is
+Product → Specification, whose gate is "PRD is segmentable / each segment carries its own business
+justification," `[live]`. So this is a *weak-gate* problem, not a missing box: a "business
+justification" is not a binding-constraint test. The `feature-agent` and `neo-feature-authoring`
+skill are **live** (per
+[architecture.md § Status](../../concepts/architecture.md#status)). This is the ~50% leak region
+from principle 2.
+
+Since this analysis was written, the **Product loop** (`neo-product`) has attached real discipline
+*upstream* of the gap: `neo.systems.thinking` does constraint analysis and `neo.product.coach`
+challenges framing, both feeding the PRD at Boundary 0. That narrows the leak but does not close
+G1, which asks for a binary **gate** — "is this the binding constraint, yes or no?" — at PRD →
+Feature. Analysis that informs a document is not a gate that can reject a segment. G1 therefore
+stays **Untracked**; its score is unchanged and re-scoring it would require re-running the whole
+analysis against the current tree.
 
 **G2 — the kill condition guards the back door, not the front.** Neo's four-field falsifier
 lives on **KPI authoring** (value fit, settled in production after the fact). A feature can

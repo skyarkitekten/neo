@@ -64,4 +64,10 @@ Canonical vocabulary for the Neo Agentic SDLC. Define a term once — here — a
 
 ---
 
+**Neo, stylized.** The system is always written **Neo** in prose — never "neo", never "NEO".
+Lowercase `neo` appears only as a literal identifier: plugin names (`neo-core`, `neo-product`),
+the marketplace (`neo`) and install targets (`neo-core@neo`), agent filenames
+(`neo.<role>.agent.md`), skill directories (`neo-feature-authoring`), and repository paths. Inside
+code fences and inline code, reproduce the identifier exactly — do not "correct" it.
+
 **Planner naming.** The two planners are named by output, never by level: **Task Planner** (Feature → Tasks, spec loop) and **Implementation Planner** (Task → Steps, coding loop). The PRD→Feature agent is deliberately **not** a "Feature Planner" — it is the **Feature Agent**, to avoid colliding with the two planners one level down.
