@@ -95,6 +95,19 @@ python3 scripts/validate-plugins.py
 
 ## Gotchas
 
+- **A tool alias the harness doesn't recognize is silently ignored — not an error.** The documented
+  `tools:` alias table describes the *cloud agent*; Copilot CLI resolves a narrower set. Probed against
+  v1.0.80: `read`, `edit`, `execute`, and `agent` work; **`search`, `web`, `todo`, and `github/*` grant
+  nothing at all.** So in the CLI an agent searches, fetches, and reaches GitHub through `execute`
+  (`rg`, `curl`, `gh`). This has already bitten us: researchers declaring `[read, search, web, todo]`
+  received only `view` and filled the gap with recalled training data wearing invented citations. Keep
+  the portable aliases for cloud/VS Code parity, but any prompt that says "search" or "fetch" needs
+  `execute` behind it. `scripts/validate-plugins.py` enforces this; the full table is in
+  `docs/contributing/guides/agent-authoring-reference.md`.
+- **Evidence discipline is a shipped contract**, not a style preference — the `neo-evidence-standard`
+  skill (duplicated into both plugins) owns the retrieval-or-silence rule and the
+  `FACT` / `INFERENCE` / `RECALL — UNVERIFIED` labels. Agents that gather or consume evidence must load it.
+
 - `docs/README.md` is a two-door hub: **user** docs (`getting-started.md`, `guides/`) sit at the
   `docs/` top level; **contributor** docs live under `docs/contributing/` (`reference/`, `guides/`,
   `design/`). `glossary.md` + `concepts/` are the shared core both doors point at.

@@ -36,7 +36,37 @@ Two parts: YAML frontmatter + Markdown body (the system prompt).
 | `argument-hint` | optional | Hint for invocation args — **ignored on GitHub.com cloud agent**. |
 | `target` | optional | `vscode` or `github-copilot`; omit for both. |
 
-Common built-in tools: `codebase`/`search`, `terminal`/`runCommands`, `edit`, `github`, `fetch`/`web`, `agent`. MCP tools are referenced by server name (e.g. `postgres`, `docker`).
+Common built-in tools: `read`, `edit`, `search`, `execute`, `web`, `todo`, `agent`. MCP tools are referenced by server name (e.g. `github/*`, `postgres`, `docker`).
+
+#### Which aliases the Copilot CLI actually resolves
+
+**A tool name the harness doesn't recognize is silently ignored — not an error.** The documented alias
+table describes the *cloud agent*; the CLI resolves a narrower set, so an allowlist copied from the
+docs can leave an agent with far less capability than its prompt assumes. Probed live against Copilot
+CLI **v1.0.80** by enumerating the runtime grant of five shipped agents:
+
+| Alias | Copilot CLI v1.0.80 | Notes |
+| --- | --- | --- |
+| `read` | ✅ `view` | |
+| `execute` | ✅ `powershell` / `bash` (+ session management) | The workhorse — see below |
+| `agent` | ✅ `task`, `read_agent`, `write_agent`, `list_agents` | Required for delegation |
+| `edit` | ✅ edit tools | |
+| `search` | ❌ **dropped** | No grep, no glob |
+| `web` | ❌ **dropped** | No fetch, no search |
+| `todo` | ❌ **dropped** | |
+| `github/*` | ❌ **dropped** | Use the `gh` CLI via `execute` |
+
+So in the CLI, **`execute` is how an agent searches the repo (`rg`, `Select-String`, `git grep`),
+fetches the web (`curl`, `https://r.jina.ai/<url>`), and reaches GitHub (`gh`)**. Keep the portable
+aliases in `tools:` for cloud agent and VS Code parity, but if an agent's prompt tells it to search or
+fetch, it needs `execute` or it will quietly answer from memory instead.
+
+This is not hypothetical: Neo shipped researchers declaring `[read, search, web, todo]` that received
+**only `view`**, and they filled the gap with recalled training data wearing invented citations. See
+the `neo-evidence-standard` skill. `scripts/validate-plugins.py` now enforces this — an allowlist that
+resolves to nothing, or one asking for a dropped alias without `execute`, fails CI.
+
+Re-probe when the CLI version changes rather than trusting this table.
 
 **Body:** structure it — role/expertise, a numbered procedure or checklist, guardrails ("never…"), and an explicit output format (show the format you expect).
 
@@ -50,10 +80,16 @@ today across both plugins, which is the reference for new agents:
 | Planning, decomposition, and orchestration of a whole loop — the hardest reasoning | `Claude Opus 4.8` | `high` | `neo.implementation-planner`, `neo.product.engineer` |
 | Review, authoring, spec work, facilitation | `Claude Sonnet 5` | `high` | `neo.code-reviewer`, `neo.feature-agent`, `neo.design.thinking`, `neo.systems.thinking`, `neo.product.coach` |
 | Orchestration and code generation | `Claude Sonnet 5` | `medium` | `neo.technical-engineer`, `neo.code-writer` |
-| Fast, wide, read-only gathering | `Claude Haiku 4.5` | `low` | `neo.researcher`, `neo.product.researcher` |
+| Evidence gathering, where a fabricated citation is expensive | `Claude Sonnet 5` | `medium` | `neo.researcher`, `neo.product.researcher` |
 
 The rule behind the table: raise reasoning where a wrong answer is expensive to *detect*
 (review, planning), lower it where the work is mechanical or the output is checked immediately.
+
+Researchers used to sit at `Claude Haiku 4.5` / `low` on the theory that gathering is wide and cheap.
+That was wrong for the same reason review is expensive: a confabulated citation is *hard to detect* —
+it reads exactly like a real one, and it propagates through every downstream lens before anyone checks
+it. Evidence work belongs with the expensive-to-detect roles, not the mechanical ones.
+
 Model names churn — verify against the target Copilot version, and prefer a name already in use
 in this repo over one from a blog post.
 
