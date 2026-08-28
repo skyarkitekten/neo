@@ -24,7 +24,7 @@ This script makes the remaining invariants executable:
     `agent` resolve; `search`, `web`, `todo`, and `github/*` grant nothing at all.
     An unrecognized tool name is not an error, it is a silent capability loss —
     which is exactly how Neo shipped researchers that could not grep or fetch;
-  * no agent uses the `user-invokable:` spelling (VS Code honors only
+  * no agent uses the `user-invocable:` spelling (VS Code honors only
     `user-invocable:`, so Neo standardizes on the `c` form).
 
 Exit code 0 = all good, 1 = at least one violation. No third-party deps.
