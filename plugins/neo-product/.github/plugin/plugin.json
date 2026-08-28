@@ -1,6 +1,6 @@
 {
   "name": "neo-product",
-  "version": "0.3.0",
+  "version": "2.0.3",
   "description": "Neo product — the upstream Product loop (Intake/Onboarding, System & Design -> PRD, Ingest Code & Docs) that produces the PRD consumed by neo-core's Specification loop. Ships the Product Engineer plus Product Researcher, Product Coach, Design Thinking, and Systems Thinking specialists, with lifecycle-logging hooks.",
   "author": {
     "name": "Chad Thomas"
@@ -8,12 +8,7 @@
   "homepage": "https://github.com/skyarkitekten/neo",
   "repository": "https://github.com/skyarkitekten/neo",
   "license": "MIT",
-  "keywords": [
-    "agents",
-    "product",
-    "hooks",
-    "observability"
-  ],
+  "keywords": ["agents", "product", "hooks", "observability"],
   "agents": ".github/agents",
   "hooks": ".github/hooks/hooks.json"
 }
