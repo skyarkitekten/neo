@@ -4,7 +4,7 @@
     "name": "skyarkitekten"
   },
   "metadata": {
-    "description": "Neo: — a concept-to-production multi-agent coding system. A core crew, an optional upstream product crew, and additive per-stack plugins, for GitHub Copilot CLI.",
+    "description": "Neo — a concept-to-production multi-agent coding system. A core crew, an optional upstream product crew, and additive per-stack plugins, for GitHub Copilot CLI.",
     "version": "2.0.3"
   },
   "plugins": [

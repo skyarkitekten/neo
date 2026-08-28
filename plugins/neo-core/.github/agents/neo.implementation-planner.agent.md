@@ -1,7 +1,7 @@
 ---
 name: Neo Implementation Planner
 description: Coding-loop planner — turns a spec plus research findings into an ordered list of discrete implementation units — each a feature/fix or a test — mapped to acceptance criteria, with dependencies and parallelizable groups marked. Reads and plans; never mutates. Invoked by the orchestrator. Does not write code or re-run research from scratch.
-model: Claude Opus 4.8
+model: Claude Opus 5
 reasoningEffort: high
 tools: [read, search, execute]
 user-invocable: false

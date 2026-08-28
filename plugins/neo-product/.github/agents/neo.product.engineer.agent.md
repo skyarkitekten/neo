@@ -7,7 +7,7 @@ description: >-
   (feasibility/dynamics). Use when: evaluating a new feature end-to-end, running a full product discovery cycle,
   producing a PRD, coordinating business analysis across viability-desirability-feasibility, synthesizing insights
   across product strategy and system dynamics, or when the user says 'product engineer'.
-model: Claude Opus 4.8
+model: Claude Opus 5
 reasoningEffort: high
 tools: [agent, read, search, edit, execute, web, todo]
 agents:
