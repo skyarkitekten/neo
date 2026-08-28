@@ -6,8 +6,8 @@ and hooks shipped as plugins for a single harness. It is **not** an application:
 there is no frontend, no backend, no compiled artifact, and no build. It is a tree
 of Markdown, JSON, Bash, and Python.
 
-Copilot is the **canonical, sole harness** (decided in issue #34). The Claude Code
-tree was dropped and deferred — a Claude mirror may be regenerated from the Copilot
+Copilot is the **canonical, sole harness**. The Claude Code
+tree was dropped and deferred — a Claude mirror may be created from the Copilot
 source later if there is demand. Until then, do not add `agents/`, `skills/`, or
 `.claude-plugin/` trees back.
 
@@ -41,12 +41,14 @@ scripts/linting/schemas/hook-manifest.schema.json   Hook-manifest JSON Schema (d
 docs/                                Grouped by genre — see docs/README.md for the map
 ```
 
-The shipped agents, in `plugins/neo-core/`: `technical-engineer` (orchestrator — start
-here), `researcher`, `implementation-planner`, `code-writer`, `code-reviewer`,
-`feature-agent`, `task-planner`. In `plugins/neo-product/`: `product.engineer`
-(orchestrator — start here), `product.researcher`, `product.coach`, `design.thinking`,
-`systems.thinking`. `master-control` is dev-time only and lives at the repo root, never
-in a plugin.
+The shipped agents:
+
+| Plugin                 | Agents                                                                                                                                                    |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `plugins/neo-core/`    | `technical-engineer` (orchestrator — start here), `researcher`, `implementation-planner`, `code-writer`, `code-reviewer`, `feature-agent`, `task-planner` |
+| `plugins/neo-product/` | `product.engineer` (orchestrator — start here), `product.researcher`, `product.coach`, `design.thinking`, `systems.thinking`                              |
+
+`master-control` is dev-time only and lives at the repo root, never in a plugin.
 
 ## Naming
 
@@ -96,7 +98,7 @@ python3 scripts/validate-plugins.py
 ## Gotchas
 
 - **A tool alias the harness doesn't recognize is silently ignored — not an error.** The documented
-  `tools:` alias table describes the *cloud agent*; Copilot CLI resolves a narrower set. Probed against
+  `tools:` alias table describes the _cloud agent_; Copilot CLI resolves a narrower set. Probed against
   v1.0.80: `read`, `edit`, `execute`, and `agent` work; **`search`, `web`, `todo`, and `github/*` grant
   nothing at all.** So in the CLI an agent searches, fetches, and reaches GitHub through `execute`
   (`rg`, `curl`, `gh`). This has already bitten us: researchers declaring `[read, search, web, todo]`
