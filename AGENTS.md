@@ -6,8 +6,8 @@ and hooks shipped as plugins for a single harness. It is **not** an application:
 there is no frontend, no backend, no compiled artifact, and no build. It is a tree
 of Markdown, JSON, Bash, and Python.
 
-Copilot is the **canonical, sole harness** (decided in issue #34). The Claude Code
-tree was dropped and deferred — a Claude mirror may be regenerated from the Copilot
+Copilot is the **canonical, sole harness**. The Claude Code
+tree was dropped and deferred — a Claude mirror may be created from the Copilot
 source later if there is demand. Until then, do not add `agents/`, `skills/`, or
 `.claude-plugin/` trees back.
 
@@ -41,12 +41,14 @@ scripts/linting/schemas/hook-manifest.schema.json   Hook-manifest JSON Schema (d
 docs/                                Grouped by genre — see docs/README.md for the map
 ```
 
-The shipped agents, in `plugins/neo-core/`: `technical-engineer` (orchestrator — start
-here), `researcher`, `implementation-planner`, `code-writer`, `code-reviewer`,
-`feature-agent`, `task-planner`. In `plugins/neo-product/`: `product.engineer`
-(orchestrator — start here), `product.researcher`, `product.coach`, `design.thinking`,
-`systems.thinking`. `master-control` is dev-time only and lives at the repo root, never
-in a plugin.
+The shipped agents:
+
+| Plugin                 | Agents                                                                                                                                                    |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `plugins/neo-core/`    | `technical-engineer` (orchestrator — start here), `researcher`, `implementation-planner`, `code-writer`, `code-reviewer`, `feature-agent`, `task-planner` |
+| `plugins/neo-product/` | `product.engineer` (orchestrator — start here), `product.researcher`, `product.coach`, `design.thinking`, `systems.thinking`                              |
+
+`master-control` is dev-time only and lives at the repo root, never in a plugin.
 
 ## Naming
 
@@ -94,6 +96,19 @@ python3 scripts/validate-plugins.py
 - Don't edit generated logs (`.agent-logs/`, `*.jsonl`).
 
 ## Gotchas
+
+- **A tool alias the harness doesn't recognize is silently ignored — not an error.** The documented
+  `tools:` alias table describes the _cloud agent_; Copilot CLI resolves a narrower set. Probed against
+  v1.0.80: `read`, `edit`, `execute`, and `agent` work; **`search`, `web`, `todo`, and `github/*` grant
+  nothing at all.** So in the CLI an agent searches, fetches, and reaches GitHub through `execute`
+  (`rg`, `curl`, `gh`). This has already bitten us: researchers declaring `[read, search, web, todo]`
+  received only `view` and filled the gap with recalled training data wearing invented citations. Keep
+  the portable aliases for cloud/VS Code parity, but any prompt that says "search" or "fetch" needs
+  `execute` behind it. `scripts/validate-plugins.py` enforces this; the full table is in
+  `docs/contributing/guides/agent-authoring-reference.md`.
+- **Evidence discipline is a shipped contract**, not a style preference — the `neo-evidence-standard`
+  skill (duplicated into both plugins) owns the retrieval-or-silence rule and the
+  `FACT` / `INFERENCE` / `RECALL — UNVERIFIED` labels. Agents that gather or consume evidence must load it.
 
 - `docs/README.md` is a two-door hub: **user** docs (`getting-started.md`, `guides/`) sit at the
   `docs/` top level; **contributor** docs live under `docs/contributing/` (`reference/`, `guides/`,

@@ -17,6 +17,13 @@ This script makes the remaining invariants executable:
   * every Copilot agent's `agents:` allowlist references a real agent `name:`;
   * any agent that delegates (non-empty `agents:`) also grants the `agent`/`Task`
     delegation tool in its `tools:` allowlist;
+  * every agent's `tools:` allowlist grants at least one tool the Copilot CLI
+    actually resolves, and any agent asking for `search`/`web`/`todo`/`github/*`
+    — aliases the CLI silently drops — also grants `execute`, the only working
+    substitute. Probed against Copilot CLI v1.0.80: `read`, `edit`, `execute`, and
+    `agent` resolve; `search`, `web`, `todo`, and `github/*` grant nothing at all.
+    An unrecognized tool name is not an error, it is a silent capability loss —
+    which is exactly how Neo shipped researchers that could not grep or fetch;
   * no agent uses the `user-invokable:` spelling (VS Code honors only
     `user-invocable:`, so Neo standardizes on the `c` form).
 
@@ -35,6 +42,47 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 
 _LIST_ITEM_RE = re.compile(r"^\s*-\s+")
 PLUGINS_DIR = REPO_ROOT / "plugins"
+
+# --- What the Copilot CLI does with `tools:` -------------------------------------
+#
+# Two tiers of confidence here, deliberately kept apart. PROBED entries were observed
+# live against Copilot CLI v1.0.80 by enumerating the runtime tool grant of five
+# shipped agents. INFERRED entries are the documented compatible spellings of a probed
+# alias (see docs/contributing/guides/agent-authoring-reference.md); they are believed
+# to behave the same but were never actually exercised. Re-probe on a CLI upgrade, and
+# promote inferred -> probed only with fresh evidence.
+
+# PROBED to resolve: `read` -> `view`, `execute` -> the shell family,
+# `agent` -> the task/delegation family, `edit` -> edit tools.
+_PROBED_EFFECTIVE = {"read", "edit", "execute", "agent"}
+# INFERRED to resolve: documented compatible spellings of the four above.
+_INFERRED_EFFECTIVE = {
+    "notebookread",
+    "multiedit", "write", "notebookedit",
+    "shell", "bash", "powershell",
+    "custom-agent", "task",
+}
+CLI_EFFECTIVE_TOOLS = _PROBED_EFFECTIVE | _INFERRED_EFFECTIVE
+
+# PROBED to be silently DROPPED: declaring these grants nothing at all, and an
+# unrecognized tool name is not an error, so the loss is invisible. `execute` is the
+# only substitute (`rg`/`Select-String` for search, `curl` for web, `gh` for GitHub).
+# `github/*` entries are handled separately by prefix.
+_PROBED_DROPPED = {"search", "web", "todo"}
+# INFERRED dropped: compatible spellings of the three above. Safe to infer in this
+# direction — if the primary alias grants nothing, its synonyms will not grant more.
+_INFERRED_DROPPED = {"grep", "glob", "websearch", "webfetch", "todowrite"}
+CLI_DROPPED_TOOLS = _PROBED_DROPPED | _INFERRED_DROPPED
+
+# Deliberately PROBED-ONLY. `shell`/`bash`/`powershell` are documented synonyms of
+# `execute`, but only `execute` was actually confirmed to grant a shell. Accepting the
+# unprobed spellings here would let `tools: [read, search, bash]` pass this check while
+# granting nothing but `view` — reintroducing the exact bug the check exists to catch.
+# Requiring the confirmed spelling fails safe: the worst case is telling an author to
+# write `execute`, which is known to work.
+EXECUTE_ALIASES = {"execute"}
+
+
 
 errors: list[str] = []
 
@@ -213,6 +261,40 @@ def copilot_agent_files(plugin: Path) -> list[Path]:
     return sorted(d.glob("neo.*.agent.md")) if d.is_dir() else []
 
 
+def check_cli_tools(plugin_name: str, agent_file: Path, lowered: set[str]) -> None:
+    """A `tools:` allowlist must grant capability the Copilot CLI actually resolves.
+
+    Two failures, both of which ship a silently crippled agent:
+
+      1. Nothing in the list resolves, so the agent runs with the bare default grant.
+         This is how `neo.implementation-planner` (`tools: ["search"]`) ended up able
+         to read a file but not search for one.
+      2. The list asks for a dropped alias (`search`, `web`, `todo`, `github/*`) without
+         `execute`. The agent's prompt then tells it to search or fetch with no tool that
+         can — which is how researchers ended up answering from recall and citing sources
+         they never opened.
+    """
+    if not lowered or "*" in lowered:
+        return  # `[]` = deliberately toolless; `["*"]` = everything
+
+    if not lowered & CLI_EFFECTIVE_TOOLS:
+        errors.append(
+            f"[{plugin_name}] {agent_file.name} declares tools: {sorted(lowered)}, none of which "
+            f"the Copilot CLI resolves; the agent gets no capability from this list. Grant at "
+            f"least one of {sorted(CLI_EFFECTIVE_TOOLS)}"
+        )
+        return
+
+    dropped = sorted((lowered & CLI_DROPPED_TOOLS) | {t for t in lowered if t.split("/", 1)[0] == "github"})
+    if dropped and not lowered & EXECUTE_ALIASES:
+        errors.append(
+            f"[{plugin_name}] {agent_file.name} declares {dropped}, which the Copilot CLI "
+            f"silently ignores, but does not declare `execute` - the only confirmed substitute "
+            f"(rg/Select-String, curl, gh). The agent will be unable to search, fetch, or "
+            f"reach GitHub despite its prompt telling it to"
+        )
+
+
 def check_plugin(plugin: Path) -> None:
     name = plugin.name
 
@@ -238,6 +320,13 @@ def check_plugin(plugin: Path) -> None:
                 f"[{name}] {f.name} uses `user-invokable:`; Neo standardizes on "
                 f"`user-invocable:`, the only spelling VS Code honors"
             )
+
+        # 3. `tools:` must grant capability the CLI actually resolves.
+        tools = fm_tools(f)
+        lowered = {t.strip().lower() for t in tools} if tools is not None else None
+        if lowered is not None:
+            check_cli_tools(name, f, lowered)
+
         refs = fm_agents(f)
         if not refs:
             continue
@@ -247,13 +336,11 @@ def check_plugin(plugin: Path) -> None:
                     f"[{name}] {f.name} lists agent '{ref}' in its agents: allowlist, "
                     f"but no Copilot agent declares name: '{ref}'"
                 )
-        # 3. An agent that delegates must also be granted the delegation tool.
+        # 4. An agent that delegates must also be granted the delegation tool.
         #    `tools:` is an allowlist: if set and it omits the `agent`/`Task` alias
         #    (and isn't the `*` wildcard), delegation silently has no task tool.
-        tools = fm_tools(f)
-        if tools is None:
+        if lowered is None:
             continue  # unset => all tools allowed, delegation works
-        lowered = {t.lower() for t in tools}
         if "*" in lowered or lowered & DELEGATION_TOOLS:
             continue
         errors.append(

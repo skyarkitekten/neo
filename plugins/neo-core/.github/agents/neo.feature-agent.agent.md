@@ -3,7 +3,7 @@ name: Neo Feature Agent
 description: Use when translating a PRD/requirements segment into a business-level Feature — What, Why, optional KPIs, and verification steps — collaboratively with the Business Engineer. Runs the interactive PRD-segment→Feature step and stops once the BE signs off. Pick this at the start of the Specification loop, before Feature→Task decomposition (Task Planner).
 model: Claude Sonnet 5
 reasoningEffort: high
-tools: [read, search, edit]
+tools: [read, search, edit, execute]
 user-invocable: true
 argument-hint: <PRD segment, issue, or requirement reference>
 ---

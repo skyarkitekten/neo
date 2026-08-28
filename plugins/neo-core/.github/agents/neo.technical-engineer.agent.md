@@ -16,7 +16,10 @@ argument-hint: <issue or story URL/ID>
      Issue via MCP; Azure DevOps has no MCP tool here, so ADO specs are read with `az` via
      `execute` — do not add a speculative `azure*` MCP tool to this list. Any *stack-specific*
      tooling (build/test/lint) still comes from the consuming project's skills — add those
-     before running so workers can build, test, and lint. -->
+     before running so workers can build, test, and lint.
+     NOTE: in Copilot CLI the `search`, `web`, and `github/*` entries above resolve to nothing —
+     they are declared for cloud agent and VS Code parity. In CLI, reach all three through
+     `execute` (`rg`/`Select-String`, `curl`, `gh`). -->
 
 # Orchestrator
 
@@ -52,6 +55,7 @@ Fall back to a built-in/generic Copilot agent **only** if the corresponding Neo 
 - Split the investigation into independent questions (e.g. one per affected area or system).
 - **Delegate each question to `Neo Researcher`, running them in parallel.** Each researcher answers one scoped question and returns affected areas, existing patterns, constraints, and risks.
 - Collect the findings. **If the spec is ambiguous or has no acceptance criteria, stop and ask the user before planning** — do not invent requirements beyond the spec. If research surfaces a gap, commission another `Neo Researcher`.
+- **Evidence gate.** Load the `neo-evidence-standard` skill. Every claim a researcher returns must carry `FACT` (with a locator retrieved this session), `INFERENCE` (derivation shown), or `RECALL — UNVERIFIED`. Send the report back rather than planning from it if a claim is unlabeled, if a file path or `sha` is cited that nobody actually opened, or if a number is called fact without a fetched source. Labels propagate — never promote `RECALL — UNVERIFIED` to fact because it sounds right or two researchers said it.
 
 ### 3. Plan
 
