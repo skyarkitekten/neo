@@ -22,48 +22,47 @@ Two parts: YAML frontmatter + Markdown body (the system prompt).
 
 **Frontmatter fields:**
 
-| Field | Status | Purpose |
-| --- | --- | --- |
-| `name` | recommended | Display name in the picker. |
-| `description` | **required** | What it does / when to pick it — drives discovery and routing. |
-| `model` | recommended | Which model powers it; match to task complexity. |
-| `reasoningEffort` | optional — **Copilot CLI only** (v1.0.66+) | Pin `low`/`medium`/`high` regardless of the user's global setting. Ignored by VS Code and the GitHub.com cloud agent. |
-| `tools` | recommended | Allowlist of built-in tools + MCP servers. |
-| `agents` | optional | Allowlist of worker agents this one may launch (needs the `agent` tool). |
-| `handoffs` | optional | VS Code handoff buttons — **ignored on GitHub.com cloud agent**. |
-| `user-invocable` | optional | Whether a human can select it directly. Copilot also accepts the `user-invokable` spelling, but VS Code honors only `user-invocable` — Neo standardizes on the `c` form everywhere. |
-| `disable-model-invocation` | optional | Prevent use as a subagent unless a coordinator allows it. |
-| `argument-hint` | optional | Hint for invocation args — **ignored on GitHub.com cloud agent**. |
-| `target` | optional | `vscode` or `github-copilot`; omit for both. |
+| Field                      | Status                                     | Purpose                                                                                                                                                                             |
+| -------------------------- | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`                     | recommended                                | Display name in the picker.                                                                                                                                                         |
+| `description`              | **required**                               | What it does / when to pick it — drives discovery and routing.                                                                                                                      |
+| `model`                    | recommended                                | Which model powers it; match to task complexity.                                                                                                                                    |
+| `reasoningEffort`          | optional — **Copilot CLI only** (v1.0.66+) | Pin `low`/`medium`/`high` regardless of the user's global setting. Ignored by VS Code and the GitHub.com cloud agent.                                                               |
+| `tools`                    | recommended                                | Allowlist of built-in tools + MCP servers.                                                                                                                                          |
+| `agents`                   | optional                                   | Allowlist of worker agents this one may launch (needs the `agent` tool).                                                                                                            |
+| `handoffs`                 | optional                                   | VS Code handoff buttons — **ignored on GitHub.com cloud agent**.                                                                                                                    |
+| `user-invocable`           | optional                                   | Whether a human can select it directly. Copilot also accepts the `user-invokable` spelling, but VS Code honors only `user-invocable` — Neo standardizes on the `c` form everywhere. |
+| `disable-model-invocation` | optional                                   | Prevent use as a subagent unless a coordinator allows it.                                                                                                                           |
+| `argument-hint`            | optional                                   | Hint for invocation args — **ignored on GitHub.com cloud agent**.                                                                                                                   |
+| `target`                   | optional                                   | `vscode` or `github-copilot`; omit for both.                                                                                                                                        |
 
 Common built-in tools: `read`, `edit`, `search`, `execute`, `web`, `todo`, `agent`. MCP tools are referenced by server name (e.g. `github/*`, `postgres`, `docker`).
 
 #### Which aliases the Copilot CLI actually resolves
 
-**A tool name the harness doesn't recognize is silently ignored — not an error.** The documented alias
-table describes the *cloud agent*; the CLI resolves a narrower set, so an allowlist copied from the
+**A tool name the harness doesn't recognize is silently ignored, it is not an error.** The documented alias
+table describes the _cloud agent_; the CLI resolves a narrower set, so an allowlist copied from the
 docs can leave an agent with far less capability than its prompt assumes. Probed live against Copilot
 CLI **v1.0.80** by enumerating the runtime grant of five shipped agents:
 
-| Alias | Copilot CLI v1.0.80 | Notes |
-| --- | --- | --- |
-| `read` | ✅ `view` | |
-| `execute` | ✅ `powershell` / `bash` (+ session management) | The workhorse — see below |
-| `agent` | ✅ `task`, `read_agent`, `write_agent`, `list_agents` | Required for delegation |
-| `edit` | ✅ edit tools | |
-| `search` | ❌ **dropped** | No grep, no glob |
-| `web` | ❌ **dropped** | No fetch, no search |
-| `todo` | ❌ **dropped** | |
-| `github/*` | ❌ **dropped** | Use the `gh` CLI via `execute` |
+| Alias      | Copilot CLI v1.0.80                                   | Notes                          |
+| ---------- | ----------------------------------------------------- | ------------------------------ |
+| `read`     | ✅ `view`                                             |                                |
+| `execute`  | ✅ `powershell` / `bash` (+ session management)       | The workhorse — see below      |
+| `agent`    | ✅ `task`, `read_agent`, `write_agent`, `list_agents` | Required for delegation        |
+| `edit`     | ✅ edit tools                                         |                                |
+| `search`   | ❌ **dropped**                                        | No grep, no glob               |
+| `web`      | ❌ **dropped**                                        | No fetch, no search            |
+| `todo`     | ❌ **dropped**                                        |                                |
+| `github/*` | ❌ **dropped**                                        | Use the `gh` CLI via `execute` |
 
 So in the CLI, **`execute` is how an agent searches the repo (`rg`, `Select-String`, `git grep`),
 fetches the web (`curl`, `https://r.jina.ai/<url>`), and reaches GitHub (`gh`)**. Keep the portable
 aliases in `tools:` for cloud agent and VS Code parity, but if an agent's prompt tells it to search or
 fetch, it needs `execute` or it will quietly answer from memory instead.
 
-This is not hypothetical: Neo shipped researchers declaring `[read, search, web, todo]` that received
-**only `view`**, and they filled the gap with recalled training data wearing invented citations. See
-the `neo-evidence-standard` skill. `scripts/validate-plugins.py` now enforces this — an allowlist that
+This hidden behavior was proven empirically in production and confirmed with evals (see
+the `neo-evidence-standard` skill). The validation script `scripts/validate-plugins.py` now enforces an allowlist that
 resolves to nothing, or one asking for a dropped alias without `execute`, fails CI.
 
 Re-probe when the CLI version changes rather than trusting this table.
@@ -75,18 +74,18 @@ Re-probe when the CLI version changes rather than trusting this table.
 `model` and `reasoningEffort` are chosen per role, never left to the default. What Neo ships
 today across both plugins, which is the reference for new agents:
 
-| Role shape | Model | `reasoningEffort` | Example |
-| --- | --- | --- | --- |
-| Planning, decomposition, and orchestration of a whole loop — the hardest reasoning | `Claude Opus 4.8` | `high` | `neo.implementation-planner`, `neo.product.engineer` |
-| Review, authoring, spec work, facilitation | `Claude Sonnet 5` | `high` | `neo.code-reviewer`, `neo.feature-agent`, `neo.design.thinking`, `neo.systems.thinking`, `neo.product.coach` |
-| Orchestration and code generation | `Claude Sonnet 5` | `medium` | `neo.technical-engineer`, `neo.code-writer` |
-| Evidence gathering, where a fabricated citation is expensive | `Claude Sonnet 5` | `medium` | `neo.researcher`, `neo.product.researcher` |
+| Role shape                                                                         | Model             | `reasoningEffort` | Example                                                                                                      |
+| ---------------------------------------------------------------------------------- | ----------------- | ----------------- | ------------------------------------------------------------------------------------------------------------ |
+| Planning, decomposition, and orchestration of a whole loop — the hardest reasoning | `Claude Opus 5`   | `high`            | `neo.implementation-planner`, `neo.product.engineer`                                                         |
+| Review, authoring, spec work, facilitation                                         | `Claude Sonnet 5` | `high`            | `neo.code-reviewer`, `neo.feature-agent`, `neo.design.thinking`, `neo.systems.thinking`, `neo.product.coach` |
+| Orchestration and code generation                                                  | `Claude Sonnet 5` | `medium`          | `neo.technical-engineer`, `neo.code-writer`                                                                  |
+| Evidence gathering, where a fabricated citation is expensive                       | `Claude Sonnet 5` | `medium`          | `neo.researcher`, `neo.product.researcher`                                                                   |
 
-The rule behind the table: raise reasoning where a wrong answer is expensive to *detect*
+The rule behind the table: raise reasoning where a wrong answer is expensive to _detect_
 (review, planning), lower it where the work is mechanical or the output is checked immediately.
 
 Researchers used to sit at `Claude Haiku 4.5` / `low` on the theory that gathering is wide and cheap.
-That was wrong for the same reason review is expensive: a confabulated citation is *hard to detect* —
+That was wrong for the same reason review is expensive: a confabulated citation is _hard to detect_ —
 it reads exactly like a real one, and it propagates through every downstream lens before anyone checks
 it. Evidence work belongs with the expensive-to-detect roles, not the mechanical ones.
 
@@ -95,9 +94,9 @@ in this repo over one from a blog post.
 
 ### Design patterns
 
-- **Domain expert** — deep knowledge of one technology, security-first defaults.
-- **Workflow automator** — executes a multi-step process (e.g. release manager); asks for confirmation before irreversible steps.
-- **Quality gate** — enforces standards (accessibility, API design); returns severity-tagged findings.
+- **Domain expert**: deep knowledge of one technology, security-first defaults.
+- **Workflow automator**: executes a multi-step process (e.g. release manager); asks for confirmation before irreversible steps.
+- **Quality gate**: enforces standards (accessibility, API design); returns severity-tagged findings.
 
 ### Best practices & pitfalls
 
@@ -156,11 +155,11 @@ A "README for agents": a predictable place for the build/test/convention context
 
 ## Quick decision guide
 
-| Need | Reach for |
-| --- | --- |
-| Standing, passive rules on matching files | Instruction file (`*.instructions.md`, `applyTo` glob) |
-| Repeatable focused task with bundled assets | Skill (`SKILL.md`) |
-| A persistent persona for a whole workflow | Agent (`*.agent.md`) |
+| Need                                             | Reach for                                              |
+| ------------------------------------------------ | ------------------------------------------------------ |
+| Standing, passive rules on matching files        | Instruction file (`*.instructions.md`, `applyTo` glob) |
+| Repeatable focused task with bundled assets      | Skill (`SKILL.md`)                                     |
+| A persistent persona for a whole workflow        | Agent (`*.agent.md`)                                   |
 | Coordinate several specialists / parallel tracks | Coordinator agent (`agent` tool + `agents:` allowlist) |
-| Project-wide build/test/style/guardrails | Root `AGENTS.md` (nested for monorepo subtrees) |
-| Guaranteed enforcement outside the model | Hook (lifecycle event) |
+| Project-wide build/test/style/guardrails         | Root `AGENTS.md` (nested for monorepo subtrees)        |
+| Guaranteed enforcement outside the model         | Hook (lifecycle event)                                 |
