@@ -152,9 +152,21 @@ Unlike a plugin tree, this file *is* repo-scoped, so `.github/plugin/` is the ri
 | `plugins[].author.name` | `"Chad Thomas"`                       | Required.                                  |
 | `plugins[].license`     | `"MIT"`                               | Required.                                  |
 | `plugins[].keywords[]`  | 4 entries                             | Required.                                  |
-| `plugins[].agents`      | `"agents/"`                           | Required.                                  |
-| `plugins[].skills`      | `"skills/"`                           | Required.                                  |
-| `plugins[].hooks`       | `"hooks/hooks.json"`                  | Required.                                  |
+
+**Do not declare `agents`, `skills`, or `hooks` here.** Component paths in a marketplace entry
+are *inert* when the plugin source ships its own `plugin.json` — which every Neo plugin does.
+Verified against Copilot CLI 1.0.81:
+
+| Path declared by                            | Skills loaded |
+| ------------------------------------------- | ------------- |
+| marketplace entry only                       | **0**         |
+| plugin's own `plugin.json`                   | 3             |
+| marketplace entry, declaring a *false* path  | 3 (ignored)   |
+
+The CLI resolves `source` → reads that plugin's `plugin.json` → loads components from there.
+A copy in the marketplace entry changes nothing but reads as live configuration, so someone
+debugging a path problem can edit it, see no effect, and lose an afternoon. One source of
+truth: the plugin's own manifest.
 
 **`source` rule:** write the repo-root-relative path to the plugin directory
 (`"plugins/neo-core"`). The spec notes a leading `./` is unnecessary; Neo omits it.
@@ -164,6 +176,14 @@ Unlike a plugin tree, this file *is* repo-scoped, so `.github/plugin/` is the ri
 Copilot CLI reads the root `.github/plugin/marketplace.json` → resolves each plugin's `source`
 → reads that plugin's `plugin.json` → agents from `agents/`, skills from `skills/`, hooks
 from `hooks/hooks.json` (Copilot v1 schema, `${PLUGIN_ROOT}`).
+
+**Keep components at the default paths.** A declared non-default path is honored on a direct
+install (`copilot plugin install ./plugins/neo-core`) but did *not* load when the same plugin
+was installed through a marketplace entry — tested at `custom-skills/` against CLI 1.0.81,
+declared in `plugin.json`, zero skills loaded. Components sitting at `agents/` and `skills/`
+are the only arrangement observed to work in both modes. This is inferred from reported skill
+counts rather than CLI source, so treat the mechanism as provisional and the guidance as firm:
+put components at the default paths, and declare them anyway.
 
 **Verify, don't assume.** A component path that resolves to nothing is not an error — the CLI
 loads the plugin and contributes nothing from that slot. The only reliable check is to install

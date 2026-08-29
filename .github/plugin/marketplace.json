@@ -22,10 +22,7 @@
         "orchestration",
         "code-review",
         "hooks"
-      ],
-      "agents": "agents/",
-      "hooks": "hooks/hooks.json",
-      "skills": "skills/"
+      ]
     },
     {
       "name": "neo-product",
@@ -40,10 +37,7 @@
         "agents",
         "product",
         "hooks"
-      ],
-      "agents": "agents/",
-      "hooks": "hooks/hooks.json",
-      "skills": "skills/"
+      ]
     }
   ]
 }

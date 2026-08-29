@@ -335,10 +335,26 @@ def check_component_paths(plugin: Path) -> None:
             return []
         return [v] if isinstance(v, str) else [x for x in v if isinstance(x, str)]
 
-    # 1. Declared paths must resolve.
+    # 1. Declared paths must resolve — and must stay inside the plugin.
     for key, want_dir in (("agents", True), ("skills", True), ("hooks", False)):
         for rel in declared(key):
+            # A plugin is copied standalone on install, so a path that escapes the plugin
+            # root (absolute, or via ..) resolves during validation against this checkout
+            # but is simply absent once installed. Note pathlib discards the base entirely
+            # when `rel` is absolute, so `plugin / "/etc"` is `/etc`.
             target = plugin / rel
+            try:
+                inside = target.resolve().is_relative_to(plugin.resolve())
+            except OSError:
+                inside = False
+            if not inside:
+                errors.append(
+                    f"[{name}] plugin.json declares {key}: '{rel}', which resolves outside "
+                    f"plugins/{name}/. A plugin is installed standalone, so anything beyond "
+                    f"its own directory is not packaged and will be missing at runtime"
+                )
+                continue
+
             ok = target.is_dir() if want_dir else target.is_file()
             if not ok:
                 kind = "directory" if want_dir else "file"
@@ -353,17 +369,30 @@ def check_component_paths(plugin: Path) -> None:
                     f"directory"
                 )
 
-    # 2. Components that exist must be declared.
-    for key, probe in (("agents", "agents"), ("skills", "skills")):
-        if (plugin / probe).is_dir() and not declared(key):
+    # 2. Components that exist must be declared. `hooks` is included because it has no
+    #    CLI default in the manifest schema — an undeclared hooks file may contribute
+    #    nothing, and the published docs are self-contradictory about whether
+    #    hooks/hooks.json is auto-discovered. Declaring it removes the question.
+    for key, probe in (("agents", "agents"), ("skills", "skills"), ("hooks", "hooks/hooks.json")):
+        target = plugin / probe
+        exists = target.is_file() if key == "hooks" else target.is_dir()
+        if exists and not declared(key):
             errors.append(
-                f"[{name}] plugins/{name}/{probe}/ exists but plugin.json declares no "
-                f"'{key}' key. Declare it explicitly ('{probe}/') even though it matches "
+                f"[{name}] plugins/{name}/{probe} exists but plugin.json declares no "
+                f"'{key}' key. Declare it explicitly ('{probe}') even where it matches "
                 f"the CLI default, so the path is visible in review"
             )
 
     skills_dir = plugin / "skills"
     if skills_dir.is_dir():
+        # Copilot loads a skill from a child directory containing SKILL.md. A skills/ dir
+        # holding only loose files (a README, say) passes the non-empty check above while
+        # contributing nothing, so require at least one real skill directory.
+        if not any(d.is_dir() for d in skills_dir.iterdir()):
+            errors.append(
+                f"[{name}] plugins/{name}/skills/ contains no skill directories; Copilot "
+                f"will load zero skills from it"
+            )
         for d in sorted(skills_dir.iterdir()):
             if d.is_dir() and not (d / "SKILL.md").is_file():
                 errors.append(f"[{name}] skills/{d.name}/ has no SKILL.md; it will not load")
@@ -470,13 +499,17 @@ def check_marketplace(path: Path) -> None:
                 f"[marketplace] {name} version '{entry.get('version')}' disagrees with "
                 f"{source}/plugin.json version '{declared}'"
             )
-        # A marketplace entry that contradicts the plugin's own component paths is a
-        # trap: whichever one the CLI honors, the other is a lie in review.
+        # Component paths in a marketplace entry are inert when the source ships its own
+        # plugin.json — the CLI reads the plugin's manifest, not this one. Verified against
+        # CLI 1.0.81: an entry that was the sole declarant loaded zero skills, and one that
+        # declared an outright false path still loaded correctly. Keeping a copy here means
+        # maintaining a value nothing reads, which reads as live config to the next person.
         for key in ("agents", "skills", "hooks"):
-            if key in entry and key in plugin_data and entry[key] != plugin_data[key]:
+            if key in entry:
                 errors.append(
-                    f"[marketplace] {name} declares {key}: {entry[key]!r} but "
-                    f"{source}/plugin.json declares {plugin_data[key]!r}"
+                    f"[marketplace] {name} declares {key}: {entry[key]!r}, which the CLI "
+                    f"ignores because {source}/plugin.json is authoritative for component "
+                    f"paths. Remove it — a copy here is dead config that looks live"
                 )
 
 
