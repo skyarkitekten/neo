@@ -4,23 +4,43 @@ Records what each agent does into a JSONL log so you can tune the `.agent.md` pr
 
 > This page covers the **fail-open observability** hook set. For the **fail-closed
 > `preToolUse` enforcement** hooks (block commit/push to `main`, draft-PR-only), see
-> [enforcement.md](enforcement.md). Both are wired from the same `.github/hooks/hooks.json`.
+> [enforcement.md](enforcement.md). Both are wired from the same `hooks/hooks.json`.
 > The manifest + script contract they share is owned by
 > [`../reference/hook-contract.md`](../reference/hook-contract.md).
 
 ## Files
 
-- `.agent-hooks/log-event.sh` — the logger (bash/macOS/Linux). One record per lifecycle event. Needs `jq`.
-- `.agent-hooks/log-event.ps1` — the Windows/PowerShell sibling. Same record shape, native PowerShell JSON, **no `jq` dependency**.
-- `.github/hooks/hooks.json` — GitHub Copilot CLI hook config (v1 schema; shipped in `plugins/neo-core/`, verify against your version). Each entry wires **both** a `bash` and a `powershell` command; Copilot runs the one matching the OS.
-- `analyze_agent_logs.py` — turns the log into per-agent and per-run stats. Reads the log from either sibling identically.
+Paths below are relative to the plugin root (`plugins/neo-core/`).
+
+- `hooks/scripts/log-event.sh` — the logger (bash/macOS/Linux). One record per lifecycle event. Needs `jq`.
+- `hooks/scripts/log-event.ps1` — the Windows/PowerShell sibling. Same record shape, native PowerShell JSON, **no `jq` dependency**.
+- `hooks/hooks.json` — GitHub Copilot CLI hook config (v1 schema; verify against your version). Each entry wires **both** a `bash` and a `powershell` command; Copilot runs the one matching the OS.
+- `scripts/analyze_agent_logs.py` — turns the log into per-agent and per-run stats. Reads the log from either sibling identically.
 
 ## Install
 
-1. Copy **both** loggers into your repo:
-   - `.agent-hooks/log-event.sh` — `chmod +x` it; requires `jq` on PATH (macOS: `brew install jq`).
-   - `.agent-hooks/log-event.ps1` — no external dependency (uses built-in PowerShell JSON).
-2. **Copilot:** merge `plugins/neo-core/.github/hooks/hooks.json` into your Copilot CLI hook settings. Each event carries both a `bash` and a `powershell` command, so Windows uses the `.ps1` and macOS/Linux use the `.sh` automatically. Confirm the file location, key names, and event names against your installed Copilot version first — these vary.
+Install the plugin — the loggers ship inside it, so there is nothing to copy:
+
+```bash
+copilot plugin install ./plugins/neo-core
+```
+
+Copilot CLI registers the hooks and supplies `${PLUGIN_ROOT}` at runtime. Each event in
+`plugins/neo-core/hooks/hooks.json` carries both a `bash` and a `powershell` command, so
+Windows runs the `.ps1` and macOS/Linux the `.sh` automatically — no per-OS setup.
+
+Two things to check afterwards:
+
+- **macOS/Linux need `jq` on PATH** (`brew install jq`) for `log-event.sh`. The PowerShell
+  sibling has no external dependency. Without `jq` the script still exits `0` and the turn
+  proceeds — it just can't build the record, so it appends a blank line instead. You lose the
+  data, not the session.
+- **Confirm the event names against your installed Copilot version** — these have changed
+  between releases. `../reference/hook-contract.md` carries the current set.
+
+Don't hand-merge `hooks.json` into repo-scoped hook settings. `${PLUGIN_ROOT}` is only
+supplied for plugin-contributed hooks, so a copied manifest resolves every script path to
+nothing — and fails silently, because these hooks are fail-open by design.
 
 ### Manual test
 
@@ -28,11 +48,11 @@ Both loggers read the payload from real stdin, so test them as a separate proces
 
 ```powershell
 '{"toolName":"t","success":true,"content":"hi"}' | Out-File "$env:TEMP\p.json" -Encoding utf8 -NoNewline
-cmd /c "type `"$env:TEMP\p.json`" | powershell -NoProfile -File .agent-hooks\log-event.ps1 userPromptSubmitted"
+cmd /c "type `"$env:TEMP\p.json`" | powershell -NoProfile -File hooks\scripts\log-event.ps1 userPromptSubmitted"
 ```
 
 ```bash
-echo '{"tool_name":"t","success":true,"content":"hi"}' | .agent-hooks/log-event.sh userPromptSubmitted
+echo '{"tool_name":"t","success":true,"content":"hi"}' | hooks/scripts/log-event.sh userPromptSubmitted
 ```
 
 Then check `~/.agent-logs/events.jsonl` for the new line.
@@ -40,7 +60,7 @@ Then check `~/.agent-logs/events.jsonl` for the new line.
 ### Set the env quickly
 
 To run the hooks by hand you need `PLUGIN_ROOT` pointed at the plugin (the dir
-containing `.agent-hooks/`), plus the optional `AGENT_LOG_DIR` / `AGENT_RUN_ID`.
+containing `hooks/scripts/`), plus the optional `AGENT_LOG_DIR` / `AGENT_RUN_ID`.
 `scripts/setup-hook-env.{ps1,sh}` set all three (and the `COPILOT_`/`CLAUDE_`
 aliases) and create the log dir; the `teardown-hook-env` siblings clear them.
 **Dot-source** them so the vars land in your current shell — running them

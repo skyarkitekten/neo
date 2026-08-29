@@ -5,7 +5,7 @@ agents for GitHub Copilot CLI that drives a spec from concept to a draft PR.
 
 ## What's inside
 
-- **Agents** (`.github/agents/`, `neo.<role>.agent.md`):
+- **Agents** (`agents/`, `neo.<role>.agent.md`):
   - `technical-engineer` — the orchestrator. **Start here.** Drives a spec through
     research → plan → implement → review → draft PR.
   - `researcher` — gathers context on the codebase and the task.
@@ -14,12 +14,13 @@ agents for GitHub Copilot CLI that drives a spec from concept to a draft PR.
   - `code-reviewer` — reviews the writer's work and requests fixes.
   - `feature-agent`, `task-planner` — the specification crew that turns an issue/story into a
     feature spec and taskset.
-- **Skills** (`.github/skills/`):
+- **Skills** (`skills/`):
+  - `neo-evidence-standard` — the retrieval-or-silence rule and the `FACT`/`INFERENCE`/`RECALL` labels.
   - `neo-feature-authoring` — authoring guidance for feature specs.
   - `neo-task-authoring` — authoring guidance for tasksets.
-- **Hooks** (`.github/hooks/hooks.json`, v1 schema, `${PLUGIN_ROOT}`):
-  - fail-open **observability** logging via `.agent-hooks/log-event.{sh,ps1}`.
-  - fail-closed **guardrail** enforcement via `.agent-hooks/enforce-guardrails.{sh,ps1}`
+- **Hooks** (`hooks/hooks.json`, v1 schema, `${PLUGIN_ROOT}`):
+  - fail-open **observability** logging via `hooks/scripts/log-event.{sh,ps1}`.
+  - fail-closed **guardrail** enforcement via `hooks/scripts/enforce-guardrails.{sh,ps1}`
     (blocks commit/push to `main`, draft-PR-only).
 - **Tooling**: `scripts/analyze_agent_logs.py` — per-agent and per-run stats from the event log.
 
@@ -32,8 +33,8 @@ copilot plugin marketplace add skyarkitekten/neo
 copilot plugin install neo-core@neo
 ```
 
-Copilot reads `.github/plugin/plugin.json` → agents from `.github/agents/` (`*.agent.md`),
-skills from `.github/skills/`, and hooks from `.github/hooks/hooks.json`.
+Copilot reads `plugin.json` → agents from `agents/` (`*.agent.md`),
+skills from `skills/`, and hooks from `hooks/hooks.json`.
 
 ## Use
 

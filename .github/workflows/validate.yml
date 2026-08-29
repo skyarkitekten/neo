@@ -23,8 +23,8 @@ jobs:
             fi
           done < <(git ls-files \
             '.github/plugin/*.json' \
-            'plugins/**/.github/plugin/plugin.json' \
-            'plugins/**/.github/hooks/hooks.json')
+            'plugins/*/plugin.json' \
+            'plugins/*/hooks/hooks.json')
           exit $fail
 
       - name: Validate Copilot plugins

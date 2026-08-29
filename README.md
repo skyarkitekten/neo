@@ -44,8 +44,8 @@ The plugins are packaged for GitHub Copilot CLI. See
 [`docs/contributing/reference/plugin-contract.md`](docs/contributing/reference/plugin-contract.md) for the normative contract — folder
 shape, required manifest fields, and `neo-` naming. Copilot reads
 `.github/plugin/marketplace.json` → each plugin under `plugins/` → agents
-from `.github/agents/` (`*.agent.md`), skills from `.github/skills/`, hooks from
-`.github/hooks/hooks.json` (v1 schema, `${PLUGIN_ROOT}`).
+from `agents/` (`*.agent.md`), skills from `skills/`, hooks from
+`hooks/hooks.json` (v1 schema, `${PLUGIN_ROOT}`).
 
 The marketplace is `neo`. `neo-core` is the baseline; `neo-product` is opt-in.
 

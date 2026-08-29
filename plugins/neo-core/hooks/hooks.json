@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      { "type": "command", "bash": "\"${PLUGIN_ROOT}/hooks/scripts/log-event.sh\" sessionStart", "powershell": "& \"$env:PLUGIN_ROOT/hooks/scripts/log-event.ps1\" sessionStart", "timeoutSec": 10 }
+    ],
+    "userPromptSubmitted": [
+      { "type": "command", "bash": "\"${PLUGIN_ROOT}/hooks/scripts/log-event.sh\" userPromptSubmitted", "powershell": "& \"$env:PLUGIN_ROOT/hooks/scripts/log-event.ps1\" userPromptSubmitted", "timeoutSec": 10 }
+    ],
+    "preToolUse": [
+      { "type": "command", "bash": "\"${PLUGIN_ROOT}/hooks/scripts/enforce-guardrails.sh\" preToolUse", "powershell": "& \"$env:PLUGIN_ROOT/hooks/scripts/enforce-guardrails.ps1\" preToolUse", "timeoutSec": 10 }
+    ],
+    "postToolUse": [
+      { "type": "command", "bash": "\"${PLUGIN_ROOT}/hooks/scripts/log-event.sh\" postToolUse", "powershell": "& \"$env:PLUGIN_ROOT/hooks/scripts/log-event.ps1\" postToolUse", "timeoutSec": 10 }
+    ],
+    "agentStop": [
+      { "type": "command", "bash": "\"${PLUGIN_ROOT}/hooks/scripts/log-event.sh\" agentStop", "powershell": "& \"$env:PLUGIN_ROOT/hooks/scripts/log-event.ps1\" agentStop", "timeoutSec": 10 }
+    ],
+    "subagentStop": [
+      { "type": "command", "bash": "\"${PLUGIN_ROOT}/hooks/scripts/log-event.sh\" subagentStop", "powershell": "& \"$env:PLUGIN_ROOT/hooks/scripts/log-event.ps1\" subagentStop", "timeoutSec": 10 }
+    ],
+    "preCompact": [
+      { "type": "command", "bash": "\"${PLUGIN_ROOT}/hooks/scripts/log-event.sh\" preCompact", "powershell": "& \"$env:PLUGIN_ROOT/hooks/scripts/log-event.ps1\" preCompact", "timeoutSec": 10 }
+    ],
+    "errorOccurred": [
+      { "type": "command", "bash": "\"${PLUGIN_ROOT}/hooks/scripts/log-event.sh\" errorOccurred", "powershell": "& \"$env:PLUGIN_ROOT/hooks/scripts/log-event.ps1\" errorOccurred", "timeoutSec": 10 }
+    ],
+    "sessionEnd": [
+      { "type": "command", "bash": "\"${PLUGIN_ROOT}/hooks/scripts/log-event.sh\" sessionEnd", "powershell": "& \"$env:PLUGIN_ROOT/hooks/scripts/log-event.ps1\" sessionEnd", "timeoutSec": 10 }
+    ]
+  }
+}
+

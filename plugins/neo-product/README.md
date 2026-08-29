@@ -29,7 +29,7 @@ the PRD this loop emits is what the BE then segments into features.
 
 ## What's inside
 
-**Agents** (`.github/agents/`, `neo.<domain>.<role>.agent.md`):
+**Agents** (`agents/`, `neo.<domain>.<role>.agent.md`):
 
 | File | Agent `name:` | Role |
 | --- | --- | --- |
@@ -42,7 +42,7 @@ the PRD this loop emits is what the BE then segments into features.
 The agents are **domain-neutral**. Product, industry, and regulatory context come from the
 consuming repo's `AGENTS.md`, PRDs, ADRs, and design docs — never baked into a prompt.
 
-**Skills** (`.github/skills/`):
+**Skills** (`skills/`):
 
 | Skill | Owns |
 | --- | --- |
@@ -50,9 +50,9 @@ consuming repo's `AGENTS.md`, PRDs, ADRs, and design docs — never baked into a
 | `neo-design-thinking` | Stakeholder/empathy mapping, personas, problem framing, journey mapping, ideation, assumption testing, service blueprinting |
 | `neo-system-thinking` | Boundaries, stocks and flows, causal loops, delays, leverage points, archetypes, intervention design |
 
-**Hooks** (`.github/hooks/hooks.json`, v1 schema, `${PLUGIN_ROOT}`): the same fail-open
+**Hooks** (`hooks/hooks.json`, v1 schema, `${PLUGIN_ROOT}`): the same fail-open
 observability logging and fail-closed guardrail enforcement as `neo-core`, via this plugin's
-own `.agent-hooks/log-event.{sh,ps1}` and `.agent-hooks/enforce-guardrails.{sh,ps1}`
+own `hooks/scripts/log-event.{sh,ps1}` and `hooks/scripts/enforce-guardrails.{sh,ps1}`
 (duplicated, not shared — plugins cannot reference files outside their own directory; see
 [`plugin-contract.md`](https://github.com/skyarkitekten/neo/blob/main/docs/contributing/reference/plugin-contract.md#1-plugin-folder-shape)).
 
