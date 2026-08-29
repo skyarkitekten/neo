@@ -20,7 +20,11 @@ Records what each agent does into a JSONL log so you can tune the `.agent.md` pr
 1. Copy **both** loggers into your repo:
    - `hooks/scripts/log-event.sh` — `chmod +x` it; requires `jq` on PATH (macOS: `brew install jq`).
    - `hooks/scripts/log-event.ps1` — no external dependency (uses built-in PowerShell JSON).
-2. **Copilot:** merge `plugins/neo-core/hooks/hooks.json` into your Copilot CLI hook settings. Each event carries both a `bash` and a `powershell` command, so Windows uses the `.ps1` and macOS/Linux use the `.sh` automatically. Confirm the file location, key names, and event names against your installed Copilot version first — these vary.
+2. **Copilot:** install the plugin so Copilot CLI registers the hooks automatically:
+   ```bash
+   copilot plugin install ./plugins/neo-core
+   ```
+   Each event in `plugins/neo-core/hooks/hooks.json` carries both a `bash` and a `powershell` command, so Windows uses the `.ps1` and macOS/Linux use the `.sh` automatically. Confirm the event names against your installed Copilot version — these vary.
 
 ### Manual test
 
