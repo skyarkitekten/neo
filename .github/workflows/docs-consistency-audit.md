@@ -7,6 +7,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+  copilot-requests: write
 strict: true
 safe-outputs:
   create-issue:
