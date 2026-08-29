@@ -1,0 +1,63 @@
+name: docs-audit-failure-alert
+
+# The Docs Consistency Audit runs weekly. A failed run is only visible as a red
+# run in the Actions tab, so a broken audit can go unnoticed for a week. This
+# surfaces failures as an issue instead, reusing a single open issue so a
+# recurring failure doesn't file one issue per week.
+
+on:
+  workflow_run:
+    workflows: ["Docs Consistency Audit"]
+    types: [completed]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  alert:
+    if: github.event.workflow_run.conclusion == 'failure'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Open or update the failure issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          RUN_EVENT: ${{ github.event.workflow_run.event }}
+          RUN_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          LABEL: docs-audit-failure
+        run: |
+          set -euo pipefail
+
+          gh label create "$LABEL" \
+            --description "Docs Consistency Audit run failed" \
+            --color B60205 2>/dev/null || true
+
+          body=$(printf '%s\n' \
+            "The [Docs Consistency Audit]($RUN_URL) failed, so the docs were not audited." \
+            "" \
+            "| | |" \
+            "|---|---|" \
+            "| Run | [\`$RUN_ID\`]($RUN_URL) |" \
+            "| Trigger | \`$RUN_EVENT\` |" \
+            "| Branch | \`$RUN_BRANCH\` |" \
+            "" \
+            "The audit is weekly, so docs drift goes unchecked until this is fixed." \
+            "" \
+            "This issue is reused for repeat failures — check the comments for earlier occurrences. It does not close automatically; close it once a run succeeds.")
+
+          existing=$(gh issue list --repo "$REPO" --label "$LABEL" --state open \
+            --limit 1 --json number --jq '.[0].number // empty')
+
+          if [ -n "$existing" ]; then
+            echo "Commenting on existing issue #${existing}"
+            gh issue comment "$existing" --repo "$REPO" --body "$body"
+          else
+            echo "Creating new failure issue"
+            gh issue create --repo "$REPO" \
+              --title "Docs Consistency Audit failed" \
+              --label "$LABEL" \
+              --body "$body"
+          fi
