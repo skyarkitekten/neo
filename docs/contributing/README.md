@@ -13,7 +13,10 @@ Before anything else, read the **shared core** (same for users and contributors)
   KPI settlement.
 
 Repo-level layout, checks, and guardrails for working on Neo live in the root
-[`AGENTS.md`](../../AGENTS.md), not here. Nothing under `docs/` ships in a plugin.
+[`AGENTS.md`](../../AGENTS.md), not here. That file also covers the **dev loop** — how to
+test a changed plugin in Copilot using a local directory-source marketplace (the supported
+replacement for the deprecated `copilot plugin install ./plugins/...` form). Nothing under
+`docs/` ships in a plugin.
 
 ## The one rule
 

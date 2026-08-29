@@ -88,6 +88,36 @@ done
 python3 scripts/validate-plugins.py
 ```
 
+### Dev loop — testing a changed plugin in Copilot
+
+Direct plugin installs (`copilot plugin install ./plugins/neo-core`) are deprecated as of
+Copilot CLI 1.0.81 and will stop working in a future release. Use a **local
+directory-source marketplace** instead. Copilot reads the plugin live from the repo
+directory (no copy step), so edits take effect on the next invocation without reinstalling:
+
+```console
+# From the repo root (where .github/plugin/marketplace.json lives):
+copilot plugin marketplace add .
+copilot plugin install neo-core@neo
+# optionally:
+copilot plugin install neo-product@neo
+```
+
+The marketplace name (`neo`) comes from `"name"` in `.github/plugin/marketplace.json`.
+Because the source is a local path, Copilot reads agents, skills, and hooks directly from
+`plugins/neo-core/` — a change to any file is picked up immediately.
+
+To clean up when done:
+
+```console
+copilot plugin uninstall neo-core
+copilot plugin uninstall neo-product   # if installed
+copilot plugin marketplace remove neo
+```
+
+> **Note:** `copilot plugin marketplace remove` may require the marketplace name (`neo`)
+> rather than the path. If it prompts, supply `neo`.
+
 ## Guardrails
 
 - **Never commit or push to `main`.** All work happens on a feature branch. This must
