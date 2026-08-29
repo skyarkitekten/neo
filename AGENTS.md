@@ -8,8 +8,8 @@ of Markdown, JSON, Bash, and Python.
 
 Copilot is the **canonical, sole harness**. The Claude Code
 tree was dropped and deferred — a Claude mirror may be created from the Copilot
-source later if there is demand. Until then, do not add `agents/`, `skills/`, or
-`.claude-plugin/` trees back.
+source later if there is demand. Until then, do not add **repo-root** `agents/`, `skills/`, or
+`.claude-plugin/` trees back. (Inside a plugin, `agents/` and `skills/` are the correct Copilot layout — this rule is about the repo root.)
 
 Every core agent points here as the source of truth for layout, commands, style, and
 guardrails. Keep it accurate.
