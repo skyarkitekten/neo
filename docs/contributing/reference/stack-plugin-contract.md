@@ -125,7 +125,7 @@ same route that repo gets its `AGENTS.md`.
 participates in none of the loops — it is the prompt used to *build* Neo. It lives at the
 repo root (`.github/agents/neo.master-control.agent.md`), which Copilot CLI auto-discovers for
 anyone working *inside* this repo, while the plugin's agent path points at
-`plugins/neo-core/.github/agents/`. So it is visible to Neo developers and invisible to
+`plugins/neo-core/agents/`. So it is visible to Neo developers and invisible to
 installers, with no exclusion mechanism to maintain: a role is shipped iff its file lives under a
 `plugins/*/` tree.
 

@@ -8,7 +8,7 @@ This is the **normative** definition of the single artifact that crosses **Bound
 identity, fields, and on-harness format so the emitter and consumer agree on one object.
 
 It does **not** restate the logical rules for a clean task — those live in the
-[`task-authoring`](../../../plugins/neo-core/.github/skills/neo-task-authoring/SKILL.md) skill and are referenced, not
+[`task-authoring`](../../../plugins/neo-core/skills/neo-task-authoring/SKILL.md) skill and are referenced, not
 duplicated. This doc adds the **carrier** (what the task *is*) and the **serialization** (where
 each field lives on a GitHub Issue and an Azure DevOps story).
 
@@ -130,26 +130,26 @@ The story-grade work-item type is fixed at project setup (§1, Naming caution).
 - Produces **one** issue/story per task, in the format of §3 / §4, with every required field
   present.
 - Files a task **only** as part of a **BE-approved task set** and marks it `be-approved`. It
-  never emits an agent-invented task ([`neo.task-planner.agent.md`](../../../plugins/neo-core/.github/agents/neo.task-planner.agent.md)).
+  never emits an agent-invented task ([`neo.task-planner.agent.md`](../../../plugins/neo-core/agents/neo.task-planner.agent.md)).
 - Conforms to `task-authoring` for the logical fields. If it cannot express a machine-checkable
   validation criterion, the task is under-specified — sharpen or split, don't file it.
 
 ### Consumer — Team Leader / orchestrator (#11)
 
 - Treats the issue/story it is handed **as** the task (§1). The
-  [`neo-technical-engineer`](../../../plugins/neo-core/.github/agents/neo.technical-engineer.agent.md) "GitHub Issue or
+  [`neo-technical-engineer`](../../../plugins/neo-core/agents/neo.technical-engineer.agent.md) "GitHub Issue or
   Azure DevOps story" input and the spec loop's "Task" are one object.
 - May assume all required fields (§2) are present and the task is `be-approved`. If a required
   field is missing or the approval marker is absent, it stops and routes back — it does **not**
-  invent scope to fill the gap ([`neo-code-writer`](../../../plugins/neo-core/.github/agents/neo.code-writer.agent.md)).
+  invent scope to fill the gap ([`neo-code-writer`](../../../plugins/neo-core/agents/neo.code-writer.agent.md)).
 - Reads the **Validation criteria** as the spec's **acceptance criteria** it plans and
   validates against (§ naming reconciliation).
 
 ### Naming reconciliation — validation criteria = acceptance criteria
 
 `task-authoring` calls the machine-checkable proof **validation criteria**; the consumer agents
-([orchestrator](../../../plugins/neo-core/.github/agents/neo.technical-engineer.agent.md),
-[implementation-planner](../../../plugins/neo-core/.github/agents/neo.implementation-planner.agent.md)) call the spec's
+([orchestrator](../../../plugins/neo-core/agents/neo.technical-engineer.agent.md),
+[implementation-planner](../../../plugins/neo-core/agents/neo.implementation-planner.agent.md)) call the spec's
 pass/fail statements **acceptance criteria**. In this schema they are the **same field**: the
 task's validation criteria are exactly the acceptance criteria the consumer maps units to.
 The two names refer to one list; do not treat them as separate inputs.
@@ -161,10 +161,10 @@ The two names refer to one list; do not treat them as separate inputs.
 This schema defines the crossing artifact and nothing else. It deliberately does not cover:
 
 - **Logical task rules** — field semantics, machine-checkability, one-PR sizing:
-  [`task-authoring`](../../../plugins/neo-core/.github/skills/neo-task-authoring/SKILL.md).
+  [`task-authoring`](../../../plugins/neo-core/skills/neo-task-authoring/SKILL.md).
 - **Feature fields** (What/Why/KPIs/verification steps) and BE sign-off:
-  [`feature-authoring`](../../../plugins/neo-core/.github/skills/neo-feature-authoring/SKILL.md).
+  [`feature-authoring`](../../../plugins/neo-core/skills/neo-feature-authoring/SKILL.md).
 - **Integration mode** and traceability-under-squash:
   [`process-flow.md`](../../concepts/process-flow.md) § Integration modes.
 - **Step decomposition** inside the Coding loop — a task becomes steps during implementation,
-  not here ([`neo.implementation-planner.agent.md`](../../../plugins/neo-core/.github/agents/neo.implementation-planner.agent.md)).
+  not here ([`neo.implementation-planner.agent.md`](../../../plugins/neo-core/agents/neo.implementation-planner.agent.md)).

@@ -12,7 +12,7 @@ Condensed reference for the **Master Control** forge. Distills three sources so 
 
 ## 1. Custom agents (`*.agent.md`)
 
-A Markdown file that gives Copilot a **persona + tool access + guardrails + model preference** for a whole session. Selected explicitly (agent picker or `@mention`), persists across the conversation, stored in `.github/agents/`, shared with the team.
+A Markdown file that gives Copilot a **persona + tool access + guardrails + model preference** for a whole session. Selected explicitly (agent picker or `@mention`), persists across the conversation, shared with the team. Stored in a repository's `.github/agents/`, or — when shipped in a plugin — in that plugin's `agents/` directory.
 
 **How it differs from siblings:** agents are chosen and persistent; instructions apply passively to matching files; skills are single-task capabilities an agent can invoke. Use an agent for an interactive multi-step workflow, an instruction for standing standards, a skill for a focused repeatable task.
 

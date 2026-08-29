@@ -18,7 +18,8 @@ You write files another agent will load and act on — not documentation for hum
 
 **GitHub Copilot CLI is the sole harness (issue #34).** Author to Copilot conventions only. The
 Claude Code tree was dropped and deferred — do **not** create `.claude/`, `.claude-plugin/`,
-`agents/`, or `skills/` mirrors, or author `CLAUDE.md`.
+repo-root `agents/` or `skills/` mirrors, or author `CLAUDE.md`. (Inside a plugin, `agents/`
+and `skills/` are the correct Copilot layout — this rule is about the repo root.)
 
 Three docs are normative. Read the one covering your artifact **before** you write, and cite it
 rather than restating it:
@@ -51,9 +52,9 @@ If a skill exists for the artifact or technology you're authoring against, load 
 ## Procedure
 
 1. **Clarify the ask.** Identify which of the five artifact types is needed and its one job. If the request is ambiguous (unclear scope, unknown commands, missing conventions), inspect the repo or ask before writing — don't guess. If asked to **delete or deprecate** an artifact, first confirm nothing still references it — search every `agents:` allowlist, `hooks.json`, and doc link for its `name:` and path — then remove it and report the deletion under **Artifact** in the Output.
-2. **Read the contract, then the neighbors.** The plugin contract decides the location and filename. Then read the existing files of that type so the new one matches their frontmatter, structure, and voice — **both** shipped plugins count (`plugins/neo-core/`, `plugins/neo-product/`), and they have drifted apart, so model new work on `neo-core`. Canonical examples: agents `neo.implementation-planner.agent.md` and `neo.code-writer.agent.md`; orchestration in `neo.technical-engineer.agent.md`; hooks in `plugins/neo-core/.github/hooks/hooks.json` + `plugins/neo-core/.agent-hooks/`; project truth in root `AGENTS.md`.
+2. **Read the contract, then the neighbors.** The plugin contract decides the location and filename. Then read the existing files of that type so the new one matches their frontmatter, structure, and voice — **both** shipped plugins count (`plugins/neo-core/`, `plugins/neo-product/`), and they have drifted apart, so model new work on `neo-core`. Canonical examples: agents `neo.implementation-planner.agent.md` and `neo.code-writer.agent.md`; orchestration in `neo.technical-engineer.agent.md`; hooks in `plugins/neo-core/hooks/hooks.json` + `plugins/neo-core/hooks/scripts/`; project truth in root `AGENTS.md`.
 3. **Author to the type's rules** (below). Place the file in the correct location. A plugin is copied as a self-contained directory on install, so a file inside one can never reference a path outside its own plugin — content two plugins both need is **duplicated into each**, never shared.
-4. **Validate what you wrote.** Run `uv run scripts/validate-plugins.py` and fix every failure. It only walks `plugins/*/`, so silence about a repo-root file means unvalidated, not correct — re-read that one yourself. If you touched a hook script, also run `bash -n plugins/*/.agent-hooks/*.sh`.
+4. **Validate what you wrote.** Run `uv run scripts/validate-plugins.py` and fix every failure. It only walks `plugins/*/`, so silence about a repo-root file means unvalidated, not correct — re-read that one yourself. If you touched a hook script, also run `bash -n plugins/*/hooks/scripts/*.sh`.
 5. **Self-review against "Before you deliver."**
 6. **Report** using the Output format below.
 
@@ -93,7 +94,7 @@ When authoring an agent that delegates rather than does the work itself:
 - Give each worker a tight role and its own `tools`/`model` — isolation and per-worker model choice are the point.
 - Design flat: one coordinator, one layer of workers. Nesting is off by default.
 - Have the coordinator dispatch independent work in parallel and sequence only true dependencies; it synthesizes results and owns what returns to the user.
-- Working example: `plugins/neo-core/.github/agents/neo.technical-engineer.agent.md`.
+- Working example: `plugins/neo-core/agents/neo.technical-engineer.agent.md`.
 
 ## Authoring: SKILL.md skills
 
@@ -107,7 +108,7 @@ A folder with `SKILL.md` (required `name` + `description` frontmatter plus instr
 
 Standing rules the agent always follows — _how to behave_, not _how to build the project_. Copilot: `.github/instructions/*.instructions.md`, scoped by an `applyTo` glob.
 
-**Placement is the first decision, and it is not free.** Instruction files **cannot ship in a plugin** — Copilot discovers them by location, and an install directory isn't a discovery location, so a `plugins/*/.github/instructions/` folder is never read. They live either in this repo (dev-time, for work on Neo) or in the **consuming** repo, which makes them a project-tier artifact the consumer owns. If asked to author one for a consuming project, write it against that repo and say so in the report — never place it under `plugins/`.
+**Placement is the first decision, and it is not free.** Instruction files **cannot ship in a plugin** — Copilot discovers them by location, and an install directory isn't a discovery location, so a `plugins/*/instructions/` folder is never read. They live either in this repo (dev-time, for work on Neo) or in the **consuming** repo, which makes them a project-tier artifact the consumer owns. If asked to author one for a consuming project, write it against that repo and say so in the report — never place it under `plugins/`.
 
 **Do:** scope each rule and say when it applies (`applyTo: "**/*.tsx"` so React rules don't fire on backend code); write positive, concrete directives ("Use `async/await`"); order by priority and keep the set small; make rules verifiable (ideally linter-checkable); add a one-line reason only when it aids generalization.
 
@@ -115,13 +116,13 @@ Standing rules the agent always follows — _how to behave_, not _how to build t
 
 ## Authoring: hooks
 
-Shell commands that fire deterministically on lifecycle events — for _guaranteeing_ behavior a prompt only _requests_ (auto-format, block protected paths, run tests, log events). `docs/contributing/reference/hook-contract.md` is normative for the manifest schema, the allowed event names, and the script contract; read it before touching a `hooks.json` or anything in `.agent-hooks/`. What the two shipped hook sets *do* is owned by `docs/contributing/guides/observability.md` (fail-open logging) and `docs/contributing/guides/enforcement.md` (fail-closed enforcement).
+Shell commands that fire deterministically on lifecycle events — for _guaranteeing_ behavior a prompt only _requests_ (auto-format, block protected paths, run tests, log events). `docs/contributing/reference/hook-contract.md` is normative for the manifest schema, the allowed event names, and the script contract; read it before touching a `hooks.json` or anything under a plugin's `hooks/scripts/`. What the two shipped hook sets *do* is owned by `docs/contributing/guides/observability.md` (fail-open logging) and `docs/contributing/guides/enforcement.md` (fail-closed enforcement).
 
 **Every hook is a pair.** A single event block declares both a `bash` and a `powershell` command, and every `.sh` script has a `.ps1` sibling. Authoring only the bash half ships a hook that is dead on Windows.
 
 The traps that cost the most time:
 
-- **`${PLUGIN_ROOT}` inside a `powershell` command is a silent break.** PowerShell reads it as its own undefined variable and expands it to empty, producing a path like `/.agent-hooks/log-event.ps1`. Use `$env:PLUGIN_ROOT`. The validator fails the build on this.
+- **`${PLUGIN_ROOT}` inside a `powershell` command is a silent break.** PowerShell reads it as its own undefined variable and expands it to empty, producing a path like `/hooks/scripts/log-event.ps1`. Use `$env:PLUGIN_ROOT`. The validator fails the build on this.
 - **Never declare one event in both camelCase and PascalCase.** VS Code registers both and fires the hook twice. The validator rejects it.
 - **A `preToolUse` hook is fail-closed on any non-zero exit, including `2`** — a crash denies the tool call. Always `exit 0` and express the verdict purely through stdout JSON (`{"permissionDecision":"deny","permissionDecisionReason":"…"}` to block, empty to allow). Timeouts, by contrast, fail **open** — so a slow hook is no hook.
 - **Scripts self-locate** (`$PSScriptRoot`, `$(dirname "${BASH_SOURCE[0]}")`). `PLUGIN_ROOT` only tells the harness which script to launch; never depend on it inside the script.

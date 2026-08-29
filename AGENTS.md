@@ -21,25 +21,30 @@ marketplace manifests, docs, and dev-time-only tooling. Anything under `plugins/
 shipped; the repo-root agent trees are **dev-time only**.
 
 ```javascript
-plugins/neo-core/                    The coding + specification crew — a Copilot tree:
-  .github/agents/                    Copilot agents — neo.<role>.agent.md
-  .github/skills/                    Copilot skills — neo-<name>/SKILL.md
-  .github/plugin/plugin.json         Copilot plugin manifest
-  .github/hooks/hooks.json           Copilot hook config (v1 schema, ${PLUGIN_ROOT})
-  .agent-hooks/log-event.sh          the observability logger
+plugins/neo-core/                    The coding + specification crew — a Copilot plugin tree:
+  plugin.json                        Copilot plugin manifest (at the plugin ROOT, not .github/)
+  agents/                            Copilot agents — neo.<role>.agent.md
+  skills/                            Copilot skills — neo-<name>/SKILL.md
+  hooks/hooks.json                   Copilot hook config (v1 schema, ${PLUGIN_ROOT})
+  hooks/scripts/log-event.sh         the observability logger
   scripts/analyze_agent_logs.py      per-agent / per-run log stats
 plugins/neo-product/                 The Product loop — same shape, grouped by discipline:
-  .github/agents/                    neo.<domain>.<role>.agent.md
-  .github/skills/                    Copilot skills — neo-<name>/SKILL.md
-  .github/plugin/plugin.json         Copilot plugin manifest
-  .github/hooks/hooks.json           Copilot hook config (v1 schema, ${PLUGIN_ROOT})
-  .agent-hooks/log-event.sh          its own copy — plugins can't share files
+  plugin.json                        Copilot plugin manifest
+  agents/                            neo.<domain>.<role>.agent.md
+  skills/                            Copilot skills — neo-<name>/SKILL.md
+  hooks/hooks.json                   Copilot hook config (v1 schema, ${PLUGIN_ROOT})
+  hooks/scripts/log-event.sh         its own copy — plugins can't share files
 .github/plugin/marketplace.json      Copilot marketplace (root, lists plugins[])
 .github/agents/neo.master-control.agent.md   DEV-TIME agent (Copilot), never shipped
 scripts/validate-plugins.py          CI plugin check (manifests + hooks + agents: allowlists)
 scripts/linting/schemas/hook-manifest.schema.json   Hook-manifest JSON Schema (draft-07)
 docs/                                Grouped by genre — see docs/README.md for the map
 ```
+
+**A plugin tree has no `.github/`.** Plugin components sit at the plugin root, which is what
+Copilot CLI documents and defaults to. `.github/` is the *repository*-scoped mechanism and is
+used only at the repo root (marketplace manifest, dev-time `master-control`). Conflating the
+two is what caused every shipped skill to silently fail to load — see the Gotchas below.
 
 The shipped agents:
 
@@ -65,24 +70,36 @@ This repo has nothing to compile, lint, or unit-test in the app sense. Do **not*
 `bun`, `dotnet`, or invent a build. What actually needs to hold before you finish:
 
 - **JSON manifests are valid.** The root Copilot marketplace manifest
-  (`.github/plugin/marketplace.json`) and each plugin's Copilot `plugin.json` and
-  `hooks.json` under `plugins/*/.github/` parse and carry required fields.
+  (`.github/plugin/marketplace.json`) and each plugin's `plugin.json` and
+  `hooks/hooks.json` parse and carry required fields.
 - **Agent frontmatter is valid** — `name:`, `tools:`, `agents:` allowlists resolve to
   real agent names.
 - **Plugins validate** — run `python3 scripts/validate-plugins.py` (`uv run scripts/validate-plugins.py`
   where `python3` isn't on PATH, e.g. Windows). It walks every
-  `plugins/*/`, checks the Copilot manifest + hooks parse, validates each `hooks.json`
-  against the hook-manifest contract (`scripts/linting/schemas/hook-manifest.schema.json`
+  `plugins/*/`, checks the Copilot manifest + hooks parse, asserts every declared component
+  path (`agents`, `skills`, `hooks`) resolves to something real on disk, validates each
+  `hooks.json` against the hook-manifest contract (`scripts/linting/schemas/hook-manifest.schema.json`
   — including the rule that a `powershell` command must use `$env:PLUGIN_ROOT`, not the
-  bare `${PLUGIN_ROOT}`), and fails on any `agents:` allowlist entry that doesn't resolve
-  to a real agent `name:`. CI runs it via `.github/workflows/validate.yml`.
+  bare `${PLUGIN_ROOT}`), rejects non-canonical hook event names, and fails on any `agents:`
+  allowlist entry that doesn't resolve to a real agent `name:`. CI runs it via
+  `.github/workflows/validate.yml`.
+- **Plugins actually load.** Static validation can't prove a component reached the CLI. If you
+  touched a manifest or moved a component, install into a throwaway `COPILOT_HOME` and read
+  what the CLI reports:
+
+  ```bash
+  export COPILOT_HOME=$(mktemp -d)
+  copilot plugin install ./plugins/neo-core    # must say "Installed 3 skills."
+  copilot plugin install ./plugins/neo-product # must say "Installed 4 skills."
+  copilot plugins list --kind skill --scope plugin
+  ```
 
 Quick manifest sanity check:
 
 ```bash
 for f in .github/plugin/marketplace.json \
-         plugins/*/.github/plugin/plugin.json \
-         plugins/*/.github/hooks/hooks.json; do
+         plugins/*/plugin.json \
+         plugins/*/hooks/hooks.json; do
   python3 -c "import json,sys; json.load(open('$f'))" && echo "ok  $f" || echo "BAD $f"
 done
 python3 scripts/validate-plugins.py
@@ -106,6 +123,14 @@ python3 scripts/validate-plugins.py
   the portable aliases for cloud/VS Code parity, but any prompt that says "search" or "fetch" needs
   `execute` behind it. `scripts/validate-plugins.py` enforces this; the full table is in
   `docs/contributing/guides/agent-authoring-reference.md`.
+- **An undeclared component path fails silently — the plugin still installs.** Copilot CLI
+  defaults `agents` to `agents/` and `skills` to `skills/` relative to the **plugin root**. If a
+  component lives anywhere else and the manifest doesn't say so, the CLI finds nothing, contributes
+  nothing, and reports success. This shipped: both plugins kept skills in `.github/skills/` without
+  a `skills` key, so **every skill silently failed to load for several releases** (issue #81). Two
+  rules follow — declare `agents`, `skills`, and `hooks` explicitly in every `plugin.json` even when
+  the value matches the default, and never trust a green validator as proof a component loaded.
+  Install into a throwaway `COPILOT_HOME` and read the skill count the CLI prints.
 - **Evidence discipline is a shipped contract**, not a style preference — the `neo-evidence-standard`
   skill (duplicated into both plugins) owns the retrieval-or-silence rule and the
   `FACT` / `INFERENCE` / `RECALL — UNVERIFIED` labels. Agents that gather or consume evidence must load it.
@@ -121,8 +146,10 @@ python3 scripts/validate-plugins.py
 - **Repo-root agent trees are dev-time; `plugins/*/` is shipped.** `master-control` lives at
   the root (`.github/agents/`) so it's visible to Neo devs but never packaged. A role ships
   iff its file is under a `plugins/*/` tree.
-- **Copilot-only (issue #34).** The Claude tree was dropped; don't reintroduce `agents/`,
-  `skills/`, `.claude/`, or `.claude-plugin/` unless a Claude mirror is deliberately revived.
+- **Copilot-only (issue #34).** The Claude tree was dropped; don't reintroduce **repo-root**
+  `agents/` or `skills/` directories, or `.claude/` / `.claude-plugin/`, unless a Claude mirror is
+  deliberately revived. (Inside a plugin, `agents/` and `skills/` are the correct Copilot layout —
+  this rule is about the repo root.)
 - Plugins are self-contained on install: a plugin can't reference files outside its own
   directory (`../neo-react/...` or a repo-root file won't be copied). Shared content must
   be duplicated into each plugin.

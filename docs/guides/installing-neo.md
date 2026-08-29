@@ -19,8 +19,8 @@ copilot plugin marketplace add skyarkitekten/neo
 copilot plugin install neo-core@neo
 ```
 
-Copilot then reads the plugin's agents (`.github/agents/*.agent.md`), skills
-(`.github/skills/`), and hooks (`.github/hooks/hooks.json`). You don't wire these by hand — the
+Copilot then reads the plugin's agents (`agents/*.agent.md`), skills
+(`skills/`), and hooks (`hooks/hooks.json`). You don't wire these by hand — the
 plugin manifest does. The exact folder shape and manifest fields are normative in
 [../contributing/reference/plugin-contract.md](../contributing/reference/plugin-contract.md);
 you only need it if something doesn't resolve.

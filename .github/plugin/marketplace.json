@@ -5,34 +5,45 @@
   },
   "metadata": {
     "description": "Neo — a concept-to-production multi-agent coding system. A core crew, an optional upstream product crew, and additive per-stack plugins, for GitHub Copilot CLI.",
-    "version": "2.0.3"
+    "version": "2.0.4"
   },
   "plugins": [
     {
       "name": "neo-core",
-      "source": "./plugins/neo-core",
+      "source": "plugins/neo-core",
       "description": "Coordinated coding-agent crew (technical-engineer orchestrator + researcher, implementation-planner, code-writer, code-reviewer) plus the feature-agent/task-planner specification crew and lifecycle-logging hooks.",
-      "version": "2.0.3",
+      "version": "2.0.4",
       "author": {
         "name": "Chad Thomas"
       },
       "license": "MIT",
-      "keywords": ["agents", "orchestration", "code-review", "hooks"],
-      "agents": ".github/agents",
-      "hooks": ".github/hooks/hooks.json"
+      "keywords": [
+        "agents",
+        "orchestration",
+        "code-review",
+        "hooks"
+      ],
+      "agents": "agents/",
+      "hooks": "hooks/hooks.json",
+      "skills": "skills/"
     },
     {
       "name": "neo-product",
-      "source": "./plugins/neo-product",
+      "source": "plugins/neo-product",
       "description": "Upstream product-engineering crew — a Product Engineer coordinating parallel Product Researchers plus Product Coach (viability), Design Thinking (desirability), and Systems Thinking (feasibility) specialists, ending in a PRD, with lifecycle-logging hooks.",
-      "version": "2.0.3",
+      "version": "2.0.4",
       "author": {
         "name": "Chad Thomas"
       },
       "license": "MIT",
-      "keywords": ["agents", "product", "hooks"],
-      "agents": ".github/agents",
-      "hooks": ".github/hooks/hooks.json"
+      "keywords": [
+        "agents",
+        "product",
+        "hooks"
+      ],
+      "agents": "agents/",
+      "hooks": "hooks/hooks.json",
+      "skills": "skills/"
     }
   ]
 }

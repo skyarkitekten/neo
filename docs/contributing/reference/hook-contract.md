@@ -13,12 +13,12 @@ not the behavior:
 
 ## Layout
 
-A plugin's hooks live in two places, both under `plugins/<plugin>/`:
+A plugin's hooks live under `plugins/<plugin>/hooks/`:
 
 | Path | Purpose |
 | --- | --- |
-| `.github/hooks/hooks.json` | The manifest — maps lifecycle events to commands. Copilot v1 schema. |
-| `.agent-hooks/*.sh`, `.agent-hooks/*.ps1` | The scripts the manifest shells out to, one bash + one PowerShell sibling each. |
+| `hooks/hooks.json` | The manifest — maps lifecycle events to commands. Copilot v1 schema. Declared by the `hooks` key in `plugin.json`. |
+| `hooks/scripts/*.sh`, `hooks/scripts/*.ps1` | The scripts the manifest shells out to, one bash + one PowerShell sibling each. |
 
 A plugin is self-contained: the manifest may only reference scripts inside its own
 directory. See [`plugin-contract.md`](./plugin-contract.md) for the wider folder shape.
@@ -31,8 +31,8 @@ directory. See [`plugin-contract.md`](./plugin-contract.md) for the wider folder
   "hooks": {
     "sessionStart": [
       { "type": "command",
-        "bash": "\"${PLUGIN_ROOT}/.agent-hooks/log-event.sh\" sessionStart",
-        "powershell": "& \"$env:PLUGIN_ROOT/.agent-hooks/log-event.ps1\" sessionStart",
+        "bash": "\"${PLUGIN_ROOT}/hooks/scripts/log-event.sh\" sessionStart",
+        "powershell": "& \"$env:PLUGIN_ROOT/hooks/scripts/log-event.ps1\" sessionStart",
         "timeoutSec": 10 }
     ]
   }
@@ -40,14 +40,37 @@ directory. See [`plugin-contract.md`](./plugin-contract.md) for the wider folder
 ```
 
 - **`version` is `1`.** The only defined schema version.
-- **One CLI-lowercase block per event.** Copilot CLI reads the camelCase event key and
-  the `bash` / `powershell` command properties. VS Code converts the lowercase key to its
-  PascalCase form and maps `bash`→osx/linux, `powershell`→windows, so **one block covers
+- **One camelCase block per event.** Copilot CLI reads the camelCase event key and
+  the `bash` / `powershell` command properties. VS Code reads the PascalCase alias of the
+  same event and maps `bash`→osx/linux, `powershell`→windows, so **one block covers
   both surfaces**. Do **not** also declare a PascalCase copy of the same event — VS Code
   would register and fire both, duplicating every invocation. The validator rejects it.
-- **Allowed events:** `sessionStart`, `sessionEnd`, `userPromptSubmit`,
-  `userPromptSubmitted`, `preToolUse`, `postToolUse`, `preCompact`, `subagentStart`,
-  `subagentStop`, `stop`, `agentStop`, `errorOccurred`.
+- **Allowed events.** Copilot CLI defines each event in two casings: a **camelCase**
+  name whose payload uses camelCase fields, and a **PascalCase** alias whose payload uses
+  snake_case fields to match the VS Code Copilot extension. They are the *same* event, not
+  two events. Neo declares the camelCase form; the validator rejects a PascalCase copy of
+  an event already declared in camelCase, because both would register and fire.
+
+  | camelCase (declare this) | PascalCase alias | Fires when |
+  | --- | --- | --- |
+  | `sessionStart` | `SessionStart` | A new or resumed session begins. |
+  | `sessionEnd` | `SessionEnd` | The session terminates. |
+  | `userPromptSubmitted` | `UserPromptSubmit` | The user submits a prompt. |
+  | `userPromptTransformed` | — | The runtime has transformed a prompt into model-facing content. |
+  | `preToolUse` | `PreToolUse` | Before each tool executes. Can allow, deny, or modify. |
+  | `postToolUse` | `PostToolUse` | After a tool completes successfully. |
+  | `postToolUseFailure` | — | After a tool completes with a failure. |
+  | `preCompact` | `PreCompact` | Context compaction is about to begin. |
+  | `subagentStart` | — | A subagent is spawned, before it runs. |
+  | `subagentStop` | `SubagentStop` | A subagent completes. |
+  | `agentStop` | `Stop` | The main agent finishes a turn. |
+  | `errorOccurred` | — | An error occurs during execution. |
+  | `notification` | `Notification` | The CLI emits a system notification. Fire-and-forget. |
+  | `permissionRequest` | — | Before the permission service runs. |
+
+  There is no lowercase `userPromptSubmit` and no lowercase `stop` — those spellings are
+  the PascalCase aliases mis-cased, and a hook declared under either name never fires.
+  Anything outside this table is rejected by the validator.
 
 ### The `${PLUGIN_ROOT}` placeholder — per shell
 
@@ -58,7 +81,7 @@ shell, and getting it wrong is a silent break:
 | Field | Correct | Wrong | Why |
 | --- | --- | --- | --- |
 | `bash` | `${PLUGIN_ROOT}` | — | bash expands the env var |
-| `powershell` | `$env:PLUGIN_ROOT` | `${PLUGIN_ROOT}` | in PowerShell `${PLUGIN_ROOT}` is its *own* (undefined) variable and expands to empty, producing a bad path like `/.agent-hooks/log-event.ps1` |
+| `powershell` | `$env:PLUGIN_ROOT` | `${PLUGIN_ROOT}` | in PowerShell `${PLUGIN_ROOT}` is its *own* (undefined) variable and expands to empty, producing a bad path like `/hooks/scripts/log-event.ps1` |
 
 `scripts/validate-plugins.py` fails the build if a bare `${PLUGIN_ROOT}` appears in any
 `powershell` command string.
@@ -112,6 +135,6 @@ payload:
 Before you open a PR that touches a hook:
 
 1. `python3 scripts/validate-plugins.py` — schema + Neo-specific rules.
-2. `bash -n plugins/*/.agent-hooks/*.sh` — shell syntax, and it surfaces stray CRLF.
+2. `bash -n plugins/*/hooks/scripts/*.sh` — shell syntax, and it surfaces stray CRLF.
 3. Manually test both siblings with stdin redirected (see
    [`guides/observability.md`](../guides/observability.md) § Manual test).

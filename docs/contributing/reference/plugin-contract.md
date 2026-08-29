@@ -50,28 +50,35 @@ Each plugin under `plugins/` is a self-contained Copilot tree:
 
 ```
 plugins/neo-core/
-├── .github/
-│   ├── plugin/
-│   │   └── plugin.json               # Copilot plugin metadata (adds agents/hooks paths)
-│   ├── agents/                       # Copilot subagents — dotted neo.<role>.agent.md
-│   ├── hooks/
-│   │   └── hooks.json                # Copilot hook schema (v1, camelCase events, ${PLUGIN_ROOT})
-│   └── skills/                       # Copilot Agent Skills, e.g. neo-task-authoring/SKILL.md
-├── .agent-hooks/
-│   ├── log-event.sh                  # observability logger, called by hooks.json
-│   ├── enforce-guardrails.sh         # preToolUse enforcement (Unix), called by hooks.json
-│   └── enforce-guardrails.ps1        # preToolUse enforcement (Windows/PowerShell sibling)
+├── plugin.json                       # Copilot plugin manifest — the required file, at the plugin root
+├── agents/                           # Copilot subagents — dotted neo.<role>.agent.md
+├── skills/                           # Copilot Agent Skills, e.g. neo-task-authoring/SKILL.md
+├── hooks/
+│   ├── hooks.json                    # Copilot hook schema (v1, camelCase events, ${PLUGIN_ROOT})
+│   └── scripts/
+│       ├── log-event.sh              # observability logger, called by hooks.json
+│       ├── enforce-guardrails.sh     # preToolUse enforcement (Unix), called by hooks.json
+│       └── enforce-guardrails.ps1    # preToolUse enforcement (Windows/PowerShell sibling)
 └── scripts/                          # plugin-local tooling, e.g. analyze_agent_logs.py
 ```
 
-| Path (within a plugin)       | Purpose                                                                                          |
-| ---------------------------- | ----------------------------------------------------------------------------------------------- |
-| `.github/plugin/plugin.json` | Plugin metadata (name, version, author, keywords, …) plus `agents`/`hooks` paths.               |
-| `.github/agents/`            | Subagent definitions, one dotted `neo.<role>.agent.md` file per role.                           |
-| `.github/skills/`            | Agent Skills, e.g. `neo-task-authoring/SKILL.md`.                                                |
-| `.github/hooks/hooks.json`   | Lifecycle-logging **and** `preToolUse` enforcement hooks, Copilot event names, `${PLUGIN_ROOT}`, versioned schema (`"version": 1`). |
-| `.agent-hooks/log-event.sh`  | The observability logger `hooks.json` shells out to (fail-open). See [observability.md](../guides/observability.md). |
-| `.agent-hooks/enforce-guardrails.sh` | The `preToolUse` enforcement hook `hooks.json` shells out to on Unix (fail-closed): blocks commit/push to `main` and non-draft PRs. A `.ps1` sibling covers Windows. See [enforcement.md](../guides/enforcement.md). |
+This is the layout Copilot CLI documents: `plugin.json` at the plugin root, with `agents/`,
+`skills/`, and `hooks/` beside it. **A plugin tree contains no `.github/` directory.**
+`.github/` is where a *repository* keeps repo-scoped agents, skills, and hooks; a plugin's
+install directory is not a repository root, so the two are different mechanisms that happen
+to share folder names. Nesting plugin components under `.github/` still resolves when every
+path is declared explicitly, but it buys nothing and it defeats the CLI's defaults — which is
+how Neo shipped for several releases with `skills` undeclared and **every skill silently
+failing to load**.
+
+| Path (within a plugin)               | Purpose                                                                                          |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| `plugin.json`                        | Plugin metadata (name, version, author, keywords, …) plus the `agents`/`skills`/`hooks` paths.  |
+| `agents/`                            | Subagent definitions, one dotted `neo.<role>.agent.md` file per role.                            |
+| `skills/`                            | Agent Skills, e.g. `neo-task-authoring/SKILL.md`.                                                |
+| `hooks/hooks.json`                   | Lifecycle-logging **and** `preToolUse` enforcement hooks, Copilot event names, `${PLUGIN_ROOT}`, versioned schema (`"version": 1`). |
+| `hooks/scripts/log-event.sh`         | The observability logger `hooks.json` shells out to (fail-open). See [observability.md](../guides/observability.md). |
+| `hooks/scripts/enforce-guardrails.sh` | The `preToolUse` enforcement hook `hooks.json` shells out to on Unix (fail-closed): blocks commit/push to `main` and non-draft PRs. A `.ps1` sibling covers Windows. See [enforcement.md](../guides/enforcement.md). |
 
 **No cross-plugin file references.** A plugin is copied as a self-contained directory on
 install. A file under `plugins/neo-core/` cannot reference a path outside its own plugin
@@ -83,62 +90,90 @@ need must be duplicated into each.
 intermediate directories between them, directories nested in the path of a file it is working
 on, `$HOME/.copilot/instructions/`, or a directory named in `COPILOT_CUSTOM_INSTRUCTIONS_DIRS`.
 A plugin's install directory is none of these, and `plugin.json` carries path keys only for
-`agents` and `hooks`. Putting an `instructions/` folder in a plugin therefore ships a directory
+`agents`, `skills`, `hooks`, `commands`, `extensions`, `mcpServers`, and `lspServers`.
+Putting an `instructions/` folder in a plugin therefore ships a directory
 Copilot never reads. Instruction files are a **project-tier** artifact authored into the
 consuming repo's `.github/instructions/` — see
 [`stack-plugin-contract.md`](./stack-plugin-contract.md).
 
-## 2. Required manifest fields
+## 2. Manifest fields
 
-Field lists below are transcribed from the manifest files as they exist today. **Required**
-means the field is present and populated.
+Two things are conflated easily here, so they are separated below:
 
-### 2.1 A plugin's `.github/plugin/plugin.json`
+- **Spec** — what GitHub Copilot CLI itself requires or defines. Source:
+  [CLI plugin reference](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-plugin-reference).
+- **House rule** — what *Neo* additionally requires of its own plugins. Not enforced by the
+  CLI; enforced by `scripts/validate-plugins.py`.
 
-Values below are transcribed from `plugins/neo-core/`; `plugins/neo-product/` carries the same
-fields with its own values.
+Per the spec, **`name` is the only required field in `plugin.json`.** Everything else is
+optional. Neo requires more because a shipped plugin with no author, license, or description
+is a poor artifact — but that is Neo's rule, not Copilot's, and an external plugin that omits
+them is still valid.
 
-| Field         | Value                                            | Status                                      |
-| ------------- | ------------------------------------------------ | ------------------------------------------- |
-| `name`        | `"neo-core"`                                     | Required.                                    |
-| `version`     | semver, e.g. `"0.1.4"`                           | Required. Each plugin versions independently. |
-| `description` | present ("… Copilot CLI manifest")               | Required.                                    |
-| `author.name` | `"Chad Thomas"`                                  | Required.                                    |
-| `homepage`    | `"https://github.com/skyarkitekten/neo"`         | Required.                                    |
-| `repository`  | `"https://github.com/skyarkitekten/neo"`         | Required.                                    |
-| `license`     | `"MIT"`                                          | Required.                                    |
-| `keywords[]`  | 6 entries                                        | Required.                                    |
-| `agents`      | `".github/agents"`                               | Required — points at the plugin's agent tree. |
-| `hooks`       | `".github/hooks/hooks.json"`                     | Required — points at the plugin's hook config. |
+### 2.1 A plugin's `plugin.json`
+
+`plugin.json` lives at the **plugin root**. Values below are transcribed from
+`plugins/neo-core/`; `plugins/neo-product/` carries the same fields with its own values.
+
+| Field         | Value                                            | Spec        | House rule                       |
+| ------------- | ------------------------------------------------ | ----------- | -------------------------------- |
+| `name`        | `"neo-core"`                                     | Required.   | Kebab-case, `neo-` prefixed.     |
+| `version`     | semver, e.g. `"2.0.4"`                           | Optional.   | Required. Each plugin versions independently. |
+| `description` | present ("… Copilot CLI manifest")               | Optional.   | Required.                        |
+| `author.name` | `"Chad Thomas"`                                  | Optional.   | Required.                        |
+| `homepage`    | `"https://github.com/skyarkitekten/neo"`         | Optional.   | Required.                        |
+| `repository`  | `"https://github.com/skyarkitekten/neo"`         | Optional.   | Required.                        |
+| `license`     | `"MIT"`                                          | Optional.   | Required.                        |
+| `keywords[]`  | 6 entries                                        | Optional.   | Required.                        |
+| `agents`      | `"agents/"`                                      | Optional; defaults to `agents/`. | Required — declared explicitly even though it matches the default. |
+| `skills`      | `"skills/"`                                      | Optional; defaults to `skills/`. | Required — declared explicitly even though it matches the default. |
+| `hooks`       | `"hooks/hooks.json"`                             | Optional; no default. | Required whenever the plugin ships hooks. |
+
+**Why declare paths that match the default.** Relying on an implicit default is what hid the
+skills bug: the key was simply absent, so nothing looked wrong in review. Declaring all three
+makes the contract legible in the manifest itself and gives the validator something to check
+against the filesystem.
 
 ### 2.2 Root `.github/plugin/marketplace.json`
 
 The marketplace manifest stays at the repo root and lists each shipped plugin under `plugins[]`.
+Unlike a plugin tree, this file *is* repo-scoped, so `.github/plugin/` is the right home for it.
 
 | Field                   | Value                                 | Status                                    |
 | ----------------------- | ------------------------------------- | ----------------------------------------- |
 | `name` (top-level)      | `"neo"`                               | Required — the marketplace name.          |
 | `owner.name`            | `"skyarkitekten"`                     | Required.                                  |
 | `metadata.description`  | present                               | Required.                                  |
-| `metadata.version`      | `"0.1.4"`                             | Required.                                  |
+| `metadata.version`      | `"2.0.4"`                             | Required.                                  |
 | `plugins[].name`        | `"neo-core"`, `"neo-product"`         | Required — one entry per shipped plugin.   |
-| `plugins[].source`      | `"./plugins/neo-core"`                | Required — `./`-prefixed repo-root path.   |
+| `plugins[].source`      | `"plugins/neo-core"`                  | Required — repo-root-relative path.        |
 | `plugins[].description` | present                               | Required.                                  |
 | `plugins[].version`     | semver, matching that plugin's `plugin.json` | Required.                           |
 | `plugins[].author.name` | `"Chad Thomas"`                       | Required.                                  |
 | `plugins[].license`     | `"MIT"`                               | Required.                                  |
 | `plugins[].keywords[]`  | 4 entries                             | Required.                                  |
-| `plugins[].agents`      | `".github/agents"`                    | Required.                                  |
-| `plugins[].hooks`       | `".github/hooks/hooks.json"`          | Required.                                  |
+| `plugins[].agents`      | `"agents/"`                           | Required.                                  |
+| `plugins[].skills`      | `"skills/"`                           | Required.                                  |
+| `plugins[].hooks`       | `"hooks/hooks.json"`                  | Required.                                  |
 
-**`source` rule:** always write the `./`-prefixed relative path from the repo root to the
-plugin directory (`"./plugins/neo-core"`).
+**`source` rule:** write the repo-root-relative path to the plugin directory
+(`"plugins/neo-core"`). The spec notes a leading `./` is unnecessary; Neo omits it.
 
 ## 3. How Copilot loads the plugin
 
 Copilot CLI reads the root `.github/plugin/marketplace.json` → resolves each plugin's `source`
-→ reads that plugin's `.github/plugin/plugin.json` → agents from `.github/agents/`, skills from
-`.github/skills/`, hooks from `.github/hooks/hooks.json` (Copilot v1 schema, `${PLUGIN_ROOT}`).
+→ reads that plugin's `plugin.json` → agents from `agents/`, skills from `skills/`, hooks
+from `hooks/hooks.json` (Copilot v1 schema, `${PLUGIN_ROOT}`).
+
+**Verify, don't assume.** A component path that resolves to nothing is not an error — the CLI
+loads the plugin and contributes nothing from that slot. The only reliable check is to install
+the plugin and inspect what actually loaded:
+
+```bash
+export COPILOT_HOME=$(mktemp -d)
+copilot plugin install ./plugins/neo-core   # reports "Installed N skills."
+copilot plugins list --kind skill --scope plugin
+```
 
 Every shipped plugin must carry its Copilot `plugin.json` and `hooks.json`; a missing or
 invalid manifest breaks the plugin. `scripts/validate-plugins.py` enforces that both parse.
@@ -196,8 +231,8 @@ sits in a marketplace alongside others.
   the Agent Skills spec defines a `metadata:` map for exactly this, alongside `name`,
   `description`, `license`, `compatibility`, and `allowed-tools` — and on spec-conformant
   packaging paths any *other* top-level key is a hard error, not an ignored field.
-- **Copilot skill directory:** `.github/skills/neo-<name>/SKILL.md`, and the frontmatter `name:`
-  matches the directory name (e.g. `.github/skills/neo-feature-authoring/SKILL.md` →
+- **Copilot skill directory:** `skills/neo-<name>/SKILL.md`, and the frontmatter `name:`
+  matches the directory name (e.g. `skills/neo-feature-authoring/SKILL.md` →
   `name: neo-feature-authoring`).
 
 Copilot resolves delegated agents by their frontmatter `name:` field, not the filename, so an

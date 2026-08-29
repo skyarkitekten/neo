@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Neo Hook Manifest",
-  "description": "Schema for Neo plugin hook manifests at plugins/<plugin>/.github/hooks/hooks.json. Event keys use the Copilot CLI lowercase form; VS Code converts them to PascalCase at load time and maps `bash` to osx/linux and `powershell` to windows. Declaring an event in both CLI-lowercase and PascalCase form fires it twice and is rejected by scripts/validate-plugins.py.",
+  "description": "Schema for Neo plugin hook manifests at plugins/<plugin>/hooks/hooks.json. Event keys use the canonical Copilot CLI camelCase form; each event also has a PascalCase alias (SessionStart, UserPromptSubmit, Stop, ...) that VS Code reads for the same event, mapping `bash` to osx/linux and `powershell` to windows. Declaring an event in both its camelCase and PascalCase form fires it twice and is rejected by scripts/validate-plugins.py. Note there is no lowercase `userPromptSubmit` or `stop` event — those are the PascalCase aliases mis-cased, and never fire.",
   "type": "object",
   "required": ["version", "hooks"],
   "additionalProperties": false,
@@ -24,16 +24,18 @@
         "enum": [
           "sessionStart",
           "sessionEnd",
-          "userPromptSubmit",
           "userPromptSubmitted",
+          "userPromptTransformed",
           "preToolUse",
           "postToolUse",
+          "postToolUseFailure",
           "preCompact",
           "subagentStart",
           "subagentStop",
-          "stop",
           "agentStop",
-          "errorOccurred"
+          "errorOccurred",
+          "notification",
+          "permissionRequest"
         ]
       },
       "additionalProperties": {

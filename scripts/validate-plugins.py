@@ -8,12 +8,19 @@ This script makes the remaining invariants executable:
 
   * every plugin has its Copilot manifest AND hooks config, and both are valid JSON;
   * the root Copilot marketplace manifest is valid JSON;
+  * every component path a plugin declares (`agents`, `skills`, `hooks`) resolves to
+    something real on disk, AND every component directory that exists is declared.
+    Copilot defaults `agents` to `agents/` and `skills` to `skills/` and treats a
+    path that resolves to nothing as an empty slot, not an error — the plugin installs
+    cleanly and contributes nothing. That is how Neo shipped for several releases with
+    skills in `.github/skills/`, no `skills` key, and every skill silently failing to
+    load (issue #81);
   * every plugin's hooks.json conforms to the Neo hook-manifest contract
     (scripts/linting/schemas/hook-manifest.schema.json): version 1, known event
     names, well-formed command entries, and the two Neo-specific rules — a
     `powershell` command must not reference the bare `${PLUGIN_ROOT}` placeholder
     (it must use `$env:PLUGIN_ROOT`), and no event may be declared in both its
-    CLI-lowercase and PascalCase form (which would fire it twice);
+    canonical camelCase and PascalCase-alias form (which would fire it twice);
   * every Copilot agent's `agents:` allowlist references a real agent `name:`;
   * any agent that delegates (non-empty `agents:`) also grants the `agent`/`Task`
     delegation tool in its `tools:` allowlist;
@@ -34,6 +41,7 @@ from __future__ import annotations
 
 import itertools
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -168,21 +176,26 @@ def check_json(path: Path) -> None:
         errors.append(f"invalid JSON: {path.relative_to(REPO_ROOT)} — {exc}")
 
 
-# Copilot CLI lifecycle event names, in their canonical camelCase form. VS Code
-# converts each to PascalCase at load time, so declaring both forms fires twice.
+# Copilot CLI lifecycle event names, in their canonical camelCase form. Each has a
+# PascalCase alias (SessionStart, UserPromptSubmit, Stop, ...) that VS Code reads for
+# the SAME event, so declaring both forms fires twice. There is no lowercase
+# `userPromptSubmit` and no lowercase `stop` — those are the aliases mis-cased, and a
+# hook declared under either name never fires.
 HOOK_EVENTS = {
     "sessionStart",
     "sessionEnd",
-    "userPromptSubmit",
     "userPromptSubmitted",
+    "userPromptTransformed",
     "preToolUse",
     "postToolUse",
+    "postToolUseFailure",
     "preCompact",
     "subagentStart",
     "subagentStop",
-    "stop",
     "agentStop",
     "errorOccurred",
+    "notification",
+    "permissionRequest",
 }
 # Per-platform command keys allowed on a hook entry, plus the cross-platform one.
 HOOK_COMMAND_KEYS = {"command", "bash", "powershell", "windows", "linux", "osx"}
@@ -257,7 +270,7 @@ def _check_hook_entry(entry: object, where: str, err) -> None:
 
 
 def copilot_agent_files(plugin: Path) -> list[Path]:
-    d = plugin / ".github" / "agents"
+    d = plugin / "agents"
     return sorted(d.glob("neo.*.agent.md")) if d.is_dir() else []
 
 
@@ -295,21 +308,104 @@ def check_cli_tools(plugin_name: str, agent_file: Path, lowered: set[str]) -> No
         )
 
 
+def check_component_paths(plugin: Path) -> None:
+    """Every component the plugin ships must be declared AND resolve on disk.
+
+    Copilot CLI defaults `agents` to `agents/` and `skills` to `skills/` relative to
+    the plugin root. A component that lives elsewhere with no manifest key pointing at
+    it is not an error to the CLI — the plugin installs cleanly and contributes nothing
+    from that slot. That is exactly how Neo shipped for several releases with every
+    skill silently failing to load (issue #81).
+
+    So we check both directions:
+      1. A declared path must exist. A typo'd or stale path ships an empty slot.
+      2. A component directory that exists must be declared. Relying on the implicit
+         default is what made the original bug invisible in review.
+    """
+    name = plugin.name
+    manifest = plugin / "plugin.json"
+    try:
+        data = json.loads(manifest.read_text(encoding="utf-8"))
+    except Exception:
+        return  # check_json already reported it
+
+    def declared(key: str) -> list[str]:
+        v = data.get(key)
+        if v is None:
+            return []
+        return [v] if isinstance(v, str) else [x for x in v if isinstance(x, str)]
+
+    # 1. Declared paths must resolve.
+    for key, want_dir in (("agents", True), ("skills", True), ("hooks", False)):
+        for rel in declared(key):
+            target = plugin / rel
+            ok = target.is_dir() if want_dir else target.is_file()
+            if not ok:
+                kind = "directory" if want_dir else "file"
+                errors.append(
+                    f"[{name}] plugin.json declares {key}: '{rel}', which is not a "
+                    f"{kind} under plugins/{name}/. Copilot loads the plugin anyway and "
+                    f"contributes nothing from this slot"
+                )
+            elif want_dir and not any(target.iterdir()):
+                errors.append(
+                    f"[{name}] plugin.json declares {key}: '{rel}', which is an empty "
+                    f"directory"
+                )
+
+    # 2. Components that exist must be declared.
+    for key, probe in (("agents", "agents"), ("skills", "skills")):
+        if (plugin / probe).is_dir() and not declared(key):
+            errors.append(
+                f"[{name}] plugins/{name}/{probe}/ exists but plugin.json declares no "
+                f"'{key}' key. Declare it explicitly ('{probe}/') even though it matches "
+                f"the CLI default, so the path is visible in review"
+            )
+
+    skills_dir = plugin / "skills"
+    if skills_dir.is_dir():
+        for d in sorted(skills_dir.iterdir()):
+            if d.is_dir() and not (d / "SKILL.md").is_file():
+                errors.append(f"[{name}] skills/{d.name}/ has no SKILL.md; it will not load")
+
+    # A bash hook script that isn't executable dies with "Permission denied" at runtime.
+    # This shipped too: neo-product's .sh scripts were committed 100644, so every one of
+    # its hooks failed silently while neo-core's identical siblings worked.
+    for sh in sorted((plugin / "hooks" / "scripts").glob("*.sh")):
+        if not os.access(sh, os.X_OK):
+            errors.append(
+                f"[{name}] hooks/scripts/{sh.name} is not executable; every hook that "
+                f"invokes it fails with 'Permission denied'. chmod +x it and commit the "
+                f"mode (git update-index --chmod=+x)"
+            )
+
+    if (plugin / ".github").exists():
+        errors.append(
+            f"[{name}] plugins/{name}/.github/ exists. A plugin install directory is not a "
+            f"repository root, so .github/ is not a component location — put plugin.json, "
+            f"agents/, skills/, and hooks/ at the plugin root"
+        )
+
+
 def check_plugin(plugin: Path) -> None:
     name = plugin.name
 
     # 1. Copilot manifest + hooks config must exist and parse.
-    check_json(plugin / ".github" / "plugin" / "plugin.json")
-    hooks_json = plugin / ".github" / "hooks" / "hooks.json"
+    check_json(plugin / "plugin.json")
+    hooks_json = plugin / "hooks" / "hooks.json"
     check_json(hooks_json)
     check_hooks_manifest(hooks_json)
+
+    # 1b. Declared component paths must match what's actually on disk, in both
+    #     directions — an undeclared or unresolvable path fails silently at runtime.
+    check_component_paths(plugin)
 
     # 2. Every Copilot agent's `agents:` allowlist must reference a real name:.
     #    Copilot resolves delegated agents by their `name:` field, not filename,
     #    so a name/allowlist mismatch silently breaks delegation.
     files = copilot_agent_files(plugin)
     if not files:
-        errors.append(f"[{name}] no Copilot agents found under .github/agents/")
+        errors.append(f"[{name}] no Copilot agents found under agents/")
         return
     declared = {fm_name(f) for f in files} - {None}
     # Aliases that grant the sub-agent delegation ("Task") tool, case-insensitive.
@@ -363,16 +459,25 @@ def check_marketplace(path: Path) -> None:
         if not source:
             errors.append(f"[marketplace] {name} has no source")
             continue
-        manifest = REPO_ROOT / source / ".github" / "plugin" / "plugin.json"
+        manifest = REPO_ROOT / source / "plugin.json"
         if not manifest.is_file():
-            errors.append(f"[marketplace] {name} source '{source}' has no .github/plugin/plugin.json")
+            errors.append(f"[marketplace] {name} source '{source}' has no plugin.json")
             continue
-        declared = json.loads(manifest.read_text()).get("version")
+        plugin_data = json.loads(manifest.read_text())
+        declared = plugin_data.get("version")
         if entry.get("version") != declared:
             errors.append(
                 f"[marketplace] {name} version '{entry.get('version')}' disagrees with "
-                f"{source}/.github/plugin/plugin.json version '{declared}'"
+                f"{source}/plugin.json version '{declared}'"
             )
+        # A marketplace entry that contradicts the plugin's own component paths is a
+        # trap: whichever one the CLI honors, the other is a lie in review.
+        for key in ("agents", "skills", "hooks"):
+            if key in entry and key in plugin_data and entry[key] != plugin_data[key]:
+                errors.append(
+                    f"[marketplace] {name} declares {key}: {entry[key]!r} but "
+                    f"{source}/plugin.json declares {plugin_data[key]!r}"
+                )
 
 
 def main() -> int:

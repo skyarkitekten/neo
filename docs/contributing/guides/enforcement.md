@@ -17,12 +17,12 @@ opposite reliability contract to — the fail-open observability logging in
 
 ## Files
 
-- `.agent-hooks/enforce-guardrails.sh` — the enforcement hook for Unix (macOS/Linux).
+- `hooks/scripts/enforce-guardrails.sh` — the enforcement hook for Unix (macOS/Linux).
   Decisive (fail-closed) for the operations it recognizes.
-- `.agent-hooks/enforce-guardrails.ps1` — the Windows/PowerShell sibling, byte-for-byte
+- `hooks/scripts/enforce-guardrails.ps1` — the Windows/PowerShell sibling, byte-for-byte
   equivalent in behavior. The `bash` and `powershell` fields on the same hook entry let the
   CLI pick the right one per platform, so enforcement runs on Windows too (not just Unix).
-- `.github/hooks/hooks.json` — wires both scripts to the `preToolUse` event (same file that
+- `hooks/hooks.json` — wires both scripts to the `preToolUse` event (same file that
   wires the observability logger).
 
 ## Copilot `preToolUse` command-hook contract
@@ -105,10 +105,10 @@ Pipe a sample payload through the hook and check the decision:
 
 ```bash
 printf '{"toolName":"bash","toolArgs":{"command":"git push origin main"}}' \
-  | .agent-hooks/enforce-guardrails.sh preToolUse
+  | hooks/scripts/enforce-guardrails.sh preToolUse
 # => {"permissionDecision":"deny","permissionDecisionReason":"Neo guardrail: pushing to 'main'…"}
 
 printf '{"toolName":"bash","toolArgs":{"command":"gh pr create --draft"}}' \
-  | .agent-hooks/enforce-guardrails.sh preToolUse
+  | hooks/scripts/enforce-guardrails.sh preToolUse
 # => (empty stdout == allow)
 ```
