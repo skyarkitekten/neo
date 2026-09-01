@@ -63,12 +63,12 @@
         "bash": {
           "type": "string",
           "minLength": 1,
-          "description": "Copilot CLI property mapped to the osx and linux commands. Use ${PLUGIN_ROOT} to locate plugin scripts."
+          "description": "Copilot CLI property mapped to the osx and linux commands. Use ${PLUGIN_ROOT} to locate plugin scripts, and guard the script's existence before invoking it (`s=\"${PLUGIN_ROOT}/hooks/scripts/x.sh\"; [ -f \"$s\" ] || exit 0; \"$s\" event`) — preToolUse is fail-closed, so a path that doesn't resolve denies every tool call."
         },
         "powershell": {
           "type": "string",
           "minLength": 1,
-          "description": "Copilot CLI property mapped to the windows command. Use $env:PLUGIN_ROOT (NOT ${PLUGIN_ROOT}) to locate plugin scripts — ${PLUGIN_ROOT} is PowerShell's own variable syntax and expands to empty."
+          "description": "Copilot CLI property mapped to the windows command. Use $env:PLUGIN_ROOT (NOT ${PLUGIN_ROOT}) to locate plugin scripts — ${PLUGIN_ROOT} is PowerShell's own variable syntax and expands to empty. Guard the script's existence before invoking it (`$s = \"$env:PLUGIN_ROOT/hooks/scripts/x.ps1\"; if (-not (Test-Path -LiteralPath $s)) { exit 0 }; & $s event`) — preToolUse is fail-closed, so a path that doesn't resolve denies every tool call."
         },
         "windows": {
           "type": "string",

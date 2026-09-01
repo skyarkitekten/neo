@@ -31,8 +31,8 @@ directory. See [`plugin-contract.md`](./plugin-contract.md) for the wider folder
   "hooks": {
     "sessionStart": [
       { "type": "command",
-        "bash": "\"${PLUGIN_ROOT}/hooks/scripts/log-event.sh\" sessionStart",
-        "powershell": "& \"$env:PLUGIN_ROOT/hooks/scripts/log-event.ps1\" sessionStart",
+        "bash": "s=\"${PLUGIN_ROOT}/hooks/scripts/log-event.sh\"; [ -f \"$s\" ] || exit 0; \"$s\" sessionStart",
+        "powershell": "$s = \"$env:PLUGIN_ROOT/hooks/scripts/log-event.ps1\"; if (-not (Test-Path -LiteralPath $s)) { exit 0 }; & $s sessionStart",
         "timeoutSec": 10 }
     ]
   }
@@ -40,6 +40,12 @@ directory. See [`plugin-contract.md`](./plugin-contract.md) for the wider folder
 ```
 
 - **`version` is `1`.** The only defined schema version.
+- **Guard the script's existence before invoking it.** A command that can't find its
+  script exits non-zero, and `preToolUse` is fail-closed — so an unresolvable path denies
+  *every* tool call and bricks the session, which is what a stale install or a component
+  moved between releases produces (issue #88). Resolve the script into `$s`, `exit 0` when
+  it's absent, and only then run it. A script that exists but crashes still fails closed;
+  the guard covers absence only. The validator rejects an unguarded invocation.
 - **One camelCase block per event.** Copilot CLI reads the camelCase event key and
   the `bash` / `powershell` command properties. VS Code reads the PascalCase alias of the
   same event and maps `bash`→osx/linux, `powershell`→windows, so **one block covers

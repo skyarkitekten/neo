@@ -73,10 +73,29 @@ parses the payload with `python3` (already a repo dependency) rather than `jq`, 
 | Recognized safe operation | allow |
 | Non-shell tool | allow |
 | Payload unparseable (or `python3` absent on Unix) | allow + stderr warning |
+| Hook script missing at the wired path | allow (existence guard in `hooks.json`) |
 | Hook times out | allow (harness fail-open) |
 
 The unparseable case is a **deliberate** fail-open: denying every tool call on a parser
 glitch would brick the session, and branch protection is the real backstop.
+
+The missing-script case is the same reasoning moved one level up, into `hooks.json` itself.
+Because `preToolUse` is fail-closed, a path that doesn't resolve — a stale install, a
+component moved between releases, an empty `PLUGIN_ROOT` — makes the shell exit non-zero
+and denies **every** tool call, including `view` and `powershell`. The session is bricked
+and `NEO_ENFORCE_GUARDRAILS=0` can't rescue it, because the script that reads that variable
+is the thing that isn't running (issue #88). So every hook command resolves the script into
+`$s` and returns early if it isn't there:
+
+```jsonc
+// bash
+"s=\"${PLUGIN_ROOT}/hooks/scripts/enforce-guardrails.sh\"; [ -f \"$s\" ] || exit 0; \"$s\" preToolUse"
+// powershell
+"$s = \"$env:PLUGIN_ROOT/hooks/scripts/enforce-guardrails.ps1\"; if (-not (Test-Path -LiteralPath $s)) { exit 0 }; & $s preToolUse"
+```
+
+A script that *is* present but crashes still fails closed — the guard only covers absence,
+never a broken guardrail. `scripts/validate-plugins.py` rejects an unguarded hook command.
 
 ## Relaxing enforcement
 
