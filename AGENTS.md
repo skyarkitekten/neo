@@ -50,7 +50,7 @@ The shipped agents:
 
 | Plugin                 | Agents                                                                                                                                                    |
 | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `plugins/neo-core/`    | `technical-engineer` (orchestrator — start here), `researcher`, `implementation-planner`, `code-writer`, `code-reviewer`, `feature-agent`, `task-planner` |
+| `plugins/neo-core/`    | `business-engineer` (Specification-loop orchestrator), `technical-engineer` (Coding-loop orchestrator — start here for one task), `researcher`, `implementation-planner`, `code-writer`, `code-reviewer`, `feature-agent`, `task-planner` |
 | `plugins/neo-product/` | `product.engineer` (orchestrator — start here), `product.researcher`, `product.coach`, `design.thinking`, `systems.thinking`                              |
 
 `master-control` is dev-time only and lives at the repo root, never in a plugin.
@@ -153,6 +153,19 @@ copilot plugin marketplace remove neo
   the portable aliases for cloud/VS Code parity, but any prompt that says "search" or "fetch" needs
   `execute` behind it. `scripts/validate-plugins.py` enforces this; the full table is in
   `docs/contributing/guides/agent-authoring-reference.md`.
+- **No alias reaches a host tool — name it exactly or omit `tools:`.** Session spawning
+  (`create_session`, `fork_session`, `open_pr_session`, …), `create_issue`, `create_pull_request`,
+  canvases, and widgets are registered by the Copilot **desktop app**, not the CLI, so the alias
+  resolver never produces them. The trap is `execute`: its grant includes "session management", but
+  that is *shell* session management (`read_powershell`, `stop_powershell`, `list_powershell`), which
+  reads identically and is not the same thing. An orchestrator declaring only aliases gets zero
+  session tools, silently, and `/orchestrate`, `/pr-stack`, and any "spawn a child session"
+  instruction simply do nothing — skills are prose and never grant tools. Naming host tools is
+  portable, because unrecognized names are ignored elsewhere. Two caveats: host tools reach depth 0
+  and depth 1 only ([copilot-cli#3293](https://github.com/github/copilot-cli/issues/3293)), so keep
+  spawning at the selected agent; and they don't exist at all under bare `copilot`.
+  `scripts/validate-plugins.py` enforces this too — a prompt that describes spawning while `tools:`
+  omits `create_session` fails CI.
 - **An undeclared component path fails silently — the plugin still installs.** Copilot CLI
   defaults `agents` to `agents/` and `skills` to `skills/` relative to the **plugin root**. If a
   component lives anywhere else and the manifest doesn't say so, the CLI finds nothing, contributes
