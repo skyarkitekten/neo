@@ -22,8 +22,8 @@ done.
 Start at **[`getting-started.md`](./getting-started.md)** — what Neo is, what's live, and the
 quickest path in. Then:
 
-- [`guides/installing-neo.md`](./guides/installing-neo.md) — install `neo-core`, write your project's
-  `AGENTS.md`, pick an integration mode, add a loop or a stack.
+- [`guides/installing-neo.md`](./guides/installing-neo.md) — install `neo-core`, troubleshoot a
+  blocked install, write your project's `AGENTS.md`, pick an integration mode, add a loop or a stack.
 - [`guides/using-neo.md`](./guides/using-neo.md) — produce a PRD with the Product loop, then invoke
   the crew and work the Specification loop with the Business Engineer.
 - [`guides/filing-work.md`](./guides/filing-work.md) — what a well-formed Feature and Task look like
