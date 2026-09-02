@@ -116,7 +116,7 @@ Standing rules the agent always follows — _how to behave_, not _how to build t
 
 ## Authoring: hooks
 
-Shell commands that fire deterministically on lifecycle events — for _guaranteeing_ behavior a prompt only _requests_ (auto-format, block protected paths, run tests, log events). `docs/contributing/reference/hook-contract.md` is normative for the manifest schema, the allowed event names, and the script contract; read it before touching a `hooks.json` or anything under a plugin's `hooks/scripts/`. What the two shipped hook sets *do* is owned by `docs/contributing/guides/observability.md` (fail-open logging) and `docs/contributing/guides/enforcement.md` (fail-closed enforcement).
+Shell commands that fire deterministically on lifecycle events — for _guaranteeing_ behavior a prompt only _requests_ (auto-format, block protected paths, run tests, log events). `docs/contributing/reference/hook-contract.md` is normative for the manifest schema, the allowed event names, and the script contract; read it before touching a `hooks.json` or anything under a plugin's `hooks/scripts/`. The shipped plugin manifests wire **only** fail-open logging (`docs/contributing/guides/observability.md`); the fail-closed enforcement scripts ship unregistered, for a consuming repo to opt into (`docs/contributing/guides/enforcement.md`).
 
 **Every hook is a pair.** A single event block declares both a `bash` and a `powershell` command, and every `.sh` script has a `.ps1` sibling. Authoring only the bash half ships a hook that is dead on Windows.
 
@@ -124,11 +124,14 @@ The traps that cost the most time:
 
 - **`${PLUGIN_ROOT}` inside a `powershell` command is a silent break.** PowerShell reads it as its own undefined variable and expands it to empty, producing a path like `/hooks/scripts/log-event.ps1`. Use `$env:PLUGIN_ROOT`. The validator fails the build on this.
 - **Never declare one event in both camelCase and PascalCase.** VS Code registers both and fires the hook twice. The validator rejects it.
+- **Never register a fail-closed event (`preToolUse`) in a shipped plugin manifest.** The validator rejects it. A hook failure there denies *every* tool call, `view` included, and `NEO_ENFORCE_GUARDRAILS=0` cannot rescue it because the script that reads it is the thing that didn't run. Ship the script; let the consuming repo wire it in its own `.github/hooks/*.json`.
+- **A `powershell` command must launch its script via `pwsh -NoProfile -ExecutionPolicy Bypass -File "$s"`, never `& $s`.** `& $s` runs a script *file*, which PowerShell execution policy governs, and the harness passes no policy flag — on a stock Windows client (all scopes `Undefined` → `Restricted`) the script refuses to load and the hook exits 1. The validator enforces the exact form. It does not beat a Group Policy scope; nothing process-scoped does.
+- **Guard the path first.** Every command resolves its script into `$s`/`s` and `exit 0`s when absent, so a layout move or stale install degrades to a no-op instead of a failure. The validator enforces this too.
 - **A `preToolUse` hook is fail-closed on any non-zero exit, including `2`** — a crash denies the tool call. Always `exit 0` and express the verdict purely through stdout JSON (`{"permissionDecision":"deny","permissionDecisionReason":"…"}` to block, empty to allow). Timeouts, by contrast, fail **open** — so a slow hook is no hook.
 - **Scripts self-locate** (`$PSScriptRoot`, `$(dirname "${BASH_SOURCE[0]}")`). `PLUGIN_ROOT` only tells the harness which script to launch; never depend on it inside the script.
 - **`.sh` files must be LF.** CRLF fails on Linux with `$'\r': command not found`. `.gitattributes` pins this — don't override it.
 
-**Do:** match event to intent (`preToolUse` to validate before, `postToolUse` to react after, `agentStop` as a final gate); explain a denial in the returned JSON so the agent can adapt; keep hooks fast and idempotent; scope with matchers.
+**Do:** match event to intent (`postToolUse` to react after, `agentStop` as a final gate; `preToolUse` to validate before — but only in a repo-level `.github/hooks/*.json`, never a shipped plugin manifest); explain a denial in the returned JSON so the agent can adapt; keep hooks fast and idempotent; scope with matchers.
 
 **Don't:** put secrets or destructive commands in hooks — they run automatically with the user's permissions, so validate and quote every input; persist payloads verbatim (`preToolUse` carries file contents and shell command strings, `userPromptSubmit` the whole prompt) — store derived signals and write only to gitignored paths; duplicate what a linter or CI already enforces; block silently; run long or network-heavy work on hot events; assume shell state carries between invocations.
 

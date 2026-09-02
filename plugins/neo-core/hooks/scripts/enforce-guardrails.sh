@@ -78,6 +78,15 @@ args = data.get("toolArgs")
 if args is None:
     args = data.get("tool_input")
 
+# `toolArgs` is typed `unknown` and the runtime parses a JSON string only "when possible",
+# so it can arrive as a raw string. Parse it here or the host-tool rule below judges a PR
+# on fields it cannot see and denies a correctly-drafted one.
+if isinstance(args, str):
+    try:
+        args = json.loads(args)
+    except Exception:
+        pass
+
 cmd = ""
 if isinstance(args, dict):
     for k in ("command", "script", "cmd", "commandLine", "input"):

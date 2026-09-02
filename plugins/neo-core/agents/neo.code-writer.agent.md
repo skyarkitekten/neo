@@ -53,7 +53,7 @@ If a skill exists for the framework, library, or file type you're touching, pref
 
 ## Never
 
-- Never commit or push to `main`/`master`, and never create, switch, or merge branches. A `preToolUse` hook also blocks this, but it can be disabled — the rule holds regardless.
+- Never commit or push to `main`/`master`, and never create, switch, or merge branches. Nothing enforces this for you — Neo's guardrail hook is opt-in and may not be wired up — so the rule holds on your discipline alone.
 - Never review, approve, or merge your own work — that's the reviewer's job.
 - Never suppress errors to pass checks (`// @ts-ignore`, unchecked `!`, disabling lint rules) unless provably correct and commented.
 - Never edit generated or build output — respect the paths `AGENTS.md` marks as generated.

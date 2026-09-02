@@ -4,7 +4,10 @@
 # that must hold at the harness level, not merely in a prompt:
 #
 #   Rule A — never commit or push to `main` (or `master`).
-#   Rule B — agents open DRAFT pull requests only.
+#   Rule B — agents open DRAFT pull requests only. Enforced against both `gh pr create`
+#            and the Copilot desktop app's `create_pull_request` / `update_pull_request`
+#            host tools, which carry structured args rather than a shell command and so
+#            would otherwise sail past the command patterns entirely.
 #
 # Contract (verified against GitHub's Copilot hooks reference):
 #   * Input: JSON on stdin — { sessionId, timestamp, cwd, toolName, toolArgs }.
@@ -75,6 +78,15 @@ args = data.get("toolArgs")
 if args is None:
     args = data.get("tool_input")
 
+# `toolArgs` is typed `unknown` and the runtime parses a JSON string only "when possible",
+# so it can arrive as a raw string. Parse it here or the host-tool rule below judges a PR
+# on fields it cannot see and denies a correctly-drafted one.
+if isinstance(args, str):
+    try:
+        args = json.loads(args)
+    except Exception:
+        pass
+
 cmd = ""
 if isinstance(args, dict):
     for k in ("command", "script", "cmd", "commandLine", "input"):
@@ -90,10 +102,30 @@ elif isinstance(args, str):
 
 cwd = data.get("cwd") or ""
 
+# Host-tool verdict. The Copilot desktop app registers its own tools (create_session,
+# create_pull_request, ...) which carry structured args rather than a shell command, so
+# the command patterns below can't see them. Rule B has to be enforced here too or the
+# host PR tools route straight around the draft-only guardrail.
+host_deny = ""
+if str(tool) == "create_pull_request":
+    if isinstance(args, dict) and args.get("draft") is not True:
+        host_deny = (
+            "Neo guardrail: agents open DRAFT pull requests only. Call "
+            "create_pull_request with draft: true (or use 'gh pr create --draft'). "
+            "To override intentionally, set NEO_ENFORCE_GUARDRAILS=0."
+        )
+elif str(tool) == "update_pull_request":
+    if isinstance(args, dict) and args.get("draft") is False:
+        host_deny = (
+            "Neo guardrail: agents must not take a PR out of draft; leave it a draft "
+            "for a human. Override with NEO_ENFORCE_GUARDRAILS=0."
+        )
+
 # Collapse to single lines; the reader below splits line by line.
 print(str(tool).replace("\n", " "))
 print(cmd.replace("\r", " ").replace("\n", " "))
 print(str(cwd).replace("\n", " "))
+print(host_deny.replace("\r", " ").replace("\n", " "))
 PY
 )"
 
@@ -106,8 +138,13 @@ fi
 tool="$(printf '%s' "$parsed" | sed -n '1p')"
 cmd="$(printf '%s' "$parsed" | sed -n '2p')"
 cwd="$(printf '%s' "$parsed" | sed -n '3p')"
+host_deny="$(printf '%s' "$parsed" | sed -n '4p')"
 
-# Only shell tools carry commands we enforce against. Everything else runs freely.
+# Rule B for desktop-app host tools, which carry structured args instead of a command.
+[ -n "$host_deny" ] && deny "$host_deny"
+
+# Beyond that, only shell tools carry commands we enforce against. Everything else
+# runs freely.
 case "$tool" in
   bash|powershell|Bash|shell|run_in_terminal) ;;
   *) allow ;;

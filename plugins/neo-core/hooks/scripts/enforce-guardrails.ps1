@@ -94,6 +94,16 @@ $argsObj = Get-Prop $data @('toolArgs', 'tool_input')
 $cwd = Get-Prop $data @('cwd')
 if ($null -eq $cwd) { $cwd = '' }
 
+# `toolArgs` is typed `unknown` and the runtime parses a JSON string only "when possible",
+# so it can arrive as a raw string. Parse it here or the host-tool rule below judges a PR
+# on fields it cannot see and denies a correctly-drafted one.
+if ($argsObj -is [string]) {
+    $trimmed = ([string]$argsObj).Trim()
+    if ($trimmed.StartsWith('{')) {
+        try { $argsObj = $trimmed | ConvertFrom-Json -ErrorAction Stop } catch { }
+    }
+}
+
 # Extract the shell command text from the tool arguments.
 $cmd = ''
 if ($argsObj -is [string]) {
@@ -112,14 +122,20 @@ if ($argsObj -is [string]) {
 # (create_session, create_pull_request, ...) which carry structured args rather than a
 # shell command, so the command patterns below can't see them. Enforce here or the host
 # PR tools route straight around the draft-only guardrail.
-if ([string]$tool -eq 'create_pull_request') {
-    $draft = if ($null -ne $argsObj) { Get-Prop $argsObj @('draft') } else { $null }
-    if ($draft -ne $true) {
-        Deny "Neo guardrail: agents open DRAFT pull requests only. Call create_pull_request with draft: true (or use 'gh pr create --draft'). To override intentionally, set NEO_ENFORCE_GUARDRAILS=0."
+if ([string]$tool -eq 'create_pull_request' -or [string]$tool -eq 'update_pull_request') {
+    # Args we cannot read are args we cannot judge. Fail OPEN with a warning, matching the
+    # unparseable-payload stance above and the Unix sibling — denying on an unrecognized
+    # payload shape would block every PR the tool opens, correctly drafted or not.
+    if ($null -eq $argsObj -or $argsObj -is [string]) {
+        [Console]::Error.WriteLine("Neo enforce-guardrails: unreadable toolArgs for $tool; allowing.")
+        Allow
     }
-} elseif ([string]$tool -eq 'update_pull_request') {
-    $draft = if ($null -ne $argsObj) { Get-Prop $argsObj @('draft') } else { $null }
-    if ($draft -eq $false) {
+    $draft = Get-Prop $argsObj @('draft')
+    if ([string]$tool -eq 'create_pull_request') {
+        if ($draft -ne $true) {
+            Deny "Neo guardrail: agents open DRAFT pull requests only. Call create_pull_request with draft: true (or use 'gh pr create --draft'). To override intentionally, set NEO_ENFORCE_GUARDRAILS=0."
+        }
+    } elseif ($draft -eq $false) {
         Deny "Neo guardrail: agents must not take a PR out of draft; leave it a draft for a human. Override with NEO_ENFORCE_GUARDRAILS=0."
     }
 }

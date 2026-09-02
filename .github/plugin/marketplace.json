@@ -5,14 +5,14 @@
   },
   "metadata": {
     "description": "Neo — a concept-to-production multi-agent coding system. A core crew, an optional upstream product crew, and additive per-stack plugins, for GitHub Copilot CLI.",
-    "version": "2.1.0"
+    "version": "2.2.0"
   },
   "plugins": [
     {
       "name": "neo-core",
       "source": "plugins/neo-core",
-      "description": "Coordinated coding-agent crew — a business-engineer orchestrator for the Specification loop and a technical-engineer orchestrator (+ researcher, implementation-planner, code-writer, code-reviewer) for the Coding loop, plus the feature-agent/task-planner specification crew, lifecycle-logging and guardrail hooks.",
-      "version": "2.1.0",
+      "description": "Coordinated coding-agent crew — a business-engineer orchestrator for the Specification loop and a technical-engineer orchestrator (+ researcher, implementation-planner, code-writer, code-reviewer) for the Coding loop, plus the feature-agent/task-planner specification crew, with lifecycle-logging hooks.",
+      "version": "2.2.0",
       "author": {
         "name": "Chad Thomas"
       },
@@ -28,7 +28,7 @@
       "name": "neo-product",
       "source": "plugins/neo-product",
       "description": "Upstream product-engineering crew — a Product Engineer coordinating parallel Product Researchers plus Product Coach (viability), Design Thinking (desirability), and Systems Thinking (feasibility) specialists, ending in a PRD, with lifecycle-logging hooks.",
-      "version": "2.0.5",
+      "version": "2.1.0",
       "author": {
         "name": "Chad Thomas"
       },

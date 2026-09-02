@@ -42,8 +42,9 @@ says who owns what.
   hook.
 - [guides/observability.md](./guides/observability.md) — install the logging hooks and read the
   per-agent / per-run stats to tune prompts.
-- [guides/enforcement.md](./guides/enforcement.md) — the `preToolUse` hooks that block commit/push to
-  `main` and non-draft PRs; their fail-closed contract and how to relax them.
+- [guides/enforcement.md](./guides/enforcement.md) — the opt-in `preToolUse` hooks that block
+  commit/push to `main` and non-draft PRs; why they ship unregistered, how to wire them up,
+  and how to relax them.
 
 ## design/ — the *why* (rationale, not a contract)
 
@@ -64,7 +65,7 @@ says who owns what.
 | Plugin hook manifest + script contract | [reference/hook-contract.md](./reference/hook-contract.md) |
 | Authoring agents / skills / hooks | [guides/agent-authoring-reference.md](./guides/agent-authoring-reference.md) |
 | Logging & prompt tuning | [guides/observability.md](./guides/observability.md) |
-| `preToolUse` enforcement (block-on-main, draft-PR-only) | [guides/enforcement.md](./guides/enforcement.md) |
+| Opt-in `preToolUse` enforcement (block-on-main, draft-PR-only) | [guides/enforcement.md](./guides/enforcement.md) |
 
 ## Superseded — kept for history
 

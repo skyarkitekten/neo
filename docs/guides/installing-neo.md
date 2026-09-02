@@ -84,9 +84,12 @@ at runtime — is owned by
 
 - The agents appear in Copilot's agent picker (look for `Neo <Role>` names, e.g. **Neo Technical
   Engineer**).
-- The guardrail hooks are active — an attempt to commit to `main` is blocked. That enforcement, and
-  how to relax it deliberately, is documented in
-  [../contributing/guides/enforcement.md](../contributing/guides/enforcement.md).
+- Nothing is blocked. Neo ships **no** enforcement hook: the guardrail scripts that block
+  commit/push to `main` and non-draft PRs are in the plugin but deliberately not registered, so
+  installing Neo changes no permissions. Branch policy is your team's call — enforce it with
+  server-side branch protection, and opt the hooks in on top if you want them locally.
+  [../contributing/guides/enforcement.md](../contributing/guides/enforcement.md) explains why and
+  how to opt in.
 - Optionally, turn on logging to tune prompts from real runs:
   [../contributing/guides/observability.md](../contributing/guides/observability.md).
 

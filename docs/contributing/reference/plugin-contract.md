@@ -57,8 +57,8 @@ plugins/neo-core/
 │   ├── hooks.json                    # Copilot hook schema (v1, camelCase events, ${PLUGIN_ROOT})
 │   └── scripts/
 │       ├── log-event.sh              # observability logger, called by hooks.json
-│       ├── enforce-guardrails.sh     # preToolUse enforcement (Unix), called by hooks.json
-│       └── enforce-guardrails.ps1    # preToolUse enforcement (Windows/PowerShell sibling)
+│       ├── enforce-guardrails.sh     # opt-in preToolUse enforcement (Unix), NOT wired by hooks.json
+│       └── enforce-guardrails.ps1    # opt-in preToolUse enforcement (Windows/PowerShell sibling)
 └── scripts/                          # plugin-local tooling, e.g. analyze_agent_logs.py
 ```
 
@@ -76,9 +76,9 @@ failing to load**.
 | `plugin.json`                        | Plugin metadata (name, version, author, keywords, …) plus the `agents`/`skills`/`hooks` paths.  |
 | `agents/`                            | Subagent definitions, one dotted `neo.<role>.agent.md` file per role.                            |
 | `skills/`                            | Agent Skills, e.g. `neo-task-authoring/SKILL.md`.                                                |
-| `hooks/hooks.json`                   | Lifecycle-logging **and** `preToolUse` enforcement hooks, Copilot event names, `${PLUGIN_ROOT}`, versioned schema (`"version": 1`). |
+| `hooks/hooks.json`                   | Lifecycle-logging hooks, Copilot event names, `${PLUGIN_ROOT}`, versioned schema (`"version": 1`). A shipped manifest registers no fail-closed event. |
 | `hooks/scripts/log-event.sh`         | The observability logger `hooks.json` shells out to (fail-open). See [observability.md](../guides/observability.md). |
-| `hooks/scripts/enforce-guardrails.sh` | The `preToolUse` enforcement hook `hooks.json` shells out to on Unix (fail-closed): blocks commit/push to `main` and non-draft PRs. A `.ps1` sibling covers Windows. See [enforcement.md](../guides/enforcement.md). |
+| `hooks/scripts/enforce-guardrails.sh` | The opt-in `preToolUse` enforcement hook on Unix (fail-closed): blocks commit/push to `main` and non-draft PRs. Shipped but **not** wired by `hooks.json`; a consuming repo opts in. A `.ps1` sibling covers Windows. See [enforcement.md](../guides/enforcement.md). |
 
 **No cross-plugin file references.** A plugin is copied as a self-contained directory on
 install. A file under `plugins/neo-core/` cannot reference a path outside its own plugin

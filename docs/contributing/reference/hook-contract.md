@@ -9,7 +9,7 @@ For what the two shipped hook sets *do*, see the guides — this page owns the *
 not the behavior:
 
 - **fail-open observability logging** → [`guides/observability.md`](../guides/observability.md)
-- **fail-closed `preToolUse` enforcement** → [`guides/enforcement.md`](../guides/enforcement.md)
+- **opt-in `preToolUse` enforcement** (shipped unregistered) → [`guides/enforcement.md`](../guides/enforcement.md)
 
 ## Layout
 
@@ -32,7 +32,7 @@ directory. See [`plugin-contract.md`](./plugin-contract.md) for the wider folder
     "sessionStart": [
       { "type": "command",
         "bash": "s=\"${PLUGIN_ROOT}/hooks/scripts/log-event.sh\"; [ -f \"$s\" ] || exit 0; \"$s\" sessionStart",
-        "powershell": "$s = \"$env:PLUGIN_ROOT/hooks/scripts/log-event.ps1\"; if (-not (Test-Path -LiteralPath $s)) { exit 0 }; & $s sessionStart",
+        "powershell": "$s = \"$env:PLUGIN_ROOT/hooks/scripts/log-event.ps1\"; if (-not (Test-Path -LiteralPath $s)) { exit 0 }; pwsh -NoProfile -ExecutionPolicy Bypass -File \"$s\" sessionStart",
         "timeoutSec": 10 }
     ]
   }
@@ -40,16 +40,30 @@ directory. See [`plugin-contract.md`](./plugin-contract.md) for the wider folder
 ```
 
 - **`version` is `1`.** The only defined schema version.
-- **Guard the script's existence before invoking it.** A command that can't find its
-  script exits non-zero, and `preToolUse` is fail-closed — so an unresolvable path denies
-  *every* tool call and bricks the session, which is what a stale install or a component
-  moved between releases produces (issue #88). Resolve the script into `$s`, `exit 0` when
-  it's absent, and only then run it. A script that exists but crashes still fails closed;
-  the guard covers absence only. Use separate `bash` and `powershell` properties for plugin
-  scripts; the cross-platform `command` property cannot express a portable guard for both
-  shells. The validator rejects cross-platform invocations and platform commands that do
-  not follow the documented assignment → existence check → successful exit → invocation
-  sequence.
+- **A shipped plugin must not register a fail-closed event.** `preToolUse` denies the tool
+  call when the hook exits non-zero, so any failure there — a stale path, a policy that won't
+  load the script, a crash — denies *every* tool call, including read-only ones, and bricks
+  the session. Ship the script and let the consuming repo wire it up; see
+  [`guides/enforcement.md`](../guides/enforcement.md) § Opting in. The validator rejects it.
+- **Guard the script's existence before invoking it.** A command that can't find its script
+  exits non-zero, which is what a stale install or a component moved between releases
+  produces (PR #93). Resolve the script into `$s`, `exit 0` when it's absent, and only then
+  run it. Use separate `bash` and `powershell` properties for plugin scripts; the
+  cross-platform `command` property cannot express a portable guard for both shells. The
+  validator rejects cross-platform invocations and platform commands that do not follow the
+  documented assignment → existence check → successful exit → invocation sequence.
+- **Invoke the PowerShell script through an explicit interpreter, never `& $s`.**
+  `& $s` runs a script **file**, which is exactly what PowerShell execution policy governs,
+  and the harness launches hooks with no `-ExecutionPolicy` flag, so ambient policy applies.
+  On a stock Windows client every scope is `Undefined`, which resolves to `Restricted`, and
+  the file refuses to load with a non-zero exit — the guard above does not help, because the
+  file is present (issue #95). Use
+  `pwsh -NoProfile -ExecutionPolicy Bypass -File "$s" <event>`. The flag is **process-scoped**:
+  it persists nothing and affects no other process, and `pwsh` is guaranteed present because
+  the harness itself spawns `pwsh.exe`. It outranks the process, user, and machine scopes but
+  **not** `MachinePolicy` / `UserPolicy` — a Group Policy that restricts script execution still
+  refuses the file, and nothing process-scoped can override that. Quote `"$s"` so paths with
+  spaces survive. POSIX has no equivalent mechanism, so `bash` commands invoke `"$s"` directly.
 - **One camelCase block per event.** Copilot CLI reads the camelCase event key and
   the `bash` / `powershell` command properties. VS Code reads the PascalCase alias of the
   same event and maps `bash`→osx/linux, `powershell`→windows, so **one block covers
@@ -125,7 +139,9 @@ The two hook sets deliberately differ, and each guide owns the detail:
   their verdict purely through stdout JSON
   (`{"permissionDecision":"deny","permissionDecisionReason":"…"}` to block, empty to
   allow). An **unparseable** payload is the one exception: it allows with a stderr warning
-  rather than bricking the session. See [`guides/enforcement.md`](../guides/enforcement.md).
+  rather than bricking the session. This contract is why Neo ships the enforcement scripts
+  **unregistered** — the failure mode belongs to the consuming repo that chooses to accept
+  it. See [`guides/enforcement.md`](../guides/enforcement.md).
 
 ## Handling sensitive payloads
 
