@@ -212,13 +212,30 @@ _PS_BAD_PLUGIN_ROOT = re.compile(r"\$\{\s*PLUGIN_ROOT\s*\}")
 # That is exactly what a layout move or a stale install produces, so the guard is
 # required on every event, not just the blocking one.
 _PLUGIN_SCRIPT_REF = re.compile(r"PLUGIN_ROOT[^\"']*/hooks/scripts/")
-_GUARDS = {
-    # command key -> (regex proving the command guards on existence, human hint)
-    "bash": (re.compile(r"\[\s*-[fxer]\s"), '[ -f "$s" ] || exit 0'),
-    "linux": (re.compile(r"\[\s*-[fxer]\s"), '[ -f "$s" ] || exit 0'),
-    "osx": (re.compile(r"\[\s*-[fxer]\s"), '[ -f "$s" ] || exit 0'),
-    "powershell": (re.compile(r"Test-Path"), "if (-not (Test-Path -LiteralPath $s)) { exit 0 }"),
-    "windows": (re.compile(r"Test-Path"), "if (-not (Test-Path -LiteralPath $s)) { exit 0 }"),
+_POSIX_SAFE_SCRIPT = re.compile(
+    r'^s\s*=\s*"[^"]*PLUGIN_ROOT[^"]*/hooks/scripts/[^"]+"\s*;\s*'
+    r'\[\s+-f\s+"\$s"\s+\]\s*\|\|\s*exit\s+0\s*;\s*'
+    r'"\$s"(?:\s+[^;|&]+)?\s*$'
+)
+_POWERSHELL_SAFE_SCRIPT = re.compile(
+    r'^\$s\s*=\s*"[^"]*\$env:PLUGIN_ROOT[^"]*/hooks/scripts/[^"]+"\s*;\s*'
+    r'if\s*\(\s*-not\s*\(\s*Test-Path\s+-LiteralPath\s+\$s\s*\)\s*\)\s*'
+    r'\{\s*exit\s+0\s*\}\s*;\s*&\s*\$s(?:\s+[^;|&]+)?\s*$',
+    re.IGNORECASE,
+)
+_SAFE_SCRIPT_FORMS = {
+    # command key -> (full safe command form, human hint)
+    "bash": (_POSIX_SAFE_SCRIPT, 's="..."; [ -f "$s" ] || exit 0; "$s" event'),
+    "linux": (_POSIX_SAFE_SCRIPT, 's="..."; [ -f "$s" ] || exit 0; "$s" event'),
+    "osx": (_POSIX_SAFE_SCRIPT, 's="..."; [ -f "$s" ] || exit 0; "$s" event'),
+    "powershell": (
+        _POWERSHELL_SAFE_SCRIPT,
+        '$s = "..."; if (-not (Test-Path -LiteralPath $s)) { exit 0 }; & $s event',
+    ),
+    "windows": (
+        _POWERSHELL_SAFE_SCRIPT,
+        '$s = "..."; if (-not (Test-Path -LiteralPath $s)) { exit 0 }; & $s event',
+    ),
 }
 
 
@@ -292,15 +309,15 @@ def _check_hook_entry(entry: object, where: str, err) -> None:
             f"guard its existence in both POSIX shells and PowerShell — use guarded `bash` "
             f"and `powershell` commands instead"
         )
-    for key, (guard, hint) in _GUARDS.items():
+    for key, (safe_form, hint) in _SAFE_SCRIPT_FORMS.items():
         cmd = entry.get(key)
         if not isinstance(cmd, str):
             continue
-        if _PLUGIN_SCRIPT_REF.search(cmd) and not guard.search(cmd):
+        if _PLUGIN_SCRIPT_REF.search(cmd) and not safe_form.fullmatch(cmd):
             err(
-                f"{where}: `{key}` command invokes a plugin script without checking it "
-                f"exists — a missing script exits non-zero, and preToolUse is fail-closed, "
-                f"so every tool call gets denied. Guard it: {hint}"
+                f"{where}: `{key}` command must assign the plugin script path, check that "
+                f"same path exists, exit 0 when absent, then invoke it — preToolUse is "
+                f"fail-closed, so an unsafe command can deny every tool call. Use: {hint}"
             )
 
 

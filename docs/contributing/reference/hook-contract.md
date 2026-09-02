@@ -47,7 +47,9 @@ directory. See [`plugin-contract.md`](./plugin-contract.md) for the wider folder
   it's absent, and only then run it. A script that exists but crashes still fails closed;
   the guard covers absence only. Use separate `bash` and `powershell` properties for plugin
   scripts; the cross-platform `command` property cannot express a portable guard for both
-  shells. The validator rejects unguarded and cross-platform plugin-script invocations.
+  shells. The validator rejects cross-platform invocations and platform commands that do
+  not follow the documented assignment → existence check → successful exit → invocation
+  sequence.
 - **One camelCase block per event.** Copilot CLI reads the camelCase event key and
   the `bash` / `powershell` command properties. VS Code reads the PascalCase alias of the
   same event and maps `bash`→osx/linux, `powershell`→windows, so **one block covers
