@@ -2,32 +2,31 @@
   "version": 1,
   "hooks": {
     "sessionStart": [
-      { "type": "command", "bash": "\"${PLUGIN_ROOT}/hooks/scripts/log-event.sh\" sessionStart", "powershell": "& \"$env:PLUGIN_ROOT/hooks/scripts/log-event.ps1\" sessionStart", "timeoutSec": 10 }
+      { "type": "command", "bash": "s=\"${PLUGIN_ROOT}/hooks/scripts/log-event.sh\"; [ -f \"$s\" ] || exit 0; \"$s\" sessionStart", "powershell": "$s = \"$env:PLUGIN_ROOT/hooks/scripts/log-event.ps1\"; if (-not (Test-Path -LiteralPath $s)) { exit 0 }; & $s sessionStart", "timeoutSec": 10 }
     ],
     "userPromptSubmitted": [
-      { "type": "command", "bash": "\"${PLUGIN_ROOT}/hooks/scripts/log-event.sh\" userPromptSubmitted", "powershell": "& \"$env:PLUGIN_ROOT/hooks/scripts/log-event.ps1\" userPromptSubmitted", "timeoutSec": 10 }
+      { "type": "command", "bash": "s=\"${PLUGIN_ROOT}/hooks/scripts/log-event.sh\"; [ -f \"$s\" ] || exit 0; \"$s\" userPromptSubmitted", "powershell": "$s = \"$env:PLUGIN_ROOT/hooks/scripts/log-event.ps1\"; if (-not (Test-Path -LiteralPath $s)) { exit 0 }; & $s userPromptSubmitted", "timeoutSec": 10 }
     ],
     "preToolUse": [
-      { "type": "command", "bash": "\"${PLUGIN_ROOT}/hooks/scripts/enforce-guardrails.sh\" preToolUse", "powershell": "& \"$env:PLUGIN_ROOT/hooks/scripts/enforce-guardrails.ps1\" preToolUse", "timeoutSec": 10 }
+      { "type": "command", "bash": "s=\"${PLUGIN_ROOT}/hooks/scripts/enforce-guardrails.sh\"; [ -f \"$s\" ] || exit 0; \"$s\" preToolUse", "powershell": "$s = \"$env:PLUGIN_ROOT/hooks/scripts/enforce-guardrails.ps1\"; if (-not (Test-Path -LiteralPath $s)) { exit 0 }; & $s preToolUse", "timeoutSec": 10 }
     ],
     "postToolUse": [
-      { "type": "command", "bash": "\"${PLUGIN_ROOT}/hooks/scripts/log-event.sh\" postToolUse", "powershell": "& \"$env:PLUGIN_ROOT/hooks/scripts/log-event.ps1\" postToolUse", "timeoutSec": 10 }
+      { "type": "command", "bash": "s=\"${PLUGIN_ROOT}/hooks/scripts/log-event.sh\"; [ -f \"$s\" ] || exit 0; \"$s\" postToolUse", "powershell": "$s = \"$env:PLUGIN_ROOT/hooks/scripts/log-event.ps1\"; if (-not (Test-Path -LiteralPath $s)) { exit 0 }; & $s postToolUse", "timeoutSec": 10 }
     ],
     "agentStop": [
-      { "type": "command", "bash": "\"${PLUGIN_ROOT}/hooks/scripts/log-event.sh\" agentStop", "powershell": "& \"$env:PLUGIN_ROOT/hooks/scripts/log-event.ps1\" agentStop", "timeoutSec": 10 }
+      { "type": "command", "bash": "s=\"${PLUGIN_ROOT}/hooks/scripts/log-event.sh\"; [ -f \"$s\" ] || exit 0; \"$s\" agentStop", "powershell": "$s = \"$env:PLUGIN_ROOT/hooks/scripts/log-event.ps1\"; if (-not (Test-Path -LiteralPath $s)) { exit 0 }; & $s agentStop", "timeoutSec": 10 }
     ],
     "subagentStop": [
-      { "type": "command", "bash": "\"${PLUGIN_ROOT}/hooks/scripts/log-event.sh\" subagentStop", "powershell": "& \"$env:PLUGIN_ROOT/hooks/scripts/log-event.ps1\" subagentStop", "timeoutSec": 10 }
+      { "type": "command", "bash": "s=\"${PLUGIN_ROOT}/hooks/scripts/log-event.sh\"; [ -f \"$s\" ] || exit 0; \"$s\" subagentStop", "powershell": "$s = \"$env:PLUGIN_ROOT/hooks/scripts/log-event.ps1\"; if (-not (Test-Path -LiteralPath $s)) { exit 0 }; & $s subagentStop", "timeoutSec": 10 }
     ],
     "preCompact": [
-      { "type": "command", "bash": "\"${PLUGIN_ROOT}/hooks/scripts/log-event.sh\" preCompact", "powershell": "& \"$env:PLUGIN_ROOT/hooks/scripts/log-event.ps1\" preCompact", "timeoutSec": 10 }
+      { "type": "command", "bash": "s=\"${PLUGIN_ROOT}/hooks/scripts/log-event.sh\"; [ -f \"$s\" ] || exit 0; \"$s\" preCompact", "powershell": "$s = \"$env:PLUGIN_ROOT/hooks/scripts/log-event.ps1\"; if (-not (Test-Path -LiteralPath $s)) { exit 0 }; & $s preCompact", "timeoutSec": 10 }
     ],
     "errorOccurred": [
-      { "type": "command", "bash": "\"${PLUGIN_ROOT}/hooks/scripts/log-event.sh\" errorOccurred", "powershell": "& \"$env:PLUGIN_ROOT/hooks/scripts/log-event.ps1\" errorOccurred", "timeoutSec": 10 }
+      { "type": "command", "bash": "s=\"${PLUGIN_ROOT}/hooks/scripts/log-event.sh\"; [ -f \"$s\" ] || exit 0; \"$s\" errorOccurred", "powershell": "$s = \"$env:PLUGIN_ROOT/hooks/scripts/log-event.ps1\"; if (-not (Test-Path -LiteralPath $s)) { exit 0 }; & $s errorOccurred", "timeoutSec": 10 }
     ],
     "sessionEnd": [
-      { "type": "command", "bash": "\"${PLUGIN_ROOT}/hooks/scripts/log-event.sh\" sessionEnd", "powershell": "& \"$env:PLUGIN_ROOT/hooks/scripts/log-event.ps1\" sessionEnd", "timeoutSec": 10 }
+      { "type": "command", "bash": "s=\"${PLUGIN_ROOT}/hooks/scripts/log-event.sh\"; [ -f \"$s\" ] || exit 0; \"$s\" sessionEnd", "powershell": "$s = \"$env:PLUGIN_ROOT/hooks/scripts/log-event.ps1\"; if (-not (Test-Path -LiteralPath $s)) { exit 0 }; & $s sessionEnd", "timeoutSec": 10 }
     ]
   }
 }
-

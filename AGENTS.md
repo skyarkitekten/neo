@@ -174,6 +174,15 @@ copilot plugin marketplace remove neo
   rules follow — declare `agents`, `skills`, and `hooks` explicitly in every `plugin.json` even when
   the value matches the default, and never trust a green validator as proof a component loaded.
   Install into a throwaway `COPILOT_HOME` and read the skill count the CLI prints.
+- **A `preToolUse` hook that can't find its script bricks the whole session.** `preToolUse` is
+  fail-closed: a non-zero exit denies the tool call, so an unresolvable script path denies
+  *every* call — `view` and `powershell` included — with `Denied by preToolUse hook (hook errored)`.
+  `NEO_ENFORCE_GUARDRAILS=0` can't rescue it, because the script that reads that variable is the
+  thing that isn't running. This shipped when a release moved hook scripts and long-lived sessions
+  kept the previous manifest in memory (issue #88). Every hook command therefore resolves its
+  script into `$s` and `exit 0`s when it's absent; `scripts/validate-plugins.py` enforces the guard.
+  A present-but-crashing script still fails closed. If you see blanket denials, restart the session
+  first — a mid-session `plugin install` does not re-read hooks.
 - **Evidence discipline is a shipped contract**, not a style preference — the `neo-evidence-standard`
   skill (duplicated into both plugins) owns the retrieval-or-silence rule and the
   `FACT` / `INFERENCE` / `RECALL — UNVERIFIED` labels. Agents that gather or consume evidence must load it.

@@ -17,10 +17,13 @@ This script makes the remaining invariants executable:
     load (issue #81);
   * every plugin's hooks.json conforms to the Neo hook-manifest contract
     (scripts/linting/schemas/hook-manifest.schema.json): version 1, known event
-    names, well-formed command entries, and the two Neo-specific rules — a
+    names, well-formed command entries, and the three Neo-specific rules — a
     `powershell` command must not reference the bare `${PLUGIN_ROOT}` placeholder
-    (it must use `$env:PLUGIN_ROOT`), and no event may be declared in both its
-    canonical camelCase and PascalCase-alias form (which would fire it twice);
+    (it must use `$env:PLUGIN_ROOT`), no event may be declared in both its
+    canonical camelCase and PascalCase-alias form (which would fire it twice), and
+    any command invoking a plugin script must first check the script exists.
+    preToolUse is fail-closed, so an unresolvable script path — a layout move, a
+    stale install — denies every tool call and bricks the session (issue #88);
   * every Copilot agent's `agents:` allowlist references a real agent `name:`;
   * any agent that delegates (non-empty `agents:`) also grants the `agent`/`Task`
     delegation tool in its `tools:` allowlist;
@@ -269,14 +272,46 @@ HOOK_ENTRY_KEYS = HOOK_COMMAND_KEYS | {"type", "cwd", "env", "timeout", "timeout
 # ${PLUGIN_ROOT} (and ${...} generally) is PowerShell's own variable syntax and
 # expands to an empty string; the env var must be read as $env:PLUGIN_ROOT.
 _PS_BAD_PLUGIN_ROOT = re.compile(r"\$\{\s*PLUGIN_ROOT\s*\}")
+# A hook command that invokes a plugin script must first check the script is there.
+# preToolUse is FAIL-CLOSED: a command that exits non-zero denies the tool call, so an
+# unresolvable script path denies *every* tool call and bricks the session (issue #88).
+# That is exactly what a layout move or a stale install produces, so the guard is
+# required on every event, not just the blocking one.
+_PLUGIN_SCRIPT_REF = re.compile(r"PLUGIN_ROOT[^\"']*/hooks/scripts/")
+_POSIX_SAFE_SCRIPT = re.compile(
+    r'^s\s*=\s*"[^"]*PLUGIN_ROOT[^"]*/hooks/scripts/[^"]+"\s*;\s*'
+    r'\[\s+-f\s+"\$s"\s+\]\s*\|\|\s*exit\s+0\s*;\s*'
+    r'"\$s"(?:\s+[^;|&]+)?\s*$'
+)
+_POWERSHELL_SAFE_SCRIPT = re.compile(
+    r'^\$s\s*=\s*"[^"]*\$env:PLUGIN_ROOT[^"]*/hooks/scripts/[^"]+"\s*;\s*'
+    r'if\s*\(\s*-not\s*\(\s*Test-Path\s+-LiteralPath\s+\$s\s*\)\s*\)\s*'
+    r'\{\s*exit\s+0\s*\}\s*;\s*&\s*\$s(?:\s+[^;|&]+)?\s*$',
+    re.IGNORECASE,
+)
+_SAFE_SCRIPT_FORMS = {
+    # command key -> (full safe command form, human hint)
+    "bash": (_POSIX_SAFE_SCRIPT, 's="..."; [ -f "$s" ] || exit 0; "$s" event'),
+    "linux": (_POSIX_SAFE_SCRIPT, 's="..."; [ -f "$s" ] || exit 0; "$s" event'),
+    "osx": (_POSIX_SAFE_SCRIPT, 's="..."; [ -f "$s" ] || exit 0; "$s" event'),
+    "powershell": (
+        _POWERSHELL_SAFE_SCRIPT,
+        '$s = "..."; if (-not (Test-Path -LiteralPath $s)) { exit 0 }; & $s event',
+    ),
+    "windows": (
+        _POWERSHELL_SAFE_SCRIPT,
+        '$s = "..."; if (-not (Test-Path -LiteralPath $s)) { exit 0 }; & $s event',
+    ),
+}
 
 
 def check_hooks_manifest(path: Path) -> None:
     """Validate a plugin hooks.json against the Neo hook-manifest contract.
 
-    Enforces the schema's structural invariants plus two Neo-specific rules that
+    Enforces the schema's structural invariants plus three Neo-specific rules that
     a plain JSON parse can't catch: no bare ${PLUGIN_ROOT} inside a `powershell`
-    command, and no event declared in both CLI-lowercase and PascalCase form.
+    command, no event declared in both CLI-lowercase and PascalCase form, and no
+    unguarded invocation of a plugin script.
     """
     rel = path.relative_to(REPO_ROOT)
     try:
@@ -333,6 +368,23 @@ def _check_hook_entry(entry: object, where: str, err) -> None:
             f"{where}: powershell command uses bare ${{PLUGIN_ROOT}}, which PowerShell "
             f"expands to empty — use $env:PLUGIN_ROOT instead"
         )
+    command = entry.get("command")
+    if isinstance(command, str) and _PLUGIN_SCRIPT_REF.search(command):
+        err(
+            f"{where}: `command` invokes a plugin script, but one portable command cannot "
+            f"guard its existence in both POSIX shells and PowerShell — use guarded `bash` "
+            f"and `powershell` commands instead"
+        )
+    for key, (safe_form, hint) in _SAFE_SCRIPT_FORMS.items():
+        cmd = entry.get(key)
+        if not isinstance(cmd, str):
+            continue
+        if _PLUGIN_SCRIPT_REF.search(cmd) and not safe_form.fullmatch(cmd):
+            err(
+                f"{where}: `{key}` command must assign the plugin script path, check that "
+                f"same path exists, exit 0 when absent, then invoke it — preToolUse is "
+                f"fail-closed, so an unsafe command can deny every tool call. Use: {hint}"
+            )
 
 
 def copilot_agent_files(plugin: Path) -> list[Path]:
