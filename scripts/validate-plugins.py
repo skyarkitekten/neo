@@ -388,8 +388,8 @@ def check_host_tools(plugin_name: str, agent_file: Path, lowered: set[str], body
     Unrecognized names are silently ignored by the runtime, so a typo costs an agent a
     capability and reports nothing.
     """
-    if not lowered or "*" in lowered:
-        return  # `[]` = deliberately toolless; `["*"]` = everything
+    if "*" in lowered:
+        return  # `["*"]` = everything
 
     if _SPAWN_PROMPT_RE.search(body) and SPAWN_TOOL not in lowered:
         errors.append(
