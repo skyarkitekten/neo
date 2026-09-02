@@ -6,8 +6,11 @@ agents for GitHub Copilot CLI that drives a spec from concept to a draft PR.
 ## What's inside
 
 - **Agents** (`agents/`, `neo.<role>.agent.md`):
-  - `technical-engineer` — the orchestrator. **Start here.** Drives a spec through
-    research → plan → implement → review → draft PR.
+  - `business-engineer` — the Specification loop orchestrator. Segments a PRD, runs
+    `feature-agent` and `task-planner` for each segment, files the approved tasks, then spawns one
+    session per task running `technical-engineer`. Needs the Copilot desktop app.
+  - `technical-engineer` — the coding orchestrator. **Start here for a single task.** Drives a spec
+    through research → plan → implement → review → draft PR.
   - `researcher` — gathers context on the codebase and the task.
   - `implementation-planner` — turns research into an implementation plan.
   - `code-writer` — implements units, one Conventional Commit per unit.
@@ -38,8 +41,9 @@ skills from `skills/`, and hooks from `hooks/hooks.json`.
 
 ## Use
 
-Invoke the **technical-engineer** with an issue/story reference and it drives the crew to a draft
-PR. See the repo docs for detail:
+Invoke the **business-engineer** with a PRD to run the Specification loop end to end, or the
+**technical-engineer** with an issue/story reference to drive a single task to a draft PR. See the
+repo docs for detail:
 
 - `docs/getting-started.md` — what Neo is and the quickest path in.
 - `docs/guides/using-neo.md` — driving the crew through the Specification loop.

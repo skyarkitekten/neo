@@ -76,6 +76,15 @@ criteria. The task is self-contained — a Coder needs no further business input
 **Gate owner.** The BE. This is a human gate by design — a bad split poisons everything
 downstream, so no agent may open it alone.
 
+**Who carries the task across.** Either the BE hands a filed task to `neo-technical-engineer`
+directly, or `neo-business-engineer` does it for them: once the BE has approved the task *set*,
+it files each task as its carrier issue and spawns one session per task running the Technical
+Engineer — parallel where tasks are independent, `base_branch`-chained where one depends on
+another. That changes *who does the carrying*, not who owns the gate. The orchestrator sequences
+and spawns; the human still signs the feature and approves the set. (Session spawning is a
+Copilot desktop-app capability — see
+[`agent-authoring-reference.md` § Host tools](../contributing/guides/agent-authoring-reference.md).)
+
 **On rejection.** A task that fails the gate does not get patched in the coding loop. A gap
 in the task goes back to the `task-planner`; a gap in the *feature* goes back to the BE and
 the `feature-agent`. Downstream agents never invent scope to fill a hole — that rule is

@@ -50,8 +50,9 @@ Verified against GitHub's [Copilot hooks reference](https://docs.github.com/en/c
 
 ## What the hook enforces
 
-It inspects only the shell tool (`bash`/`powershell`); every other tool (`view`, `edit`,
-`grep`, …) is allowed immediately so enforcement never impedes normal work. The Unix hook
+It inspects the shell tool (`bash`/`powershell`) plus the two desktop-app **host tools** that
+can open or un-draft a pull request; every other tool (`view`, `edit`, `grep`, …) is allowed
+immediately so enforcement never impedes normal work. The Unix hook
 parses the payload with `python3` (already a repo dependency) rather than `jq`, so a missing
 `jq` cannot brick every command; the PowerShell hook uses native `ConvertFrom-Json`.
 
@@ -64,6 +65,14 @@ parses the payload with `python3` (already a repo dependency) rather than `jq`, 
 **Rule B — draft-PR-only:**
 - `gh pr create` without `--draft`/`-d`.
 - `gh pr ready` (which un-drafts a PR).
+- The host tool `create_pull_request` called without `draft: true`.
+- The host tool `update_pull_request` called with `draft: false`.
+
+The last two matter because host tools carry **structured arguments, not a shell command
+string** — they would sail straight past the command patterns. An agent granted
+`create_pull_request` could otherwise open a non-draft PR with the guardrail none the wiser,
+which is why Neo's own agents are granted the session host tools but deliberately *not* the PR
+ones (see `docs/contributing/guides/agent-authoring-reference.md` § Host tools).
 
 **Failure matrix:**
 
@@ -130,4 +139,8 @@ printf '{"toolName":"bash","toolArgs":{"command":"git push origin main"}}' \
 printf '{"toolName":"bash","toolArgs":{"command":"gh pr create --draft"}}' \
   | hooks/scripts/enforce-guardrails.sh preToolUse
 # => (empty stdout == allow)
+
+printf '{"toolName":"create_pull_request","toolArgs":{"title":"x"}}' \
+  | hooks/scripts/enforce-guardrails.sh preToolUse
+# => {"permissionDecision":"deny","permissionDecisionReason":"Neo guardrail: agents open DRAFT…"}
 ```

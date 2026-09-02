@@ -17,6 +17,7 @@ Specification loop. Assumes Neo is already installed (see
 | --- | --- | --- |
 | **Neo Product Engineer** (`product.engineer`) | Orchestrator for the Product loop — drives research → lenses → synthesis → **PRD** | Yes — if you need a PRD |
 | **Neo Product Researcher / Product Coach / Design Thinking Facilitator / Systems Thinking Facilitator** | Product-loop workers: research fan-out, then the viability, desirability, and feasibility lenses | No — the Product Engineer wires them |
+| **Neo Business Engineer** (`business-engineer`) | Orchestrator for the Specification loop — segments the PRD, runs Feature Agent and Task Planner for each segment, files the approved tasks, then spawns one session per task | Yes — if you want the loop driven rather than driving it by hand |
 | **Neo Feature Agent** (`feature-agent`) | Drafts a **Feature** — What/Why/KPIs/verification — from a PRD segment, with you | Yes |
 | **Neo Task Planner** (`task-planner`) | Splits a signed feature into **Tasks**, with you | Yes |
 | **Neo Technical Engineer** (`technical-engineer`) | Orchestrator — takes a Task (issue/story) and drives research → plan → implement → review → draft PR | Yes |
@@ -24,6 +25,12 @@ Specification loop. Assumes Neo is already installed (see
 
 The workers are deliberately sharp and single-purpose; they don't know each other or the whole
 spec. The orchestrator (and you) wire them together.
+
+> **Neo Business Engineer needs the Copilot desktop app.** Spawning sessions is a desktop-app
+> capability; in a bare terminal those tools don't exist and the agent will tell you so and stop
+> after filing the tasks. Also **select it as your session agent** rather than asking another agent
+> to delegate to it — session tools aren't passed down to a sub-agent two levels deep
+> ([copilot-cli#3293](https://github.com/github/copilot-cli/issues/3293)).
 
 The Product agents ship in the optional `neo-product` plugin. If it isn't installed they won't
 appear in the picker — see [installing-neo.md](./installing-neo.md).
@@ -50,6 +57,11 @@ The loop is **upstream of**, not a replacement for, `feature-agent` and `task-pl
 This is the part that's `[live]`. It is **interactive and human-gated** — never autonomous — because
 a bad split poisons everything downstream.
 
+You can run the three steps below yourself, invoking each agent in turn, or hand the whole loop to
+**Neo Business Engineer**, which sequences them for you. Either way the gates are identical: the
+orchestrator drafts, sequences, and spawns, but **you sign the feature and you approve the task
+set**. It cannot sign for you.
+
 1. **PRD → Feature.** Invoke **Neo Feature Agent** with a PRD/requirements segment — from step 0,
    or one you already had. It drafts
    **What**, **Why**, optional **KPIs**, and **verification steps**, working with you. It stops at a
@@ -67,6 +79,18 @@ a bad split poisons everything downstream.
    pauses twice for you: **`/fleet`** before research and planning, and **`/rubber-duck`** on the plan
    before implementation. Findings loop back to the writer until the reviewer approves. All work stays
    on that feature branch; it never commits to `main` and never merges.
+
+   Occasionally a Task turns out not to fit in one reviewable PR. When that happens the Technical
+   Engineer will tell you and **stack** it: one child session per layer, built bottom-to-top, each
+   PR based on the one below. That's the exception — the default contract is still one Task, one
+   draft PR — and like the Business Engineer's fan-out it needs the desktop app.
+
+**Running the loop with Neo Business Engineer.** Invoke it with a PRD (or a single segment). It
+proposes a segmentation, then for each segment runs the Feature Agent and stops for your sign-off,
+runs the Task Planner and stops for your approval of the *set*, files each approved task as its
+carrier issue, and spawns one session per task running the Technical Engineer — in parallel where
+tasks are independent, stacked where one depends on another. It approves each child's plan, steers
+them, and reports back every task, issue, branch, and draft PR.
 
 ## Your job at the gates
 
