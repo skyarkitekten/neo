@@ -13,9 +13,9 @@ This is a **monorepo of plugins**. The shipped crews live under `plugins/`; the 
 holds manifests, docs, and dev-time-only tooling.
 
 - `AGENTS.md` — project context agents read (layout, checks, guardrails).
-- `plugins/neo-core/` — the baseline plugin. Agents (`technical-engineer` orchestrator, plus
-  `researcher`, `implementation-planner`, `code-writer`, `code-reviewer`, `feature-agent`,
-  `task-planner`), the two authoring skills, the observability hooks + logger, and
+- `plugins/neo-core/` — the baseline plugin. Agents (`business-engineer` and `technical-engineer`
+  orchestrators, plus `researcher`, `implementation-planner`, `code-writer`, `code-reviewer`,
+  `feature-agent`, `task-planner`), the two authoring skills, the observability hooks + logger, and
   `analyze_agent_logs.py`.
 - `plugins/neo-product/` — the optional Product loop. Agents (`product.engineer` orchestrator, plus
   `product.researcher`, `product.coach`, `design.thinking`, `systems.thinking`), the three product
@@ -33,8 +33,9 @@ holds manifests, docs, and dev-time-only tooling.
 ## Start
 
 New here? Start at [`docs/getting-started.md`](docs/getting-started.md). To produce a PRD, invoke
-the **product.engineer** with a problem or opportunity. To run the coding crew, invoke the
-**technical-engineer** with an issue/story reference; see
+the **product.engineer** with a problem or opportunity. To run the specification loop end to end,
+invoke the **business-engineer** with a PRD; to run the coding crew on a single task, invoke the
+**technical-engineer** with an issue/story reference. See
 [`docs/guides/using-neo.md`](docs/guides/using-neo.md) for the workflow and
 `docs/concepts/process-flow.md` for the loop boundaries.
 

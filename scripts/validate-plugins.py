@@ -90,9 +90,63 @@ CLI_DROPPED_TOOLS = _PROBED_DROPPED | _INFERRED_DROPPED
 # write `execute`, which is known to work.
 EXECUTE_ALIASES = {"execute"}
 
+# --- Host tools (Copilot desktop app) ---------------------------------------------
+#
+# Registered by the desktop app's Tauri backend (`src-tauri/src/tools/*.rs`) and
+# injected over the SDK — they are NOT CLI built-ins, and **no alias reaches them**.
+# In particular `execute` grants *shell* session management (`read_powershell`,
+# `stop_powershell`, `list_powershell`), not app sessions; the resemblance is what makes
+# this bug so easy to ship. A custom agent gets a host tool only by omitting `tools:`
+# entirely, declaring `*`, or naming the tool exactly. Naming is portable: unrecognized
+# tool names are ignored, so the list degrades harmlessly where the app isn't running.
+# Probed against Copilot CLI v1.0.80 / desktop app 2.96.0 — re-probe on upgrade.
+HOST_TOOLS = {
+    # Session lifecycle — this is the family that makes spawning possible.
+    "create_session", "fork_session", "open_pr_session", "open_issue_session",
+    "archive_session", "delete_item", "get_session", "list_sessions_and_chats",
+    "send_session_message", "respond_to_session_plan", "navigate_to",
+    "rename_session", "rename_branch",
+    # Projects.
+    "list_projects", "create_project",
+    # GitHub surfaces the app owns.
+    "create_issue", "create_pull_request", "update_pull_request",
+    "reply_to_comment", "reply_and_resolve_review_thread", "get_changes_overview",
+    "add_pr_review_comment", "edit_pr_review_comment", "remove_pr_review_comment",
+    "annotate_diff_line",
+    # Workflows and automation.
+    "list_workflows", "save_workflow", "run_workflow",
+    "get_session_automation", "save_session_automation",
+    # Widgets, canvases, extensions.
+    "render_widget", "discover_widgets", "clear_widget",
+    "open_canvas", "invoke_canvas_action", "list_canvas_capabilities",
+    "extensions_reload", "extensions_manage", "install_extension", "share_extension",
+}
+
+# The one host tool spawning actually requires.
+SPAWN_TOOL = "create_session"
+
+# Prompt-body markers that mean "this agent spawns or steers child sessions". Matched
+# against the agent body, not its frontmatter, so the rule keys off what the prompt
+# *tells the agent to do* — the same shape as the "prompt says search, needs execute"
+# rule above.
+_SPAWN_PROMPT_RE = re.compile(
+    r"create_session"
+    r"|child session"
+    r"|/orchestrate|/pr-stack|/spawn"
+    r"|base_branch"
+    r"|stacked?\s+(?:PR|pull request|session)"
+    r"|spawn(?:s|ing|ed)?\s+(?:a\s+|one\s+|the\s+)?(?:child\s+|new\s+)?session",
+    re.IGNORECASE,
+)
+
+# Names that are neither an alias nor a host tool but are legitimately declarable.
+# Unprobed: whether the CLI honors them in a `tools:` allowlist was never confirmed, so
+# they are exempted from the unknown-name warning rather than blessed.
+_UNPROBED_DECLARABLE = {"ask_user", "skill", "sql", "task_complete"}
 
 
 errors: list[str] = []
+warnings: list[str] = []
 
 
 def frontmatter_lines(path: Path) -> list[str]:
@@ -165,6 +219,18 @@ def fm_agents(path: Path) -> list[str] | None:
 def fm_tools(path: Path) -> list[str] | None:
     """Parse an agent's `tools:` allowlist. None means unset (all tools allowed)."""
     return _fm_list(path, "tools")
+
+
+def body_text(path: Path) -> str:
+    """Return everything after the closing frontmatter fence — the agent's prompt."""
+    text = path.read_text()
+    if not text.startswith("---"):
+        return text
+    lines = text.splitlines()
+    for i in range(1, len(lines)):
+        if lines[i].strip() == "---":
+            return "\n".join(lines[i + 1 :])
+    return ""
 
 
 def check_json(path: Path) -> None:
@@ -305,6 +371,41 @@ def check_cli_tools(plugin_name: str, agent_file: Path, lowered: set[str]) -> No
             f"silently ignores, but does not declare `execute` - the only confirmed substitute "
             f"(rg/Select-String, curl, gh). The agent will be unable to search, fetch, or "
             f"reach GitHub despite its prompt telling it to"
+        )
+
+
+def check_host_tools(plugin_name: str, agent_file: Path, lowered: set[str], body: str) -> None:
+    """An agent told to spawn sessions must name the host tool that does it.
+
+    Session spawning lives in the desktop app, not the CLI, and no alias reaches it —
+    `execute` grants *shell* session management, which reads like app session management
+    and is not. So an agent whose prompt says "spawn a child session" while its `tools:`
+    list holds only aliases gets nothing, with no error anywhere: `/spawn`, `/orchestrate`
+    and `/pr-stack` simply do nothing. Key off the prompt, the same way the `execute`
+    rule does, because the prompt is what promises the capability.
+
+    Also warn on a `tools:` entry that is neither a known alias nor a known host tool.
+    Unrecognized names are silently ignored by the runtime, so a typo costs an agent a
+    capability and reports nothing.
+    """
+    if "*" in lowered:
+        return  # `["*"]` = everything
+
+    if _SPAWN_PROMPT_RE.search(body) and SPAWN_TOOL not in lowered:
+        errors.append(
+            f"[{plugin_name}] {agent_file.name} has a prompt that describes spawning or "
+            f"steering child sessions, but its tools: list omits `{SPAWN_TOOL}`. Session "
+            f"tools are desktop-app host tools — no alias grants them, so the agent will "
+            f"silently have no way to spawn. Name them exactly (see HOST_TOOLS) or omit "
+            f"`tools:` entirely"
+        )
+
+    known = CLI_EFFECTIVE_TOOLS | CLI_DROPPED_TOOLS | HOST_TOOLS | _UNPROBED_DECLARABLE
+    unknown = sorted(t for t in lowered if t not in known and "/" not in t)
+    if unknown:
+        warnings.append(
+            f"[{plugin_name}] {agent_file.name} declares {unknown}, which match no known "
+            f"alias or host tool. Unrecognized names are ignored silently — check for a typo"
         )
 
 
@@ -451,6 +552,7 @@ def check_plugin(plugin: Path) -> None:
         lowered = {t.strip().lower() for t in tools} if tools is not None else None
         if lowered is not None:
             check_cli_tools(name, f, lowered)
+            check_host_tools(name, f, lowered, body_text(f))
 
         refs = fm_agents(f)
         if not refs:
@@ -530,6 +632,11 @@ def main() -> int:
     marketplace = REPO_ROOT / ".github" / "plugin" / "marketplace.json"
     check_json(marketplace)
     check_marketplace(marketplace)
+
+    if warnings:
+        print("Plugin validation warnings:", file=sys.stderr)
+        for w in warnings:
+            print(f"  - {w}", file=sys.stderr)
 
     if errors:
         print("Plugin validation FAILED:", file=sys.stderr)

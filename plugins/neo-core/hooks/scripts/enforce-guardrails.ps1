@@ -5,7 +5,10 @@
   harness level, not merely in a prompt:
 
     Rule A - never commit or push to `main` (or `master`).
-    Rule B - agents open DRAFT pull requests only.
+    Rule B - agents open DRAFT pull requests only. Enforced against both `gh pr create`
+             and the desktop app's create_pull_request / update_pull_request host tools,
+             which carry structured args rather than a shell command and so would
+             otherwise sail past the command patterns entirely.
 
 .NOTES
   Contract (see docs/contributing/guides/enforcement.md and GitHub's Copilot hooks reference):
@@ -105,7 +108,23 @@ if ($argsObj -is [string]) {
     }
 }
 
-# Only shell tools carry commands we enforce against. Everything else runs freely.
+# Rule B for desktop-app host tools. The Copilot desktop app registers its own tools
+# (create_session, create_pull_request, ...) which carry structured args rather than a
+# shell command, so the command patterns below can't see them. Enforce here or the host
+# PR tools route straight around the draft-only guardrail.
+if ([string]$tool -eq 'create_pull_request') {
+    $draft = if ($null -ne $argsObj) { Get-Prop $argsObj @('draft') } else { $null }
+    if ($draft -ne $true) {
+        Deny "Neo guardrail: agents open DRAFT pull requests only. Call create_pull_request with draft: true (or use 'gh pr create --draft'). To override intentionally, set NEO_ENFORCE_GUARDRAILS=0."
+    }
+} elseif ([string]$tool -eq 'update_pull_request') {
+    $draft = if ($null -ne $argsObj) { Get-Prop $argsObj @('draft') } else { $null }
+    if ($draft -eq $false) {
+        Deny "Neo guardrail: agents must not take a PR out of draft; leave it a draft for a human. Override with NEO_ENFORCE_GUARDRAILS=0."
+    }
+}
+
+# Beyond that, only shell tools carry commands we enforce against. Everything else runs freely.
 $shellTools = @('bash', 'powershell', 'Bash', 'shell', 'run_in_terminal')
 if ($shellTools -notcontains [string]$tool) { Allow }
 

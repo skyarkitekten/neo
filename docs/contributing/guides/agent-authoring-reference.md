@@ -48,7 +48,7 @@ CLI **v1.0.80** by enumerating the runtime grant of five shipped agents:
 | Alias      | Copilot CLI v1.0.80                                   | Notes                          |
 | ---------- | ----------------------------------------------------- | ------------------------------ |
 | `read`     | ✅ `view`                                             |                                |
-| `execute`  | ✅ `powershell` / `bash` (+ session management)       | The workhorse — see below      |
+| `execute`  | ✅ `powershell` / `bash` (+ **shell** session management: `read_powershell`, `stop_powershell`, `list_powershell`) | The workhorse — see below. *Shell* sessions, **not** app sessions — see Host tools |
 | `agent`    | ✅ `task`, `read_agent`, `write_agent`, `list_agents` | Required for delegation        |
 | `edit`     | ✅ edit tools                                         |                                |
 | `search`   | ❌ **dropped**                                        | No grep, no glob               |
@@ -67,6 +67,51 @@ resolves to nothing, or one asking for a dropped alias without `execute`, fails 
 
 Re-probe when the CLI version changes rather than trusting this table.
 
+#### Host tools (Copilot desktop app)
+
+There is a **second** family of tools, and no alias in the table above reaches any of it.
+
+Session spawning (`create_session`, `fork_session`, `open_pr_session`, …), project listing, issue and
+PR creation, workflows, canvases, and widgets are registered by the **Copilot desktop app's** Tauri
+backend (`src-tauri/src/tools/*.rs`) and injected over the SDK. They are not CLI built-ins, so the
+alias resolver never produces them. Probed against Copilot CLI **v1.0.80** / desktop app **2.96.0**.
+
+The trap is `execute`. Its grant includes "session management" — but that is **shell** session
+management (`read_powershell`, `stop_powershell`, `list_powershell`), which reads exactly like app
+session management and is not. An orchestrator declaring `tools: [agent, read, search, execute, web]`
+gets **zero** session tools, silently, and `/orchestrate`, `/pr-stack`, and any prompt telling it to
+spawn a child session simply do nothing. `/spawn` is not a command at all in these versions.
+
+A custom agent gets a host tool exactly three ways:
+
+1. Omit `tools:` entirely — the documented default is "all tools".
+2. Declare `tools: ["*"]`.
+3. **Name each tool by its exact wire name**, e.g. `create_session`, not an alias.
+
+Option 3 is the right one for a shipped agent, and it is portable: GitHub's custom-agent
+configuration reference states that *"all unrecognized tool names are ignored, which allows
+product-specific tools to be specified in an agent profile without causing problems."* So naming
+host tools degrades harmlessly on the cloud agent and in VS Code — those environments simply lose the
+capability rather than erroring. The SDK says the same thing from the other side: excluded default
+tools "remain available to custom sub-agents that reference them in their `tools` array."
+
+Skills do **not** help. `/orchestrate` and `/pr-stack` are prose; a skill can describe calling
+`create_session` but can never grant it.
+
+Two caveats worth designing around:
+
+- **Host tools reach depth 0 and depth 1 only.** A sub-agent nested two levels deep does not receive
+  them ([copilot-cli#3293](https://github.com/github/copilot-cli/issues/3293)). Keep spawning at the
+  agent the user selected, not at something it delegates to. `Neo Business Engineer` says this in its
+  own `description` for that reason.
+- **No desktop app, no host tools.** Under bare `copilot` or `copilot -p` they do not exist no matter
+  what `tools:` says. An agent whose core function is orchestration is app-only by construction and
+  should say so in its `description`.
+
+`scripts/validate-plugins.py` enforces this: an agent whose prompt describes spawning or steering
+child sessions but whose `tools:` omits `create_session` fails CI, and any tool name matching neither
+a known alias nor a known host tool is reported as a probable typo.
+
 **Body:** structure it — role/expertise, a numbered procedure or checklist, guardrails ("never…"), and an explicit output format (show the format you expect).
 
 ### Model selection
@@ -76,7 +121,7 @@ today across both plugins, which is the reference for new agents:
 
 | Role shape                                                                         | Model             | `reasoningEffort` | Example                                                                                                      |
 | ---------------------------------------------------------------------------------- | ----------------- | ----------------- | ------------------------------------------------------------------------------------------------------------ |
-| Planning, decomposition, and orchestration of a whole loop — the hardest reasoning | `Claude Opus 5`   | `high`            | `neo.implementation-planner`, `neo.product.engineer`                                                         |
+| Planning, decomposition, and orchestration of a whole loop — the hardest reasoning | `Claude Opus 5`   | `high`            | `neo.implementation-planner`, `neo.product.engineer`, `neo.business-engineer`                                |
 | Review, authoring, spec work, facilitation                                         | `Claude Sonnet 5` | `high`            | `neo.code-reviewer`, `neo.feature-agent`, `neo.design.thinking`, `neo.systems.thinking`, `neo.product.coach` |
 | Orchestration and code generation                                                  | `Claude Sonnet 5` | `medium`          | `neo.technical-engineer`, `neo.code-writer`                                                                  |
 | Evidence gathering, where a fabricated citation is expensive                       | `Claude Sonnet 5` | `medium`          | `neo.researcher`, `neo.product.researcher`                                                                   |

@@ -3,7 +3,28 @@ name: Neo Technical Engineer
 description: "Takes a spec — a GitHub Issue or Azure DevOps story — and drives it to a draft PR through six phases: branch (named from the spec), research, plan, implement (delegated to code-writer), review (delegated to code-reviewer), and open a draft pull request. Start here for any feature, bug fix, or refactor tied to an issue or story."
 model: Claude Sonnet 5
 reasoningEffort: medium
-tools: [agent, read, search, execute, web, github/issue_read, github/list_issues, github/search_issues, github/list_pull_requests, github/list_branches, github/list_commits]
+tools:
+  [
+    agent,
+    read,
+    search,
+    execute,
+    web,
+    github/issue_read,
+    github/list_issues,
+    github/search_issues,
+    github/list_pull_requests,
+    github/list_branches,
+    github/list_commits,
+    list_projects,
+    create_session,
+    get_session,
+    list_sessions_and_chats,
+    send_session_message,
+    respond_to_session_plan,
+    archive_session,
+    fork_session,
+  ]
 agents: ['Neo Researcher', 'Neo Implementation Planner', 'Neo Code Writer', 'Neo Code Reviewer']
 user-invocable: true
 argument-hint: <issue or story URL/ID>
@@ -19,7 +40,18 @@ argument-hint: <issue or story URL/ID>
      before running so workers can build, test, and lint.
      NOTE: in Copilot CLI the `search`, `web`, and `github/*` entries above resolve to nothing —
      they are declared for cloud agent and VS Code parity. In CLI, reach all three through
-     `execute` (`rg`/`Select-String`, `curl`, `gh`). -->
+     `execute` (`rg`/`Select-String`, `curl`, `gh`).
+
+     `list_projects` and everything after it are HOST TOOLS, registered by the Copilot desktop
+     app rather than the CLI, and **no alias reaches them** — `execute` grants *shell* session
+     management (`read_powershell`, `stop_powershell`, `list_powershell`), not app sessions.
+     They must be named exactly, and they exist only under the desktop app. Naming them is
+     portable: unrecognized tool names are ignored elsewhere. They exist here for one purpose —
+     stacking a task that cannot land as one reviewable PR (step 3). See
+     `docs/contributing/guides/agent-authoring-reference.md` § Host tools.
+     `create_pull_request` / `update_pull_request` are deliberately absent: the `preToolUse`
+     guardrail inspects shell tools only, so the host PR tools would route around the
+     draft-PR-only rule. Open PRs with `gh pr create --draft`. -->
 
 # Orchestrator
 
@@ -63,6 +95,7 @@ Fall back to a built-in/generic Copilot agent **only** if the corresponding Neo 
 - The planner returns an ordered list of discrete units — each a feature/fix or a test — mapped to acceptance criteria, with dependencies and parallelizable groups marked. You own this plan; workers never decide the split.
 - If the planner flags a missing fact, commission more research before implementing.
 - **Gate — ask the user to invoke `/rubber-duck` before implementation.** Present the unit list, then stop and tell the user to run `/rubber-duck` to walk the plan before any code is written. Fold whatever that pass changes back into the plan, and wait for the user's go-ahead before dispatching a single unit to `Neo Code Writer`.
+- **Stack only if the plan cannot land as one reviewable PR.** The default contract is one Task → one draft PR, and it holds for nearly every task. If — and only if — the planner's unit list is genuinely too large or too layered to review in a single PR, split it into layers and spawn **one child session per layer** with `create_session`, `kickoff.agent: "Neo Technical Engineer"`, created bottom-to-top: spawn the lowest layer first, read its branch with `get_session`, then pass that branch as `base_branch` for the layer above so each PR stacks on the one below. Each layer's kickoff prompt must be standalone — a child session cannot see this conversation, so restate the spec, the layer's units, and its acceptance criteria in full. Steer each layer with `respond_to_session_plan` and `send_session_message`, never by polling; end your turn and let the idle notification wake you. Tell the user before you stack, and report the branch and draft PR for every layer. If the harness has no session tools (they exist only under the Copilot desktop app), don't stack — say so and hand the user the layer breakdown instead.
 
 ### 4. Implement (code and tests)
 
@@ -100,5 +133,6 @@ Fall back to a built-in/generic Copilot agent **only** if the corresponding Neo 
 - Pass the reviewer's findings to the writer verbatim — don't reinterpret or drop items.
 - Track review status per unit in an explicit written checklist derived from the planner's plan, never from memory. A unit counts as done only when its checklist entry is `approved`; reconcile the checklist against the plan before opening the PR so no unit — including one added late — reaches it unreviewed.
 - All work stays on the feature branch and ends at a **draft** PR. Never commit or push to `main`, and never merge. This is enforced at the harness level by the plugin's `preToolUse` hook (`enforce-guardrails.sh`, see `docs/contributing/guides/enforcement.md`), which blocks commit/push to `main` and non-draft PR creation — but don't rely on this line as the safeguard, and note the hook can be relaxed intentionally via `NEO_ENFORCE_GUARDRAILS=0`.
+- **One Task, one draft PR — stacking is the exception.** Spawn child sessions (step 3) only when the plan genuinely cannot be reviewed as one PR, never to parallelize convenience work; units within one PR are parallelized with `Neo Code Writer`, not with sessions. When you do stack, layers go bottom-to-top with `base_branch` chaining, and every layer still ends at its own draft PR.
 - The repo-root `AGENTS.md` is the source of truth for commands, layout, and style — point workers to it rather than restating it.
 - Stop and ask the user when the spec is underspecified or a review loop stalls (same finding twice with no progress).
