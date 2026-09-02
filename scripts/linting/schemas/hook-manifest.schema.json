@@ -58,7 +58,7 @@
         "command": {
           "type": "string",
           "minLength": 1,
-          "description": "Cross-platform command. VS Code-native property."
+          "description": "Cross-platform command. VS Code-native property. Do not use this property to invoke plugin scripts: one portable command cannot guard script existence in both POSIX shells and PowerShell. Use guarded bash and powershell properties instead."
         },
         "bash": {
           "type": "string",

@@ -285,6 +285,13 @@ def _check_hook_entry(entry: object, where: str, err) -> None:
             f"{where}: powershell command uses bare ${{PLUGIN_ROOT}}, which PowerShell "
             f"expands to empty — use $env:PLUGIN_ROOT instead"
         )
+    command = entry.get("command")
+    if isinstance(command, str) and _PLUGIN_SCRIPT_REF.search(command):
+        err(
+            f"{where}: `command` invokes a plugin script, but one portable command cannot "
+            f"guard its existence in both POSIX shells and PowerShell — use guarded `bash` "
+            f"and `powershell` commands instead"
+        )
     for key, (guard, hint) in _GUARDS.items():
         cmd = entry.get(key)
         if not isinstance(cmd, str):
