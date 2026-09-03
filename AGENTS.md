@@ -179,17 +179,21 @@ copilot plugin marketplace remove neo
   ships one.** `preToolUse` is fail-closed: a non-zero exit denies the tool call, so a hook that
   fails to launch denies *every* call — `view` and `powershell` included — with
   `Denied by preToolUse hook (hook errored)`. `NEO_ENFORCE_GUARDRAILS=0` can't rescue it, because
-  the script that reads that variable is the thing that isn't running. This shipped **twice**:
-  a release moved hook scripts while long-lived sessions kept the previous manifest in memory
-  (PR #93), and the manifest invoked the script as `& $s`, which runs a script *file* and is
+  the script that reads that variable is the thing that isn't running. This shipped **three
+  times**: a release moved hook scripts while long-lived sessions kept the previous manifest in
+  memory (PR #93); the manifest invoked the script as `& $s`, which runs a script *file* and is
   therefore blocked by PowerShell execution policy on a stock Windows client, where every scope is
-  `Undefined` and the effective policy is `Restricted` (issue #95). Three rules follow, all
+  `Undefined` and the effective policy is `Restricted`; and it invoked `"$s"` on POSIX, which
+  execs the file and so needs the executable bit that `[ -f "$s" ]` never checks, failing with 126
+  on macOS (both issue #95). Three rules follow, all
   enforced by `scripts/validate-plugins.py`: a shipped plugin registers **no** fail-closed event
   (the guardrail scripts stay in-tree and consuming repos opt in — see
   `docs/contributing/guides/enforcement.md`); every hook command still resolves its script into
-  `$s` and `exit 0`s when it's absent; and every `powershell` command invokes via
-  `pwsh -NoProfile -ExecutionPolicy Bypass -File "$s"`, never `& $s`. If you see blanket denials,
-  restart the session first — a mid-session `plugin install` does not re-read hooks.
+  `$s` and `exit 0`s when it's absent; and every command launches the script through an **explicit
+  interpreter** — `pwsh -NoProfile -ExecutionPolicy Bypass -File "$s"` and `bash "$s"`, never
+  `& $s` or a bare `"$s"`, so no ambient host state decides whether the file is runnable. If you
+  see blanket denials, restart the session first — a mid-session `plugin install` does not re-read
+  hooks.
 - **Evidence discipline is a shipped contract**, not a style preference — the `neo-evidence-standard`
   skill (duplicated into both plugins) owns the retrieval-or-silence rule and the
   `FACT` / `INFERENCE` / `RECALL — UNVERIFIED` labels. Agents that gather or consume evidence must load it.

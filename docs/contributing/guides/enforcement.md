@@ -35,7 +35,7 @@ configure.
 *every* tool call, and it is fail-closed. The script allows non-shell tools immediately — but
 only if it runs at all. Any failure to launch denies `view`, `edit`, and `powershell` just as
 readily as `git push`, and `NEO_ENFORCE_GUARDRAILS=0` cannot rescue it because the script that
-reads that variable is the thing that never ran. This has now shipped twice:
+reads that variable is the thing that never ran. This has now shipped three times:
 
 - A release moved hook scripts and long-lived sessions kept the previous manifest in memory,
   so the wired path no longer resolved (PR #93).
@@ -43,8 +43,12 @@ reads that variable is the thing that never ran. This has now shipped twice:
   subject to PowerShell execution policy. On a stock Windows client, where every scope is
   `Undefined` and the effective policy is `Restricted`, the file simply refused to load
   (issue #95).
+- The same manifest invoked `"$s"` on POSIX, which execs the file and therefore needs the
+  executable bit. `[ -f "$s" ]` checks existence, not `-x`, so a copy that lost its mode bit in
+  transit passed the guard and then failed exec with 126. macOS users hit the identical blanket
+  denial (issue #95).
 
-Both produced a non-zero exit, and a non-zero exit on `preToolUse` denies the call. Users saw
+All three produced a non-zero exit, and a non-zero exit on `preToolUse` denies the call. Users saw
 `Denied by preToolUse hook from "neo-core@neo" (hook errored)` on every action.
 
 Spending that failure mode on weak, redundant enforcement of someone else's policy is a bad
@@ -86,7 +90,7 @@ survives a plugin uninstall or version bump.
   "hooks": {
     "preToolUse": [
       { "type": "command",
-        "bash": "r=\"$(git rev-parse --show-toplevel 2>/dev/null)\"; s=\"$r/.github/hooks/scripts/enforce-guardrails.sh\"; [ -n \"$r\" ] && [ -f \"$s\" ] || exit 0; \"$s\" preToolUse",
+        "bash": "r=\"$(git rev-parse --show-toplevel 2>/dev/null)\"; s=\"$r/.github/hooks/scripts/enforce-guardrails.sh\"; [ -n \"$r\" ] && [ -f \"$s\" ] || exit 0; bash \"$s\" preToolUse",
         "powershell": "$r = (git rev-parse --show-toplevel 2>$null); $s = \"$r/.github/hooks/scripts/enforce-guardrails.ps1\"; if (-not $r -or -not (Test-Path -LiteralPath $s)) { exit 0 }; pwsh -NoProfile -ExecutionPolicy Bypass -File \"$s\" preToolUse",
         "timeoutSec": 10 }
     ]
@@ -99,17 +103,21 @@ broken release. Keep them if you adapt it:
 
 - **The existence guard.** If the path does not resolve, `exit 0` rather than letting the
   shell exit non-zero and deny everything.
-- **The explicit interpreter.** `& $s` runs a script file, which PowerShell execution policy
-  governs, and the harness passes no `-ExecutionPolicy` flag. `-ExecutionPolicy Bypass` is
-  **process-scoped** — it changes no machine, user, or persisted setting, and affects no other
-  process. `pwsh` is guaranteed present because the harness itself spawns `pwsh.exe`.
+- **The explicit interpreter, on both platforms.** The existence guard proves the file is there;
+  it does not prove the OS will run it. On Windows, `& $s` runs a script file, which PowerShell
+  execution policy governs, and the harness passes no `-ExecutionPolicy` flag. `-ExecutionPolicy
+  Bypass` is **process-scoped** — it changes no machine, user, or persisted setting, and affects
+  no other process. `pwsh` is guaranteed present because the harness itself spawns `pwsh.exe`.
+  On POSIX, a bare `"$s"` execs the file and so requires the executable bit, which `[ -f "$s" ]`
+  does not check; `bash "$s"` passes the script as an argument to an already-running interpreter,
+  so neither the mode bit nor the shebang matters.
 - **The repo-root anchor.** A bare relative path is resolved against the hook process's working
   directory, which is wherever the user launched the CLI — not necessarily the repo root. When it
   misses, the existence guard fires and enforcement is **silently off**. `git rev-parse
   --show-toplevel` anchors it. (The scripts themselves already resolve the branch against the
   *payload's* `cwd`, not the process's, for the same reason.)
 
-Measured exit codes for the two forms, same script, same machine:
+Measured exit codes, same script, same machine. Windows, by effective execution policy:
 
 | Effective policy | `& $s` | `pwsh -ExecutionPolicy Bypass -File "$s"` |
 | --- | --- | --- |
@@ -117,6 +125,18 @@ Measured exit codes for the two forms, same script, same machine:
 | `AllSigned` | **1 — denies everything** | 0 |
 | `RemoteSigned` | 0 | 0 |
 | `Bypass` | 0 | 0 |
+
+POSIX, by file state:
+
+| File state | `"$s"` | `bash "$s"` |
+| --- | --- | --- |
+| mode 755, LF endings | 0 | 0 |
+| mode 644 (executable bit lost) | **126 — denies everything** | 0 |
+| CRLF line endings | **127 — denies everything** | **2 — denies everything** |
+
+The last row is the exception that proves the rule: an explicit interpreter cannot rescue CRLF,
+because bash itself chokes on the `\r`. That is why `*.sh text eol=lf` in `.gitattributes` is
+load-bearing rather than cosmetic, and why it matters that this repo is developed on Windows.
 
 > **`-ExecutionPolicy` does not beat Group Policy.** The flag sets the **Process** scope, which
 > ranks below `MachinePolicy` and `UserPolicy`. On a machine where an administrator has set the
@@ -194,7 +214,7 @@ string** — they would sail straight past the command patterns.
 | Non-shell tool | allow |
 | Payload unparseable (or `python3` absent on Unix) | allow + stderr warning |
 | Hook script missing at the wired path | allow (existence guard in the hook command) |
-| Interpreter or execution policy refuses to load the script | **deny — must be prevented, not handled** |
+| Interpreter, execution policy, or a missing executable bit refuses to run the script | **deny — must be prevented, not handled** |
 | Script present but crashes | **deny** |
 | Hook times out | allow (harness fail-open) |
 
@@ -248,8 +268,10 @@ printf '{"toolName":"create_pull_request","toolArgs":{"title":"x"}}' \
 # => {"permissionDecision":"deny","permissionDecisionReason":"Neo guardrail: agents open DRAFT…"}
 ```
 
-On Windows, test the **whole hook command**, not just the script — the failure this page
-exists to prevent lives in the command, not the script:
+Test the **whole hook command**, not just the script — the failure this page exists to prevent
+lives in the command, not the script.
+
+On Windows:
 
 ```powershell
 $cmd = '$s = ".github/hooks/scripts/enforce-guardrails.ps1"; if (-not (Test-Path -LiteralPath $s)) { exit 0 }; pwsh -NoProfile -ExecutionPolicy Bypass -File "$s" preToolUse'
@@ -260,4 +282,15 @@ $cmd = '$s = ".github/hooks/scripts/enforce-guardrails.ps1"; if (-not (Test-Path
 
 `-ExecutionPolicy Restricted` on the outer process reproduces the stock-Windows-client
 condition, because process scope is inherited by children unless they set their own.
+
+On macOS or Linux, reproduce the equivalent condition by stripping the executable bit:
+
+```bash
+chmod 644 .github/hooks/scripts/enforce-guardrails.sh
+cmd='s=".github/hooks/scripts/enforce-guardrails.sh"; [ -f "$s" ] || exit 0; bash "$s" preToolUse'
+printf '%s' '{"toolName":"bash","toolArgs":{"command":"git push origin main"}}' | bash -c "$cmd"
+echo "exit=$?"
+# => the deny JSON, and exit=0. Swapping `bash "$s"` for a bare `"$s"` here gives exit=126,
+#    which is the macOS blanket-denial bug.
+```
 

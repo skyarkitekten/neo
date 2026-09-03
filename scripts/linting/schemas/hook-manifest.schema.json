@@ -63,7 +63,7 @@
         "bash": {
           "type": "string",
           "minLength": 1,
-          "description": "Copilot CLI property mapped to the osx and linux commands. Use ${PLUGIN_ROOT} to locate plugin scripts, and guard the script's existence before invoking it (`s=\"${PLUGIN_ROOT}/hooks/scripts/x.sh\"; [ -f \"$s\" ] || exit 0; \"$s\" event`) — a hook that exits non-zero is a failed hook, and on a fail-closed event that denies the tool call."
+          "description": "Copilot CLI property mapped to the osx and linux commands. Use ${PLUGIN_ROOT} to locate plugin scripts, guard the script's existence, and invoke it through an explicit interpreter (`s=\"${PLUGIN_ROOT}/hooks/scripts/x.sh\"; [ -f \"$s\" ] || exit 0; bash \"$s\" event`). Running `\"$s\"` directly requires the POSIX executable bit, which the -f guard does not check and which zip/copy transports drop; exec then fails with 126, and on a fail-closed event that denies every tool call. A hook that exits non-zero is a failed hook."
         },
         "powershell": {
           "type": "string",

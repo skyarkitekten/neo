@@ -22,8 +22,8 @@ This script makes the remaining invariants executable:
     (it must use `$env:PLUGIN_ROOT`), no event may be declared in both its
     canonical camelCase and PascalCase-alias form (which would fire it twice),
     any command invoking a plugin script must first check the script exists AND
-    run it through an explicit interpreter rather than letting ambient execution policy
-    decide, and
+    run it through an explicit interpreter rather than letting ambient host state
+    decide whether the file is runnable, and
     no shipped plugin may register a fail-closed event. A hook that exits non-zero
     is a failed hook, and on `preToolUse` that denies the tool call — every tool
     call, including read-only ones. Both halves have shipped: a layout move left
@@ -288,20 +288,34 @@ HOOK_FAIL_CLOSED_EVENTS = {"preToolUse"}
 # ${PLUGIN_ROOT} (and ${...} generally) is PowerShell's own variable syntax and
 # expands to an empty string; the env var must be read as $env:PLUGIN_ROOT.
 _PS_BAD_PLUGIN_ROOT = re.compile(r"\$\{\s*PLUGIN_ROOT\s*\}")
-# A hook command that invokes a plugin script must first check the script is there, and on
-# Windows must run it through an explicit interpreter rather than letting ambient execution
-# policy decide. A hook that exits non-zero is treated as failure by the harness, and on the
-# fail-closed `preToolUse` event that denies the tool call outright, so an unresolvable OR
-# unloadable script path can deny *every* tool call and brick the session. Both have shipped: a
-# layout move left the path stale (PR #93), and `& $s` on a machine whose effective policy is
-# `Restricted` refused to load a script that was right there (issue #95). The guard and the
-# explicit interpreter are required on every event, not just the blocking one.
+# A hook command that invokes a plugin script must first check the script is there, and must
+# then run it through an explicit interpreter rather than letting ambient host state decide
+# whether the file is runnable. A hook that exits non-zero is treated as failure by the harness,
+# and on the fail-closed `preToolUse` event that denies the tool call outright, so an
+# unresolvable OR unrunnable script path can deny *every* tool call and brick the session.
+# All three have shipped: a layout move left the path stale (PR #93); `& $s` on a machine whose
+# effective policy is `Restricted` refused to load a script that was right there; and `"$s"` on
+# macOS refused to exec a script whose executable bit was missing (both issue #95). The guard and
+# the explicit interpreter are required on every event and every platform, not just the blocking
+# event on Windows.
 _PLUGIN_SCRIPT_REF = re.compile(r"PLUGIN_ROOT[^\"']*/hooks/scripts/")
+# `"$s" event` executes the script FILE directly, which requires the POSIX executable bit and a
+# resolvable shebang. The `[ -f "$s" ]` guard proves the file is THERE; it never proves it can
+# RUN. When the bit is missing the guard passes and exec fails with 126 (a bad shebang gives
+# 127) — and on fail-closed `preToolUse` that denies every tool call. This shipped: macOS users
+# hit the identical `(hook errored)` blanket denial as the Windows execution-policy outage
+# (issue #95). `bash "$s"` passes the script as an ARGUMENT to an interpreter that is already
+# running, so neither the mode bit nor the shebang is consulted — measured exit 0 with the bit
+# stripped, versus 126 for the direct form.
+#
+# This does NOT rescue CRLF line endings (bash still chokes on `\r`), so the `*.sh text eol=lf`
+# rule in .gitattributes stays load-bearing.
 _POSIX_SAFE_SCRIPT = re.compile(
     r'^s\s*=\s*"[^"]*PLUGIN_ROOT[^"]*/hooks/scripts/[^"]+"\s*;\s*'
     r'\[\s+-f\s+"\$s"\s+\]\s*\|\|\s*exit\s+0\s*;\s*'
-    r'"\$s"(?:\s+[^;|&]+)?\s*$'
+    r'bash\s+"\$s"(?:\s+[^;|&]+)?\s*$'
 )
+_POSIX_SAFE_HINT = 's="..."; [ -f "$s" ] || exit 0; bash "$s" event'
 # `& $s` runs a script FILE, which is exactly what PowerShell execution policy governs, and
 # the harness passes no -ExecutionPolicy flag. On a stock Windows client every scope is
 # Undefined, which resolves to Restricted, and the file simply refuses to load (exit 1).
@@ -322,9 +336,9 @@ _PS_SAFE_HINT = (
 )
 _SAFE_SCRIPT_FORMS = {
     # command key -> (full safe command form, human hint)
-    "bash": (_POSIX_SAFE_SCRIPT, 's="..."; [ -f "$s" ] || exit 0; "$s" event'),
-    "linux": (_POSIX_SAFE_SCRIPT, 's="..."; [ -f "$s" ] || exit 0; "$s" event'),
-    "osx": (_POSIX_SAFE_SCRIPT, 's="..."; [ -f "$s" ] || exit 0; "$s" event'),
+    "bash": (_POSIX_SAFE_SCRIPT, _POSIX_SAFE_HINT),
+    "linux": (_POSIX_SAFE_SCRIPT, _POSIX_SAFE_HINT),
+    "osx": (_POSIX_SAFE_SCRIPT, _POSIX_SAFE_HINT),
     "powershell": (_POWERSHELL_SAFE_SCRIPT, _PS_SAFE_HINT),
     "windows": (_POWERSHELL_SAFE_SCRIPT, _PS_SAFE_HINT),
 }
@@ -416,7 +430,8 @@ def _check_hook_entry(entry: object, where: str, err) -> None:
             err(
                 f"{where}: `{key}` command must assign the plugin script path, check that "
                 f"same path exists, exit 0 when absent, then invoke it through an explicit "
-                f"interpreter rather than letting ambient execution policy decide — a hook "
+                f"interpreter rather than letting ambient host state decide whether the file "
+                f"is runnable (Windows execution policy, or the POSIX executable bit). A hook "
                 f"that exits non-zero is a failed hook, and on a fail-closed event that "
                 f"denies the tool call. Use: {hint}"
             )

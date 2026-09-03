@@ -52,18 +52,30 @@ directory. See [`plugin-contract.md`](./plugin-contract.md) for the wider folder
   cross-platform `command` property cannot express a portable guard for both shells. The
   validator rejects cross-platform invocations and platform commands that do not follow the
   documented assignment → existence check → successful exit → invocation sequence.
-- **Invoke the PowerShell script through an explicit interpreter, never `& $s`.**
-  `& $s` runs a script **file**, which is exactly what PowerShell execution policy governs,
-  and the harness launches hooks with no `-ExecutionPolicy` flag, so ambient policy applies.
-  On a stock Windows client every scope is `Undefined`, which resolves to `Restricted`, and
-  the file refuses to load with a non-zero exit — the guard above does not help, because the
-  file is present (issue #95). Use
+- **Invoke the script through an explicit interpreter on both platforms.** Never `& $s`, and
+  never a bare `"$s"`. The existence guard above proves the file is *there*; it does not prove
+  the OS will *run* it, and each platform has its own way of refusing. Both have shipped as
+  blanket tool-call denials (issue #95).
+
+  On Windows, `& $s` runs a script **file**, which is exactly what PowerShell execution policy
+  governs, and the harness launches hooks with no `-ExecutionPolicy` flag, so ambient policy
+  applies. On a stock Windows client every scope is `Undefined`, which resolves to `Restricted`,
+  and the file refuses to load (exit 1). Use
   `pwsh -NoProfile -ExecutionPolicy Bypass -File "$s" <event>`. The flag is **process-scoped**:
   it persists nothing and affects no other process, and `pwsh` is guaranteed present because
   the harness itself spawns `pwsh.exe`. It outranks the process, user, and machine scopes but
   **not** `MachinePolicy` / `UserPolicy` — a Group Policy that restricts script execution still
-  refuses the file, and nothing process-scoped can override that. Quote `"$s"` so paths with
-  spaces survive. POSIX has no equivalent mechanism, so `bash` commands invoke `"$s"` directly.
+  refuses the file, and nothing process-scoped can override that.
+
+  On macOS and Linux, `"$s"` execs the file, which requires the POSIX **executable bit** and a
+  resolvable shebang. `[ -f "$s" ]` tests existence, not `-x`, so a file that lost its mode bit
+  in transit sails past the guard and then fails exec with 126 (a bad shebang gives 127). Use
+  `bash "$s" <event>`, which passes the script as an *argument* to an interpreter that is already
+  running, so neither the mode bit nor the shebang is consulted.
+
+  Quote `"$s"` on both so paths with spaces survive. Note that an explicit interpreter does
+  **not** rescue CRLF line endings — bash still chokes on `\r` — so the `*.sh text eol=lf` rule
+  in `.gitattributes` remains load-bearing, especially in a repo developed on Windows.
 - **One camelCase block per event.** Copilot CLI reads the camelCase event key and
   the `bash` / `powershell` command properties. VS Code reads the PascalCase alias of the
   same event and maps `bash`→osx/linux, `powershell`→windows, so **one block covers
