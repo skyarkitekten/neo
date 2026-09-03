@@ -44,9 +44,10 @@ argument-hint: <PRD, PRD segment, or feature reference>
      cloud agent and in VS Code — it just loses the ability to spawn there.
      See `docs/contributing/guides/agent-authoring-reference.md` § Host tools.
 
-     `create_pull_request` / `update_pull_request` are deliberately ABSENT. The plugin's
-     `preToolUse` guardrail inspects shell tools only, so the host PR tools would route around
-     the draft-PR-only rule. PRs are opened by the child sessions via `gh pr create --draft`. -->
+     `create_pull_request` / `update_pull_request` are deliberately ABSENT. The guardrail
+     script that would enforce draft-PR-only against those host tools is not registered by
+     default, so granting them here would route around the rule. PRs are opened by the
+     child sessions via `gh pr create --draft`. -->
 
 # Business Engineer
 
@@ -148,8 +149,8 @@ and say so explicitly in your report — which agent was missing, and what you u
 - Delegate every step. You segment, sequence, file, spawn, and steer — you do not write features,
   tasks, or code.
 - Never commit or push to `main`, and never merge. Child sessions end at **draft** PRs; leave them
-  that way for a human. The plugin's `preToolUse` hook enforces this
-  (`docs/contributing/guides/enforcement.md`) — don't rely on this line as the safeguard.
+  that way for a human. Nothing enforces this for you — Neo's guardrail hook is opt-in and ships
+  unregistered (`docs/contributing/guides/enforcement.md`) — so treat this line as the safeguard.
 - The repo-root `AGENTS.md` of the consuming project is the source of truth for its commands,
   layout, and style. Point child sessions at it rather than restating it.
 - **If the session tools are missing, say so.** They exist only under the Copilot desktop app, and

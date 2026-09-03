@@ -22,9 +22,14 @@ agents for GitHub Copilot CLI that drives a spec from concept to a draft PR.
   - `neo-feature-authoring` — authoring guidance for feature specs.
   - `neo-task-authoring` — authoring guidance for tasksets.
 - **Hooks** (`hooks/hooks.json`, v1 schema, `${PLUGIN_ROOT}`):
-  - fail-open **observability** logging via `hooks/scripts/log-event.{sh,ps1}`.
-  - fail-closed **guardrail** enforcement via `hooks/scripts/enforce-guardrails.{sh,ps1}`
-    (blocks commit/push to `main`, draft-PR-only).
+  - fail-open **observability** logging via `hooks/scripts/log-event.{sh,ps1}` — the only
+    thing the manifest registers.
+  - opt-in **guardrail** enforcement via `hooks/scripts/enforce-guardrails.{sh,ps1}`
+    (blocks commit/push to `main`, draft-PR-only). Shipped **unregistered**: it is a
+    fail-closed `preToolUse` hook, so any failure to launch denies every tool call, and the
+    policy is the consuming repo's to choose. See
+    [enforcement.md](https://github.com/skyarkitekten/neo/blob/main/docs/contributing/guides/enforcement.md)
+    to opt in.
 - **Tooling**: `scripts/analyze_agent_logs.py` — per-agent and per-run stats from the event log.
 
 ## Install

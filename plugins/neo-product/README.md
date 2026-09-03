@@ -50,11 +50,13 @@ consuming repo's `AGENTS.md`, PRDs, ADRs, and design docs — never baked into a
 | `neo-design-thinking` | Stakeholder/empathy mapping, personas, problem framing, journey mapping, ideation, assumption testing, service blueprinting |
 | `neo-system-thinking` | Boundaries, stocks and flows, causal loops, delays, leverage points, archetypes, intervention design |
 
-**Hooks** (`hooks/hooks.json`, v1 schema, `${PLUGIN_ROOT}`): the same fail-open
-observability logging and fail-closed guardrail enforcement as `neo-core`, via this plugin's
-own `hooks/scripts/log-event.{sh,ps1}` and `hooks/scripts/enforce-guardrails.{sh,ps1}`
+**Hooks** (`hooks/hooks.json`, v1 schema, `${PLUGIN_ROOT}`): the same registered fail-open
+observability logging, and the same **unregistered, opt-in** guardrail scripts, as
+`neo-core` — via this plugin's own `hooks/scripts/log-event.{sh,ps1}` and
+`hooks/scripts/enforce-guardrails.{sh,ps1}`, which are byte-identical copies of `neo-core`'s
 (duplicated, not shared — plugins cannot reference files outside their own directory; see
 [`plugin-contract.md`](https://github.com/skyarkitekten/neo/blob/main/docs/contributing/reference/plugin-contract.md#1-plugin-folder-shape)).
+Because they are copies they can drift, and have: keep all four in step when you change one.
 
 ## Why a new plugin and not a `neo-core` addition
 

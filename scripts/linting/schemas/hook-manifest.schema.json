@@ -63,12 +63,12 @@
         "bash": {
           "type": "string",
           "minLength": 1,
-          "description": "Copilot CLI property mapped to the osx and linux commands. Use ${PLUGIN_ROOT} to locate plugin scripts, and guard the script's existence before invoking it (`s=\"${PLUGIN_ROOT}/hooks/scripts/x.sh\"; [ -f \"$s\" ] || exit 0; \"$s\" event`) — preToolUse is fail-closed, so a path that doesn't resolve denies every tool call."
+          "description": "Copilot CLI property mapped to the osx and linux commands. Use ${PLUGIN_ROOT} to locate plugin scripts, guard the script's existence, and invoke it through an explicit interpreter (`s=\"${PLUGIN_ROOT}/hooks/scripts/x.sh\"; [ -f \"$s\" ] || exit 0; bash \"$s\" event`). Running `\"$s\"` directly requires the POSIX executable bit, which the -f guard does not check and which zip/copy transports drop; exec then fails with 126, and on a fail-closed event that denies every tool call. A hook that exits non-zero is a failed hook."
         },
         "powershell": {
           "type": "string",
           "minLength": 1,
-          "description": "Copilot CLI property mapped to the windows command. Use $env:PLUGIN_ROOT (NOT ${PLUGIN_ROOT}) to locate plugin scripts — ${PLUGIN_ROOT} is PowerShell's own variable syntax and expands to empty. Guard the script's existence before invoking it (`$s = \"$env:PLUGIN_ROOT/hooks/scripts/x.ps1\"; if (-not (Test-Path -LiteralPath $s)) { exit 0 }; & $s event`) — preToolUse is fail-closed, so a path that doesn't resolve denies every tool call."
+          "description": "Copilot CLI property mapped to the windows command. Use $env:PLUGIN_ROOT (NOT ${PLUGIN_ROOT}) to locate plugin scripts — ${PLUGIN_ROOT} is PowerShell's own variable syntax and expands to empty. Guard the script's existence, then invoke it through an explicit interpreter, never `& $s` (`$s = \"$env:PLUGIN_ROOT/hooks/scripts/x.ps1\"; if (-not (Test-Path -LiteralPath $s)) { exit 0 }; pwsh -NoProfile -ExecutionPolicy Bypass -File \"$s\" event`). `& $s` runs a script FILE, which PowerShell execution policy governs, and the harness passes no -ExecutionPolicy flag; on a stock Windows client every scope is Undefined, resolving to Restricted, and the file refuses to load. -ExecutionPolicy Bypass is process-scoped and persists nothing. A hook that exits non-zero is a failed hook, and on a fail-closed event that denies the tool call."
         },
         "windows": {
           "type": "string",

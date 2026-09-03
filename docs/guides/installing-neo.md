@@ -84,10 +84,93 @@ at runtime — is owned by
 
 - The agents appear in Copilot's agent picker (look for `Neo <Role>` names, e.g. **Neo Technical
   Engineer**).
-- The guardrail hooks are active — an attempt to commit to `main` is blocked. That enforcement, and
-  how to relax it deliberately, is documented in
-  [../contributing/guides/enforcement.md](../contributing/guides/enforcement.md).
+- Nothing is blocked. Neo ships **no** enforcement hook: the guardrail scripts that block
+  commit/push to `main` and non-draft PRs are in the plugin but deliberately not registered, so
+  installing Neo changes no permissions. Branch policy is your team's call — enforce it with
+  server-side branch protection, and opt the hooks in on top if you want them locally.
+  [../contributing/guides/enforcement.md](../contributing/guides/enforcement.md) explains why and
+  how to opt in.
 - Optionally, turn on logging to tune prompts from real runs:
   [../contributing/guides/observability.md](../contributing/guides/observability.md).
 
 Once installed, hand off to [using-neo.md](./using-neo.md) to start driving the crew.
+
+## Troubleshooting: every tool call is denied
+
+This affects already-installed `neo-core` 2.1.0 and `neo-product` 2.0.5 on some Windows, macOS, and
+Linux machines. The symptom is this error on every tool call, including read-only calls such as
+`view`:
+
+```text
+Denied by preToolUse hook from "neo-core@neo" (hook errored)
+```
+
+If `neo-product` is installed, the plugin name may be `neo-product@neo`. In VS Code, the same
+root cause can show up as a warning that mentions `log-event.ps1`.
+
+**Cause.** The hook script is present but the operating system refuses to run it. The hook then
+fails, and a failed `preToolUse` hook denies the tool call. There are two variants of the same
+mistake, because the old hook command let ambient host state decide whether the file was runnable:
+
+| Platform      | What blocks the script                                          | Hook exit |
+| ------------- | --------------------------------------------------------------- | --------- |
+| Windows       | Execution policy refuses to load `.ps1`                           | 1         |
+| macOS / Linux | The `.sh` file is missing its executable bit, so `exec` fails     | 126       |
+
+Confirm the failing case.
+
+On Windows:
+
+```powershell
+pwsh -NoProfile -Command "Get-ExecutionPolicy -List"
+```
+
+If every scope is `Undefined`, the effective policy on a client SKU is `Restricted`, which blocks
+the script.
+
+On macOS or Linux:
+
+```bash
+ls -l ~/.copilot/installed-plugins/neo/neo-core/hooks/scripts/
+```
+
+If the mode column reads `-rw-r--r--` rather than `-rwxr-xr-x`, the executable bit is missing.
+
+Fixes, best first:
+
+1. **Upgrade** to `neo-core` 2.2.0 or later and `neo-product` 2.1.0 or later. These versions no
+   longer register the hook, and they invoke hook scripts through an explicit interpreter so
+   neither execution policy nor the executable bit can block them. Restart the Copilot session
+   after upgrading: a mid-session `copilot plugin install` does not re-read hook manifests, and
+   plugin installs use a physical copy rather than reading this repo live.
+2. If you cannot upgrade yet, unblock the script for your platform.
+
+   Windows:
+
+   ```powershell
+   Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+   ```
+
+   `CurrentUser` needs no admin rights. `RemoteSigned` allows local scripts to run and requires
+   downloaded scripts to be signed.
+
+   macOS or Linux:
+
+   ```bash
+   chmod +x ~/.copilot/installed-plugins/neo/*/hooks/scripts/*.sh
+   ```
+
+3. Or uninstall the plugins and restart:
+
+   ```console
+   copilot plugin uninstall neo-core
+   copilot plugin uninstall neo-product
+   ```
+
+`NEO_ENFORCE_GUARDRAILS=0` will not help here. That setting is read by the hook script, and in this
+failure the script never runs.
+
+On Group-Policy-managed Windows machines, `-ExecutionPolicy` flags cannot override `MachinePolicy`
+or `UserPolicy`. If those scopes block scripts, option 2 may not be available; use option 1 or 3
+instead. For the full technical story, see
+[enforcement.md](../contributing/guides/enforcement.md).

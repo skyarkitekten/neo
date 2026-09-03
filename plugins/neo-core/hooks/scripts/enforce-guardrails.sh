@@ -78,6 +78,15 @@ args = data.get("toolArgs")
 if args is None:
     args = data.get("tool_input")
 
+# `toolArgs` is typed `unknown` and the runtime parses a JSON string only "when possible",
+# so it can arrive as a raw string. Parse it here or the host-tool rule below judges a PR
+# on fields it cannot see and denies a correctly-drafted one.
+if isinstance(args, str):
+    try:
+        args = json.loads(args)
+    except Exception:
+        pass
+
 cmd = ""
 if isinstance(args, dict):
     for k in ("command", "script", "cmd", "commandLine", "input"):
@@ -98,15 +107,23 @@ cwd = data.get("cwd") or ""
 # the command patterns below can't see them. Rule B has to be enforced here too or the
 # host PR tools route straight around the draft-only guardrail.
 host_deny = ""
-if str(tool) == "create_pull_request":
-    if isinstance(args, dict) and args.get("draft") is not True:
-        host_deny = (
-            "Neo guardrail: agents open DRAFT pull requests only. Call "
-            "create_pull_request with draft: true (or use 'gh pr create --draft'). "
-            "To override intentionally, set NEO_ENFORCE_GUARDRAILS=0."
-        )
-elif str(tool) == "update_pull_request":
-    if isinstance(args, dict) and args.get("draft") is False:
+host_warn = ""
+if str(tool) in ("create_pull_request", "update_pull_request"):
+    # Args we cannot read are args we cannot judge. Fail OPEN with a warning, matching the
+    # unparseable-payload stance above and the PowerShell sibling - denying on an
+    # unrecognized payload shape would block every PR the tool opens, correctly drafted or
+    # not. The warning travels back as a marker line because this block's stderr is
+    # discarded; the shell layer below prints it.
+    if not isinstance(args, dict):
+        host_warn = "Neo enforce-guardrails: unreadable toolArgs for %s; allowing." % str(tool)
+    elif str(tool) == "create_pull_request":
+        if args.get("draft") is not True:
+            host_deny = (
+                "Neo guardrail: agents open DRAFT pull requests only. Call "
+                "create_pull_request with draft: true (or use 'gh pr create --draft'). "
+                "To override intentionally, set NEO_ENFORCE_GUARDRAILS=0."
+            )
+    elif args.get("draft") is False:
         host_deny = (
             "Neo guardrail: agents must not take a PR out of draft; leave it a draft "
             "for a human. Override with NEO_ENFORCE_GUARDRAILS=0."
@@ -117,6 +134,7 @@ print(str(tool).replace("\n", " "))
 print(cmd.replace("\r", " ").replace("\n", " "))
 print(str(cwd).replace("\n", " "))
 print(host_deny.replace("\r", " ").replace("\n", " "))
+print(host_warn.replace("\r", " ").replace("\n", " "))
 PY
 )"
 
@@ -130,6 +148,12 @@ tool="$(printf '%s' "$parsed" | sed -n '1p')"
 cmd="$(printf '%s' "$parsed" | sed -n '2p')"
 cwd="$(printf '%s' "$parsed" | sed -n '3p')"
 host_deny="$(printf '%s' "$parsed" | sed -n '4p')"
+host_warn="$(printf '%s' "$parsed" | sed -n '5p')"
+
+# Args we could not read for a host PR tool: warn, then fall through to allow. This is the
+# stderr warning the PowerShell sibling emits inline; it has to be relayed here because the
+# python block's own stderr is discarded.
+[ -n "$host_warn" ] && printf '%s\n' "$host_warn" >&2
 
 # Rule B for desktop-app host tools, which carry structured args instead of a command.
 [ -n "$host_deny" ] && deny "$host_deny"

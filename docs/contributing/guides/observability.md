@@ -1,12 +1,21 @@
 # Neo observability logging
 
-Records what each agent does into a JSONL log so you can tune the `.agent.md` prompts from data, not guesses. Logging is fail-open and append-only — it never blocks or slows a turn.
+Records what each agent does into a JSONL log so you can tune the `.agent.md` prompts from data, not guesses. Logging is fail-open and append-only — it never blocks a turn.
 
-> This page covers the **fail-open observability** hook set. For the **fail-closed
-> `preToolUse` enforcement** hooks (block commit/push to `main`, draft-PR-only), see
-> [enforcement.md](enforcement.md). Both are wired from the same `hooks/hooks.json`.
-> The manifest + script contract they share is owned by
-> [`../reference/hook-contract.md`](../reference/hook-contract.md).
+> **Windows cost.** Each hook launches a nested `pwsh` so that ambient execution policy cannot
+> refuse the script file (see [enforcement.md](enforcement.md) § Opting in for why). Measured on
+> a warm Windows 11 client that costs roughly **270 ms per hook invocation** on top of the
+> harness's own launch, and both plugins register the same events, so a tool call that fires
+> `postToolUse` pays it about four times. Unix invokes `bash "$s"` for the same reason, but at no
+> added cost — it replaces the shebang's own `env` lookup rather than adding a process (measured
+> 243 ms vs 259 ms for the direct form). If that matters more to you than the logs, turn logging
+> off with `NEO_LOG_HOOKS=0`.
+
+> This page covers the **fail-open observability** hook set, which is the only thing
+> `hooks/hooks.json` registers. For the **opt-in, fail-closed `preToolUse` enforcement**
+> hooks (block commit/push to `main`, draft-PR-only) — shipped as scripts but deliberately
+> not wired — see [enforcement.md](enforcement.md). The manifest + script contract they
+> share is owned by [`../reference/hook-contract.md`](../reference/hook-contract.md).
 
 ## Files
 
@@ -48,7 +57,7 @@ Both loggers read the payload from real stdin, so test them as a separate proces
 
 ```powershell
 '{"toolName":"t","success":true,"content":"hi"}' | Out-File "$env:TEMP\p.json" -Encoding utf8 -NoNewline
-cmd /c "type `"$env:TEMP\p.json`" | powershell -NoProfile -File hooks\scripts\log-event.ps1 userPromptSubmitted"
+cmd /c "type `"$env:TEMP\p.json`" | pwsh -NoProfile -ExecutionPolicy Bypass -File hooks\scripts\log-event.ps1 userPromptSubmitted"
 ```
 
 ```bash

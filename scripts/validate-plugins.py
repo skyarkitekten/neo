@@ -17,13 +17,20 @@ This script makes the remaining invariants executable:
     load (issue #81);
   * every plugin's hooks.json conforms to the Neo hook-manifest contract
     (scripts/linting/schemas/hook-manifest.schema.json): version 1, known event
-    names, well-formed command entries, and the three Neo-specific rules — a
+    names, well-formed command entries, and four Neo-specific rules — a
     `powershell` command must not reference the bare `${PLUGIN_ROOT}` placeholder
     (it must use `$env:PLUGIN_ROOT`), no event may be declared in both its
-    canonical camelCase and PascalCase-alias form (which would fire it twice), and
-    any command invoking a plugin script must first check the script exists.
-    preToolUse is fail-closed, so an unresolvable script path — a layout move, a
-    stale install — denies every tool call and bricks the session (issue #88);
+    canonical camelCase and PascalCase-alias form (which would fire it twice),
+    any command invoking a plugin script must first check the script exists AND
+    run it through an explicit interpreter rather than letting ambient host state
+    decide whether the file is runnable, and
+    no shipped plugin may register a fail-closed event. A hook that exits non-zero
+    is a failed hook, and on `preToolUse` that denies the tool call — every tool
+    call, including read-only ones. Both halves have shipped: a layout move left
+    the script path stale (PR #93), and `& $s` refused to load on a machine whose
+    effective execution policy was `Restricted` (issue #95). Either bricked the
+    session, and `NEO_ENFORCE_GUARDRAILS=0` could not rescue it because the script
+    that reads that variable is the thing that never ran;
   * every Copilot agent's `agents:` allowlist references a real agent `name:`;
   * any agent that delegates (non-empty `agents:`) also grants the `agent`/`Task`
     delegation tool in its `tools:` allowlist;
@@ -269,49 +276,82 @@ HOOK_EVENTS = {
 # Per-platform command keys allowed on a hook entry, plus the cross-platform one.
 HOOK_COMMAND_KEYS = {"command", "bash", "powershell", "windows", "linux", "osx"}
 HOOK_ENTRY_KEYS = HOOK_COMMAND_KEYS | {"type", "cwd", "env", "timeout", "timeoutSec"}
+# Events where a failed hook blocks the agent rather than merely logging. A shipped plugin
+# must not register one. `preToolUse` interposes on EVERY tool call, so any failure in it —
+# a stale path, a policy that won't load the script, a crash — denies `view` just as
+# readily as `git push`, and the NEO_ENFORCE_GUARDRAILS escape hatch cannot help because
+# the script that reads it is the thing that didn't run. Neo's guardrails are also a
+# consuming team's policy call, not a plugin's to impose; server-side branch protection is
+# the real control. The scripts stay in-tree and teams opt in — see
+# docs/contributing/guides/enforcement.md (issue #95).
+HOOK_FAIL_CLOSED_EVENTS = {"preToolUse"}
 # ${PLUGIN_ROOT} (and ${...} generally) is PowerShell's own variable syntax and
 # expands to an empty string; the env var must be read as $env:PLUGIN_ROOT.
 _PS_BAD_PLUGIN_ROOT = re.compile(r"\$\{\s*PLUGIN_ROOT\s*\}")
-# A hook command that invokes a plugin script must first check the script is there.
-# preToolUse is FAIL-CLOSED: a command that exits non-zero denies the tool call, so an
-# unresolvable script path denies *every* tool call and bricks the session (issue #88).
-# That is exactly what a layout move or a stale install produces, so the guard is
-# required on every event, not just the blocking one.
+# A hook command that invokes a plugin script must first check the script is there, and must
+# then run it through an explicit interpreter rather than letting ambient host state decide
+# whether the file is runnable. A hook that exits non-zero is treated as failure by the harness,
+# and on the fail-closed `preToolUse` event that denies the tool call outright, so an
+# unresolvable OR unrunnable script path can deny *every* tool call and brick the session.
+# All three have shipped: a layout move left the path stale (PR #93); `& $s` on a machine whose
+# effective policy is `Restricted` refused to load a script that was right there; and `"$s"` on
+# macOS refused to exec a script whose executable bit was missing (both issue #95). The guard and
+# the explicit interpreter are required on every event and every platform, not just the blocking
+# event on Windows.
 _PLUGIN_SCRIPT_REF = re.compile(r"PLUGIN_ROOT[^\"']*/hooks/scripts/")
+# `"$s" event` executes the script FILE directly, which requires the POSIX executable bit and a
+# resolvable shebang. The `[ -f "$s" ]` guard proves the file is THERE; it never proves it can
+# RUN. When the bit is missing the guard passes and exec fails with 126 (a bad shebang gives
+# 127) — and on fail-closed `preToolUse` that denies every tool call. This shipped: macOS users
+# hit the identical `(hook errored)` blanket denial as the Windows execution-policy outage
+# (issue #95). `bash "$s"` passes the script as an ARGUMENT to an interpreter that is already
+# running, so neither the mode bit nor the shebang is consulted — measured exit 0 with the bit
+# stripped, versus 126 for the direct form.
+#
+# This does NOT rescue CRLF line endings (bash still chokes on `\r`), so the `*.sh text eol=lf`
+# rule in .gitattributes stays load-bearing.
 _POSIX_SAFE_SCRIPT = re.compile(
     r'^s\s*=\s*"[^"]*PLUGIN_ROOT[^"]*/hooks/scripts/[^"]+"\s*;\s*'
     r'\[\s+-f\s+"\$s"\s+\]\s*\|\|\s*exit\s+0\s*;\s*'
-    r'"\$s"(?:\s+[^;|&]+)?\s*$'
+    r'bash\s+"\$s"(?:\s+[^;|&]+)?\s*$'
 )
+_POSIX_SAFE_HINT = 's="..."; [ -f "$s" ] || exit 0; bash "$s" event'
+# `& $s` runs a script FILE, which is exactly what PowerShell execution policy governs, and
+# the harness passes no -ExecutionPolicy flag. On a stock Windows client every scope is
+# Undefined, which resolves to Restricted, and the file simply refuses to load (exit 1).
+# `-ExecutionPolicy Bypass` is process-scoped: it persists nothing and affects no other
+# process. It clears the Process/CurrentUser/LocalMachine scopes but NOT MachinePolicy or
+# UserPolicy, which outrank it — a Group Policy that restricts script execution still wins.
+# `pwsh` is guaranteed present because the harness itself spawns pwsh.exe.
 _POWERSHELL_SAFE_SCRIPT = re.compile(
     r'^\$s\s*=\s*"[^"]*\$env:PLUGIN_ROOT[^"]*/hooks/scripts/[^"]+"\s*;\s*'
     r'if\s*\(\s*-not\s*\(\s*Test-Path\s+-LiteralPath\s+\$s\s*\)\s*\)\s*'
-    r'\{\s*exit\s+0\s*\}\s*;\s*&\s*\$s(?:\s+[^;|&]+)?\s*$',
+    r'\{\s*exit\s+0\s*\}\s*;\s*'
+    r'pwsh\s+-NoProfile\s+-ExecutionPolicy\s+Bypass\s+-File\s+"\$s"(?:\s+[^;|&]+)?\s*$',
     re.IGNORECASE,
+)
+_PS_SAFE_HINT = (
+    '$s = "..."; if (-not (Test-Path -LiteralPath $s)) { exit 0 }; '
+    'pwsh -NoProfile -ExecutionPolicy Bypass -File "$s" event'
 )
 _SAFE_SCRIPT_FORMS = {
     # command key -> (full safe command form, human hint)
-    "bash": (_POSIX_SAFE_SCRIPT, 's="..."; [ -f "$s" ] || exit 0; "$s" event'),
-    "linux": (_POSIX_SAFE_SCRIPT, 's="..."; [ -f "$s" ] || exit 0; "$s" event'),
-    "osx": (_POSIX_SAFE_SCRIPT, 's="..."; [ -f "$s" ] || exit 0; "$s" event'),
-    "powershell": (
-        _POWERSHELL_SAFE_SCRIPT,
-        '$s = "..."; if (-not (Test-Path -LiteralPath $s)) { exit 0 }; & $s event',
-    ),
-    "windows": (
-        _POWERSHELL_SAFE_SCRIPT,
-        '$s = "..."; if (-not (Test-Path -LiteralPath $s)) { exit 0 }; & $s event',
-    ),
+    "bash": (_POSIX_SAFE_SCRIPT, _POSIX_SAFE_HINT),
+    "linux": (_POSIX_SAFE_SCRIPT, _POSIX_SAFE_HINT),
+    "osx": (_POSIX_SAFE_SCRIPT, _POSIX_SAFE_HINT),
+    "powershell": (_POWERSHELL_SAFE_SCRIPT, _PS_SAFE_HINT),
+    "windows": (_POWERSHELL_SAFE_SCRIPT, _PS_SAFE_HINT),
 }
 
 
 def check_hooks_manifest(path: Path) -> None:
     """Validate a plugin hooks.json against the Neo hook-manifest contract.
 
-    Enforces the schema's structural invariants plus three Neo-specific rules that
+    Enforces the schema's structural invariants plus four Neo-specific rules that
     a plain JSON parse can't catch: no bare ${PLUGIN_ROOT} inside a `powershell`
-    command, no event declared in both CLI-lowercase and PascalCase form, and no
-    unguarded invocation of a plugin script.
+    command, no event declared in both CLI-lowercase and PascalCase form, no
+    unguarded or policy-blockable invocation of a plugin script, and no fail-closed
+    event registered by a shipped plugin.
     """
     rel = path.relative_to(REPO_ROOT)
     try:
@@ -344,6 +384,13 @@ def check_hooks_manifest(path: Path) -> None:
         seen_lower[low] = event
         if low not in HOOK_EVENTS:
             err(f"unknown event name '{event}'")
+        if low in HOOK_FAIL_CLOSED_EVENTS:
+            err(
+                f"event '{event}' is fail-closed and must not be registered by a shipped "
+                f"plugin — a hook failure there denies every tool call, including read-only "
+                f"ones, and bricks the session. Ship the script and let teams opt in "
+                f"instead; see docs/contributing/guides/enforcement.md"
+            )
         if not isinstance(entries, list) or not entries:
             err(f"event '{event}' must map to a non-empty array")
             continue
@@ -382,8 +429,11 @@ def _check_hook_entry(entry: object, where: str, err) -> None:
         if _PLUGIN_SCRIPT_REF.search(cmd) and not safe_form.fullmatch(cmd):
             err(
                 f"{where}: `{key}` command must assign the plugin script path, check that "
-                f"same path exists, exit 0 when absent, then invoke it — preToolUse is "
-                f"fail-closed, so an unsafe command can deny every tool call. Use: {hint}"
+                f"same path exists, exit 0 when absent, then invoke it through an explicit "
+                f"interpreter rather than letting ambient host state decide whether the file "
+                f"is runnable (Windows execution policy, or the POSIX executable bit). A hook "
+                f"that exits non-zero is a failed hook, and on a fail-closed event that "
+                f"denies the tool call. Use: {hint}"
             )
 
 

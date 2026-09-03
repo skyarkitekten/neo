@@ -10,7 +10,8 @@ the **Copilot-only decision** (#34, PR #36/#37) that dropped the Claude agent tr
 `.claude-plugin/` manifests, and the dual hook configs, renaming `validate-mirrors.py` →
 `validate-plugins.py`. Neo is now a **single-harness (GitHub Copilot) distribution repo**.
 
-Since then: `preToolUse` enforcement shipped (#42, PR #44), and the **Product loop** shipped
+Since then: `preToolUse` enforcement shipped (#42, PR #44) and was later withdrawn from the
+shipped manifests (#95 — the scripts remain, opt-in), and the **Product loop** shipped
 as a second plugin, `neo-product` (PR #70, plus `product.researcher` in PR #71) — five agents
 and three skills producing a PRD upstream of the Specification loop.
 
@@ -30,8 +31,11 @@ Run `gh issue list --state open` for the live backlog. Current shape:
   (#65), `neo-csharp-api` (#66), `neo-azure-platform` (#67), and `neo-ops` (#68, pairs
   with #14 Verification agents).
 - **Safety / hooks** — #4 core observability hook set + per-session enablement. The
-  `preToolUse` enforcement half (block-on-`main`, draft-PR-only) is **done** — #42, PR #44.
-  #75 tracks duplicate hook registration now that two plugins each ship the same nine events.
+  `preToolUse` enforcement half (block-on-`main`, draft-PR-only) shipped in #42 / PR #44 and
+  was **withdrawn from the shipped manifests** in #95: the scripts remain in-tree but are
+  no longer registered, because a fail-closed hook that can't launch denies every tool call,
+  and the policy belongs to the consuming repo. See `docs/contributing/guides/enforcement.md`.
+  #75 tracks duplicate hook registration now that two plugins each ship the same events.
 - **Docs tooling** — #76 add undocumented-plugin and Neo-stylization checks to the Docs
   Consistency Audit; blocked on gh-aw v0.83.1 to recompile the workflow lock file.
 - **Verification agents** — #14 SRE / Platform Eng (`phase: core`, not built).
