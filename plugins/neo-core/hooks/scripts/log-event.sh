@@ -6,6 +6,8 @@
 # Reads the event payload as JSON on stdin (both Copilot and Claude Code pass
 # JSON this way) and writes a compact record to $AGENT_LOG_DIR/events.jsonl.
 #
+# REQUIRES: jq (https://jqlang.github.io/jq/). On macOS, install with: brew install jq
+# 
 # Env:
 #   AGENT_LOG_DIR  where to write logs   (default: $HOME/.agent-logs)
 #   AGENT_RUN_ID   correlation key       (default: current git branch)
@@ -22,6 +24,21 @@ RUN_ID="${AGENT_RUN_ID:-$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo un
 TS="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
 mkdir -p "$LOG_DIR" 2>/dev/null
+
+# Check for jq prerequisite
+if ! command -v jq >/dev/null 2>&1; then
+  # Warn once per session per user
+  WARN_FILE="${LOG_DIR}/.jq-warning"
+  if [ ! -f "$WARN_FILE" ]; then
+    touch "$WARN_FILE"
+    echo "WARNING: jq not found on PATH. Agent logging disabled." >&2
+    echo "Install with: brew install jq (macOS) or apt-get install jq (Linux)" >&2
+  fi
+  # Fail-open: exit cleanly without logging this event
+  printf '{"continue":true}\n'
+  exit 0
+fi
+
 payload="$(cat)"
 
 # Curated record with cross-harness fallbacks. Strings are truncated so tool
@@ -42,7 +59,7 @@ record="$(printf '%s' "$payload" | jq -c \
   }' 2>/dev/null)"
 
 # If the payload shape was unexpected and jq produced nothing, keep a minimal
-# raw record so no event is silently dropped.
+# raw record so no event is silently dropped. (jq is guaranteed to be on PATH.)
 if [ -z "$record" ]; then
   record="$(jq -nc --arg ts "$TS" --arg run "$RUN_ID" --arg event "$EVENT" \
     --arg raw "$(printf '%s' "$payload" | head -c 2000)" \

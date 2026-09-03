@@ -41,9 +41,9 @@ Windows runs the `.ps1` and macOS/Linux the `.sh` automatically — no per-OS se
 Two things to check afterwards:
 
 - **macOS/Linux need `jq` on PATH** (`brew install jq`) for `log-event.sh`. The PowerShell
-  sibling has no external dependency. Without `jq` the script still exits `0` and the turn
-  proceeds — it just can't build the record, so it appends a blank line instead. You lose the
-  data, not the session.
+  sibling has no external dependency. If `jq` is missing, `log-event.sh` warns once to stderr
+  and skips logging for that event (exits cleanly without writing a record). You lose the
+  data for events while `jq` is absent, but the session continues unaffected.
 - **Confirm the event names against your installed Copilot version** — these have changed
   between releases. `../reference/hook-contract.md` carries the current set.
 

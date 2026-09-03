@@ -11,6 +11,9 @@
   Uses native PowerShell JSON (ConvertFrom-Json / ConvertTo-Json) so it has NO `jq`
   dependency — that is the whole point of the PowerShell path on Windows.
 
+  The shell sibling log-event.sh requires jq (https://jqlang.github.io/jq/): on
+  macOS run 'brew install jq' and on Linux 'apt-get install jq'.
+
   Env:
     AGENT_LOG_DIR  where to write logs   (default: $HOME/.agent-logs)
     AGENT_RUN_ID   correlation key       (default: current git branch)
