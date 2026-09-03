@@ -21,7 +21,7 @@ are built:
 | --- | --- | --- |
 | **Product loop** | Problem/opportunity → research → viability/desirability/feasibility → **PRD** | `[live]` |
 | **Specification loop** | PRD/requirements → **Feature** (business, human-signed) → **Task** (spec, ≈ 1 PR) | `[live]` |
-| **Coding loop** | Research → plan → implement → review → draft PR | `[target]` |
+| **Coding loop** | Research → plan → implement → review → draft PR | `[live]` |
 | **Verification / Operations** | PR review, smoke/user test, CD, telemetry | `[target]` |
 
 So today you use Neo to **turn intent into a signed-off, machine-checkable task set** — and, if you
