@@ -213,6 +213,7 @@ string** — they would sail straight past the command patterns.
 | Recognized safe operation | allow |
 | Non-shell tool | allow |
 | Payload unparseable (or `python3` absent on Unix) | allow + stderr warning |
+| Host-tool `toolArgs` present but unreadable (not JSON, not an object) | allow + stderr warning |
 | Hook script missing at the wired path | allow (existence guard in the hook command) |
 | Interpreter, execution policy, or a missing executable bit refuses to run the script | **deny — must be prevented, not handled** |
 | Script present but crashes | **deny** |

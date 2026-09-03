@@ -31,7 +31,7 @@ directory. See [`plugin-contract.md`](./plugin-contract.md) for the wider folder
   "hooks": {
     "sessionStart": [
       { "type": "command",
-        "bash": "s=\"${PLUGIN_ROOT}/hooks/scripts/log-event.sh\"; [ -f \"$s\" ] || exit 0; \"$s\" sessionStart",
+        "bash": "s=\"${PLUGIN_ROOT}/hooks/scripts/log-event.sh\"; [ -f \"$s\" ] || exit 0; bash \"$s\" sessionStart",
         "powershell": "$s = \"$env:PLUGIN_ROOT/hooks/scripts/log-event.ps1\"; if (-not (Test-Path -LiteralPath $s)) { exit 0 }; pwsh -NoProfile -ExecutionPolicy Bypass -File \"$s\" sessionStart",
         "timeoutSec": 10 }
     ]
