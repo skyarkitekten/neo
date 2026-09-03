@@ -31,7 +31,8 @@ Paths below are relative to the plugin root (`plugins/neo-core/`).
 Install the plugin — the loggers ship inside it, so there is nothing to copy:
 
 ```bash
-copilot plugin install ./plugins/neo-core
+copilot plugin marketplace add .
+copilot plugin install neo-core@neo
 ```
 
 Copilot CLI registers the hooks and supplies `${PLUGIN_ROOT}` at runtime. Each event in
