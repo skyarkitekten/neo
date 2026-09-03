@@ -89,10 +89,19 @@ This repo has nothing to compile, lint, or unit-test in the app sense. Do **not*
 
   ```bash
   export COPILOT_HOME=$(mktemp -d)
-  copilot plugin install ./plugins/neo-core    # must say "Installed 3 skills."
-  copilot plugin install ./plugins/neo-product # must say "Installed 4 skills."
-  copilot plugins list --kind skill --scope plugin
+  copilot plugin marketplace add .
+  copilot plugin install neo-core@neo    # must say "Installed 3 skills."
+  copilot plugin install neo-product@neo # must say "Installed 4 skills."
+  copilot plugin list                    # confirms installed, enabled, and live directory
+  copilot -p "List the exact names of every skill available to you and nothing else."
   ```
+
+  Note: `copilot plugins list --kind skill --scope plugin` is unreliable on CLI 1.0.81 —
+  it prints `No plugins found.` even when the skills installed and are loading correctly.
+  Plugin-contributed skills aren't enumerated by that command; trust the install-time skill
+  count, `copilot plugin list`, and a live session naming its skills instead. Also note that
+  the direct-install form (`copilot plugin install ./plugins/neo-core`) is deprecated as of
+  1.0.81 — use the marketplace form above.
 
 Quick manifest sanity check:
 
@@ -108,17 +117,12 @@ python3 scripts/validate-plugins.py
 ### Dev loop — testing a changed plugin in Copilot
 
 Direct plugin installs (`copilot plugin install ./plugins/neo-core`) are deprecated as of
-Copilot CLI 1.0.81 and will stop working in a future release. Use a **local
-directory-source marketplace** instead. Copilot reads the plugin live from the repo
-directory (no copy step), so edits take effect on the next invocation without reinstalling:
-
-```console
-# From the repo root (where .github/plugin/marketplace.json lives):
-copilot plugin marketplace add .
-copilot plugin install neo-core@neo
-# optionally:
-copilot plugin install neo-product@neo
-```
+Copilot CLI 1.0.81 and will stop working in a future release. Use the same
+`copilot plugin marketplace add .` + `copilot plugin install neo-core@neo` commands from
+"Plugins actually load" above — but against your normal `COPILOT_HOME`, not a throwaway one,
+since here you want the install to persist across invocations. Copilot reads the plugin live
+from the repo directory (no copy step), so edits take effect on the next invocation without
+reinstalling.
 
 The marketplace name (`neo`) comes from `"name"` in `.github/plugin/marketplace.json`.
 Because the source is a local path, Copilot reads agents, skills, and hooks directly from
