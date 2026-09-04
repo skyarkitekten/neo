@@ -11,6 +11,9 @@
   Uses native PowerShell JSON (ConvertFrom-Json / ConvertTo-Json) so it has NO `jq`
   dependency — that is the whole point of the PowerShell path on Windows.
 
+  The shell sibling log-event.sh requires jq (https://jqlang.github.io/jq/): on
+  macOS run 'brew install jq' and on Linux 'apt-get install jq'.
+
   Env:
     AGENT_LOG_DIR  where to write logs   (default: $HOME/.agent-logs)
     AGENT_RUN_ID   correlation key       (default: current git branch)
@@ -96,7 +99,10 @@ try {
     }
 
     $line = $record | ConvertTo-Json -Compress -Depth 10
-    Add-Content -LiteralPath $logFile -Value $line -Encoding utf8
+    # Never append an empty line — a blank record breaks every downstream reader.
+    if (-not [string]::IsNullOrWhiteSpace($line)) {
+        Add-Content -LiteralPath $logFile -Value $line -Encoding utf8
+    }
 } catch {
     # Fail-open: never surface an error to the harness.
 }
