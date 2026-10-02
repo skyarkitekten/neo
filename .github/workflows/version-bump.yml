@@ -9,7 +9,7 @@ name: version-bump
 on:
   push:
     branches: [main]
-    paths: ['plugins/**']
+    paths: ['plugins/**', '.github/plugin/marketplace.json']
 
 permissions:
   contents: write
@@ -51,6 +51,24 @@ jobs:
           git checkout -b "$branch"
           git commit -am "chore(release): bump plugin versions"
           git push origin "$branch"
-          gh pr create --base main --head "$branch" \
+          url=$(gh pr create --base main --head "$branch" \
             --title "chore(release): bump plugin versions" \
-            --body "$(printf 'Automated SemVer bump for changes merged in %s.\n\n```\n%s\n```' "$GITHUB_SHA" "$(cat /tmp/bumps.txt)")"
+            --body "$(printf 'Automated SemVer bump for changes merged in %s.\n\n```\n%s\n```' "$GITHUB_SHA" "$(cat /tmp/bumps.txt)")")
+          gh pr merge "$url" --auto --squash --delete-branch || echo "auto-merge unavailable; merge the bump PR manually"
+
+      # No bump needed => this push is the merged release commit (or a no-op): tag + release.
+      - name: Tag and release
+        if: steps.bump.outputs.changed == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          version=$(python3 -c "import json;print(json.load(open('.github/plugin/marketplace.json'))['metadata']['version'])")
+          if git ls-remote --exit-code --tags origin "refs/tags/$version" >/dev/null; then
+            echo "tag $version already exists"; exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$version" -m "Release $version" "$GITHUB_SHA"
+          git push origin "$version"
+          gh release create "$version" --verify-tag --title "$version" --generate-notes

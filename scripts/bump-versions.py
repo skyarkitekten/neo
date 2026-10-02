@@ -5,7 +5,8 @@ Usage: bump-versions.py <base-rev> <head-rev>
 
 For each plugins/<name>/, reads the non-merge commits in base..head that touched
 that directory (skipping `chore(release)` commits) and bumps the plugin's
-plugin.json and its plugins[] entry in .github/plugin/marketplace.json:
+plugin.json and its plugins[] entry in .github/plugin/marketplace.json;
+the marketplace's own metadata.version is bumped by the highest level applied:
   `type!:` or a `BREAKING CHANGE` footer -> major, `feat` -> minor, anything else -> patch.
 Prints one `<plugin> <old> -> <new>` line per bump; prints nothing if none.
 """
@@ -60,11 +61,13 @@ def main():
         return
     market = json.loads(MARKETPLACE.read_text())
     changed = False
+    top = 0
     for entry in market["plugins"]:
         plugin_dir = entry["source"]
         rank = level(base, head, plugin_dir)
         if not rank:
             continue
+        top = max(top, rank)
         manifest = ROOT / plugin_dir / "plugin.json"
         data = json.loads(manifest.read_text())
         old, new = data["version"], bump(data["version"], rank)
@@ -73,7 +76,10 @@ def main():
         changed = True
         print(f"{entry['name']} {old} -> {new}")
     if changed:
+        meta = market["metadata"]
+        old, meta["version"] = meta["version"], bump(meta["version"], top)
         write(MARKETPLACE, market)
+        print(f"{market['name']} (marketplace) {old} -> {meta['version']}")
 
 
 if __name__ == "__main__":
