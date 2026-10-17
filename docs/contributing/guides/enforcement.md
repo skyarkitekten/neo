@@ -69,9 +69,9 @@ Both siblings enforce the same two rules, including against the desktop app's
 rather than a shell command string and would otherwise sail past the command patterns entirely.
 
 > **Duplicated, so it can drift.** A plugin cannot reference files outside its own directory, so
-> each of `neo-core` and `neo-product` ships its own copy of all four scripts. That is four files
-> to keep in step, and they have drifted before: `neo-product`'s pair sat a revision behind and
-> silently missed the host-tool half of Rule B. If you change one, change all four and diff them.
+> each of `neo-core`, `neo-product`, and `neo-arc` ships its own copy of all four scripts. That is
+> four files per plugin to keep in step, and they have drifted before: `neo-product`'s pair sat a revision behind and
+> silently missed the host-tool half of Rule B. If you change one, change every copy and diff them.
 
 ## Opting in
 

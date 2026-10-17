@@ -4,7 +4,7 @@
     "name": "skyarkitekten"
   },
   "metadata": {
-    "description": "Neo \u2014 a concept-to-production multi-agent coding system. A core crew, an optional upstream product crew, and additive per-stack plugins, for GitHub Copilot CLI.",
+    "description": "Neo \u2014 a concept-to-production multi-agent coding system. A core crew, optional product and architecture-assessment crews, and additive per-stack plugins, for GitHub Copilot CLI.",
     "version": "2.2.1"
   },
   "plugins": [
@@ -36,6 +36,22 @@
       "keywords": [
         "agents",
         "product",
+        "hooks"
+      ]
+    },
+    {
+      "name": "neo-arc",
+      "source": "plugins/neo-arc",
+      "description": "Architecture-assessment crew \u2014 an Architecture Engineer orchestrator coordinating a scout, parallel readers, three independent designers, a three-lens judge panel, a synthesizer, one refuter per load-bearing reuse claim, a completeness critic, a report writer, and three fact-checkers, ending in an evidence-backed assessment report, with lifecycle-logging hooks.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Chad Thomas"
+      },
+      "license": "MIT",
+      "keywords": [
+        "agents",
+        "architecture",
+        "assessment",
         "hooks"
       ]
     }

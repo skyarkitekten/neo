@@ -34,6 +34,13 @@ plugins/neo-product/                 The Product loop — same shape, grouped by
   skills/                            Copilot skills — neo-<name>/SKILL.md
   hooks/hooks.json                   Copilot hook config (v1 schema, ${PLUGIN_ROOT})
   hooks/scripts/log-event.sh         its own copy — plugins can't share files
+plugins/neo-arc/                     The Architecture Assessment loop — same shape, flat naming:
+  plugin.json                        Copilot plugin manifest
+  agents/                            neo.arc-<role>.agent.md
+  skills/                            its own copy of neo-evidence-standard
+  extensions/neo-arc-assessment/     optional explicit-only Dynamic Workflow — extension.mjs (declared by plugin.json "extensions")
+  hooks/hooks.json                   Copilot hook config (v1 schema, ${PLUGIN_ROOT})
+  hooks/scripts/log-event.sh         its own copy — plugins can't share files
 .github/plugin/marketplace.json      Copilot marketplace (root, lists plugins[])
 .github/agents/neo.master-control.agent.md   DEV-TIME agent (Copilot), never shipped
 scripts/validate-plugins.py          CI plugin check (manifests + hooks + agents: allowlists)
@@ -52,6 +59,7 @@ The shipped agents:
 | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `plugins/neo-core/`    | `business-engineer` (Specification-loop orchestrator), `technical-engineer` (Coding-loop orchestrator — start here for one task), `researcher`, `implementation-planner`, `code-writer`, `code-reviewer`, `feature-agent`, `task-planner` |
 | `plugins/neo-product/` | `product.engineer` (orchestrator — start here), `product.researcher`, `product.coach`, `design.thinking`, `systems.thinking`                              |
+| `plugins/neo-arc/`     | `architecture-engineer` (orchestrator — start here), `arc-scout`, `arc-reader`, `arc-designer`, `arc-judge`, `arc-synthesizer`, `arc-refuter`, `arc-critic`, `arc-report`, `arc-factcheck` |
 
 `master-control` is dev-time only and lives at the repo root, never in a plugin.
 
@@ -77,7 +85,7 @@ This repo has nothing to compile, lint, or unit-test in the app sense. Do **not*
 - **Plugins validate** — run `python3 scripts/validate-plugins.py` (`uv run scripts/validate-plugins.py`
   where `python3` isn't on PATH, e.g. Windows). It walks every
   `plugins/*/`, checks the Copilot manifest + hooks parse, asserts every declared component
-  path (`agents`, `skills`, `hooks`) resolves to something real on disk, validates each
+  path (`agents`, `skills`, `hooks`, `extensions`) resolves to something real on disk, validates each
   `hooks.json` against the hook-manifest contract (`scripts/linting/schemas/hook-manifest.schema.json`
   — including the rule that a `powershell` command must use `$env:PLUGIN_ROOT`, not the
   bare `${PLUGIN_ROOT}`), rejects non-canonical hook event names, and fails on any `agents:`
@@ -92,6 +100,7 @@ This repo has nothing to compile, lint, or unit-test in the app sense. Do **not*
   copilot plugin marketplace add .       # must run from the repo root
   copilot plugin install neo-core@neo    # must say "Installed 3 skills."
   copilot plugin install neo-product@neo # must say "Installed 4 skills."
+  copilot plugin install neo-arc@neo     # must say "Installed 1 skill."
   copilot plugin list                    # confirms installed, enabled, and live directory
   copilot -p "List the exact names of every skill available to you and nothing else."
   ```
@@ -133,6 +142,7 @@ To clean up when done:
 ```console
 copilot plugin uninstall neo-core
 copilot plugin uninstall neo-product   # if installed
+copilot plugin uninstall neo-arc       # if installed
 copilot plugin marketplace remove neo
 ```
 
@@ -199,7 +209,7 @@ copilot plugin marketplace remove neo
   see blanket denials, restart the session first — a mid-session `plugin install` does not re-read
   hooks.
 - **Evidence discipline is a shipped contract**, not a style preference — the `neo-evidence-standard`
-  skill (duplicated into both plugins) owns the retrieval-or-silence rule and the
+  skill (duplicated into every plugin) owns the retrieval-or-silence rule and the
   `FACT` / `INFERENCE` / `RECALL — UNVERIFIED` labels. Agents that gather or consume evidence must load it.
 
 - `docs/README.md` is a two-door hub: **user** docs (`getting-started.md`, `guides/`) sit at the
