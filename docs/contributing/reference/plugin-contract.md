@@ -275,9 +275,13 @@ sits in a marketplace alongside others.
   matches the directory name (e.g. `skills/neo-feature-authoring/SKILL.md` →
   `name: neo-feature-authoring`).
 
-Copilot resolves delegated agents by their frontmatter `name:` field, not the filename, so an
-agent's `agents:` allowlist must reference real `name:` values. `scripts/validate-plugins.py`
-walks every `plugins/*/` and fails CI on any allowlist entry that doesn't resolve.
+Delegation identity differs by surface, so an agent carries both. The `agents:` allowlist is
+written in frontmatter `name:` values, which is how VS Code resolves it. `scripts/validate-plugins.py`
+walks every `plugins/*/` and fails CI on any allowlist entry that doesn't resolve. The Copilot CLI's
+delegation tool instead keys a plugin agent by `<plugin>:<file-stem>` (e.g. `neo-core:neo.code-writer`),
+rejects the display name, and does not enforce `agents:` at all. So an orchestrator's prose must name
+the `agent_type` ID it passes, not only the display name. See
+[agent-authoring-reference § How delegation targets resolve](../guides/agent-authoring-reference.md#how-delegation-targets-resolve).
 
 ### Vendored skills
 

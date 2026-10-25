@@ -61,17 +61,31 @@ human: you draft, sequence, spawn, and collect. **The human signs.** Every gate 
 
 ## Which agent to delegate to
 
-| Step | Agent to invoke |
-| --- | --- |
-| PRD segment → Feature | `Neo Feature Agent` |
-| Feature → Tasks | `Neo Task Planner` |
-| Task → draft PR | `Neo Technical Engineer` — **spawned as a child session**, not delegated |
+| Step | Agent | `agent_type` to pass | Fallback if unavailable |
+| --- | --- | --- | --- |
+| PRD segment → Feature | `Neo Feature Agent` | `neo-core:neo.feature-agent` | `general-purpose` |
+| Feature → Tasks | `Neo Task Planner` | `neo-core:neo.task-planner` | `general-purpose` |
+| Task → draft PR | `Neo Technical Engineer` — **spawned as a child session**, not delegated | — | — |
 
 The Technical Engineer runs in its own session because a task is one branch and one PR; running two
 in one worktree would race. Use `create_session`, never `agent`, for that step.
 
-Fall back to a generic Copilot agent only if a Neo agent is genuinely unavailable in this harness,
-and say so explicitly in your report — which agent was missing, and what you used instead.
+Display names (`Neo Task Planner`) are **not** what the delegation tool accepts. In Copilot CLI a
+plugin agent's `agent_type` is `<plugin>:<file-stem>`; the display name fails with `Unknown agent_type`.
+
+**Resolve availability once per session, before the first delegation, and record it.** Read the
+`agent_type` values your delegation tool lists. Do not probe by calling it. Record `resolved` or `fallback`
+for each delegated row, then use the recorded value for the rest of the session. **Never retry a
+rejected `agent_type` string.** If a call fails with `Unknown agent_type`, read the valid types listed in the error, update
+the record once, and continue. Re-check only when the session's configuration changes, for example after a plugin
+reinstall or reload.
+
+**Fallback.** Use a fallback only for a row recorded as `fallback`. Give it the same bounded
+assignment, and restate the role's contract in the prompt, because the built-in agent doesn't know it: the
+`neo-feature-authoring` or `neo-task-authoring` skill, interactive with the human, and no signing.
+Disclose the substitution once when you record it, and again in your final report: which agent was missing, the
+evidence, and what you used instead. It's a harness issue to raise separately. Don't block the
+loop on it or rediscover it per segment.
 
 ## Procedure
 

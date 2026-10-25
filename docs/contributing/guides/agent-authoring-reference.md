@@ -112,6 +112,30 @@ Two caveats worth designing around:
 child sessions but whose `tools:` omits `create_session` fails CI, and any tool name matching neither
 a known alias nor a known host tool is reported as a probable typo.
 
+#### How delegation targets resolve
+
+Probed against Copilot CLI **v1.0.104** with both plugins installed into a throwaway `COPILOT_HOME`:
+
+- **A plugin agent's `agent_type` is `<plugin>:<file-stem>`**, e.g. `neo-core:neo.code-writer`.
+  Repo-scoped agents (`.github/agents/`) are listed by display `name:` (`Neo Master Control`).
+- **The display name is rejected.** `agent_type: "Neo Code Writer"` fails with
+  `Unknown agent_type: Neo Code Writer. Valid types are: … neo-core:neo.code-writer …`. Strong models
+  often translate the name to the ID themselves, so delegation by display name works *sometimes*.
+  That intermittency looks like an availability problem, but it isn't one.
+- **`agents:` is not enforced.** An orchestrator sees every agent whether the allowlist holds
+  display names, qualified IDs, or file stems. Keep it in display names for VS Code and the validator,
+  but don't rely on it to restrict anything in the CLI.
+- **Depth-1 agents see the same list.** An orchestrator invoked as a sub-agent can still delegate to
+  the Neo agents. The host-tool depth limit above is a different mechanism.
+
+Separately, sessions have reported an `Unknown agent_type` whose valid-types list held **only
+built-ins**, sometimes after Neo agents had resolved earlier in the same session. That is plugin
+availability, not naming, and its root cause hasn't been established. Orchestrators therefore name
+the exact `agent_type` they pass. They resolve availability once per session from the tool's listed
+values, record it, never retry a rejected string, and use a fixed, disclosed fallback that keeps
+bounded units and independent review. See the delegation section of `neo.technical-engineer.agent.md`
+for the canonical wording.
+
 **Body:** structure it — role/expertise, a numbered procedure or checklist, guardrails ("never…"), and an explicit output format (show the format you expect).
 
 ### Model selection

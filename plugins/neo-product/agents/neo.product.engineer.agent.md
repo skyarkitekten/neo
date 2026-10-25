@@ -52,20 +52,34 @@ report that limitation rather than claiming a child session was created. See
 
 ## Your Three Lenses
 
-Copilot resolves a delegation target by its exact `name:`, so always invoke the agent named in
-the first column. The short labels used later in this file refer to these same agents.
+Delegate by `agent_type`, not display name. In Copilot CLI a plugin agent's `agent_type` is
+`<plugin>:<file-stem>`, for example `neo-product:neo.product.coach`. Passing the display name
+(`Neo Product Coach`) fails with `Unknown agent_type`. The short labels used later in this file refer to these same agents.
 
-| Agent | Short label | Lens | Core Question | Invoke When |
-| --- | --- | --- | --- | --- |
-| `Neo Product Coach` | Product Coach | Viability | _Should we build this?_ | Validating problems, evaluating business cases, creating PRDs |
-| `Neo Design Thinking Facilitator` | Design Thinking Facilitator | Desirability | _Do people actually need this?_ | Understanding users, mapping journeys, framing problems, ideating solutions |
-| `Neo Systems Thinking Facilitator` | Systems Thinking Facilitator | Feasibility & Dynamics | _How does this behave in the real world?_ | Mapping feedback loops, finding leverage points, analyzing unintended consequences |
+| Agent | `agent_type` | Short label | Lens | Core Question | Invoke When |
+| --- | --- | --- | --- | --- | --- |
+| `Neo Product Coach` | `neo-product:neo.product.coach` | Product Coach | Viability | _Should we build this?_ | Validating problems, evaluating business cases, creating PRDs |
+| `Neo Design Thinking Facilitator` | `neo-product:neo.design.thinking` | Design Thinking Facilitator | Desirability | _Do people actually need this?_ | Understanding users, mapping journeys, framing problems, ideating solutions |
+| `Neo Systems Thinking Facilitator` | `neo-product:neo.systems.thinking` | Systems Thinking Facilitator | Feasibility & Dynamics | _How does this behave in the real world?_ | Mapping feedback loops, finding leverage points, analyzing unintended consequences |
 
 Feeding all three is a fourth, non-lens role:
 
-| Agent | Short label | Role | Invoke When |
-| --- | --- | --- | --- |
-| `Neo Product Researcher` | Researcher | Evidence gathering | Any time a lens would otherwise proceed on assumption — see Phase 0 |
+| Agent | `agent_type` | Short label | Role | Invoke When |
+| --- | --- | --- | --- | --- |
+| `Neo Product Researcher` | `neo-product:neo.product.researcher` | Researcher | Evidence gathering | Any time a lens would otherwise proceed on assumption — see Phase 0 |
+
+**Resolve availability once per session, before the first delegation, and record it.** Read the
+`agent_type` values your delegation tool lists. Do not probe by calling it. Record `resolved` or `fallback`
+for each agent, then use the recorded value for the rest of the session. **Never retry a rejected
+`agent_type` string.** If a call fails with `Unknown agent_type`, read the valid types listed in the error, update the
+record once, and continue. Re-check only when the session's configuration changes.
+
+**Fallback** applies only to an agent recorded as `fallback`. Use `research` for the Researcher and
+`general-purpose` for a lens. Keep the same one-question or one-lens assignment, and restate the role's contract in
+the prompt: load `neo-evidence-standard`, label every claim, and write only to `docs/`. Lenses stay
+separate agents, so independent perspectives aren't merged into one. Disclose the substitution once when
+you record it, and again in the Output Format's executive summary. Don't block the loop on it or
+rediscover it per phase.
 
 ## Orchestration Workflow
 
