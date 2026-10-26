@@ -115,7 +115,7 @@ same route that repo gets its `AGENTS.md`.
 | `neo-design-thinking` skill | `neo-product` | |
 | `neo-systems-thinking` skill | `neo-product` | |
 | `neo-evidence-standard` skill | `neo-product` | Copy of `neo-core`'s; keep the two in step |
-| Lifecycle hooks + `log-event.{sh,ps1}` | `neo-core`, `neo-product` | Duplicated, not shared — a plugin cannot reference files outside its own directory |
+| Lifecycle hooks + `log-event.{sh,ps1}` | `neo-core`, `neo-product` | Duplicated, not shared — a plugin cannot reference files outside its own directory, and each plugin must log when installed alone. With both installed, both fire; the logger de-duplicates per event so one record is written ([observability.md](../guides/observability.md#multiple-neo-plugins)) |
 | `enforce-guardrails.{sh,ps1}` | `neo-core`, `neo-product` | Opt-in `preToolUse` guardrail scripts, shipped unregistered; duplicated like the logger |
 | `analyze_agent_logs.py` | `neo-core` | Analyzes logs the core hooks emit — ships with them |
 | **`master-control`** | **nothing** | Dev-time only |

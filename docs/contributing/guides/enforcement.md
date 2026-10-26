@@ -266,6 +266,48 @@ always means infrastructure failure, never "ran and denied". That is what lets t
 convert a crash into allow-with-warning without swallowing a real verdict. Without the wrapper
 (the strict form), a crashing script fails closed.
 
+## Denial records
+
+Every deny also appends **one** record to the observability log, so a team that opted in can
+answer how often the guardrail fired and which rule did it. It goes to the same file the
+logger writes — `$AGENT_LOG_DIR/events.jsonl`, default `~/.agent-logs/events.jsonl` — and
+`run` follows the logger's fallback order (see [observability.md](observability.md)), so denial
+records join the logger's records for the same run:
+
+```json
+{"ts":"2026-10-26T20:55:11Z","run":"feat/42-login","session":"…","event":"guardrailDenied","tool":"bash","rule":"A1-push-protected-ref","decision":"deny","reason":"protected_branch"}
+```
+
+| `rule` (stable id) | `reason` | Fires on |
+| --- | --- | --- |
+| `A1-push-protected-ref` | `protected_branch` | `git push` with a `main`/`master` refspec |
+| `A2-commit-on-protected-branch` | `protected_branch` | `git commit` / bare `git push` while HEAD is `main`/`master` |
+| `B1-gh-pr-create-not-draft` | `draft_only` | `gh pr create` without `--draft` |
+| `B2-gh-pr-ready` | `draft_only` | `gh pr ready` |
+| `B3-host-create-pr-not-draft` | `draft_only` | host `create_pull_request` without `draft: true` |
+| `B4-host-update-pr-undraft` | `draft_only` | host `update_pull_request` with `draft: false` |
+
+**Privacy boundary.** The record holds derived fields only. The command string, file
+contents, tool arguments, and the human-readable `permissionDecisionReason` are **never**
+written (see [`../reference/hook-contract.md`](../reference/hook-contract.md) § Handling
+sensitive payloads). `tool` and `session` come from the payload, so both are reduced to
+`[A-Za-z0-9._:/-]` and capped (64 and 128 characters). Allowed calls write nothing.
+
+**It cannot change the verdict.** The record is written *after* the deny JSON, every stream of
+the write is discarded, and any failure — unwritable or non-directory `AGENT_LOG_DIR`, missing
+`git`, a full disk — is swallowed, so stdout still carries only the permission JSON and the
+exit code is still 0. Neither script needs `jq` (bash uses the `python3` it already requires;
+PowerShell uses native JSON). Set `NEO_LOG_HOOKS=0` (also `off`/`false`/`no`) to turn the
+records off without touching enforcement.
+
+**Duplicates (#75).** Neither plugin registers this hook — the shipped `hooks.json` files wire
+only `log-event` — so installing both `neo-core` and `neo-product` does **not** duplicate denial
+records. They come from this script, not from `log-event.sh`/`.ps1`, so the per-event claim-file
+de-duplication added to the logger for #75 (PR #130) does **not** cover them: the script writes one record
+per invocation with no de-duplication. If you register the guardrail more than once (for example
+in both `.github/hooks/*.json` and a global `config.json`), a single denied call **will** write
+one record per registration. Register it once, or count distinct `(ts, session, rule)`.
+
 ## Relaxing enforcement
 
 Once you have opted in, interaction with the per-session enablement levers from the

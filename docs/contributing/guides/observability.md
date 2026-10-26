@@ -88,14 +88,40 @@ source scripts/setup-hook-env.sh                # or: source scripts/setup-hook-
 source scripts/teardown-hook-env.sh
 ```
 
-`AGENT_RUN_ID` defaults to the current git branch, matching the loggers' own
-fallback (see below).
+When `AGENT_RUN_ID` is unset, the loggers derive `run` themselves (see
+[What gets logged](#what-gets-logged)).
 
 ## What gets logged
 
-Each line: `ts`, `run` (correlation id — defaults to git branch), `event`, `agent`, `tool`, `status`, and a truncated `prompt`. Default log path is `~/.agent-logs/events.jsonl` (override with `AGENT_LOG_DIR`).
+Each line: `ts`, `run` (correlation id), `event`, `agent`, `tool`, `status`, `session`, and a truncated `prompt`. Default log path is `~/.agent-logs/events.jsonl` (override with `AGENT_LOG_DIR`).
 
-Set `AGENT_RUN_ID` to correlate all events for one spec/task; otherwise the current git branch is used, which works well with the feature-branch-per-spec flow.
+Opted-in guardrail denials also land here as `guardrailDenied` records — see [enforcement.md](enforcement.md) § Denial records.
+
+`run` is resolved by the same ordered fallback in both loggers — the first non-empty value wins:
+
+1. **`AGENT_RUN_ID`** — set it to correlate all events for one spec/task explicitly.
+2. **Git branch of the payload's `cwd`** (`cwd` / `workingDirectory` / `working_directory`), via `git -C <cwd>`. The harness does not guarantee the hook process runs inside the repo, so the payload's working directory is the reliable anchor; this is what makes the feature-branch-per-spec flow group correctly.
+3. **Git branch of the hook process's own cwd** — the original behaviour, kept for harnesses that send no `cwd`.
+4. **Payload session id** (`session_id` / `sessionId`) — still groups one session's events when there is no branch.
+5. **`unknown`**.
+
+A detached `HEAD` is not treated as a branch, so it falls through to the session id. Without `jq` the shell logger skips logging entirely (see [Install](#install)), so the payload-based steps only matter when a record is written.
+
+### Multiple Neo plugins
+
+`neo-core` and `neo-product` each register the same logging hooks, so each logs when installed
+alone. With both installed, Copilot fires **both** loggers for every event with the same payload
+(observed on CLI 1.0.103: every event was written twice before de-duplication). The loggers
+de-duplicate at write time: the first invocation atomically creates a claim file at
+`$AGENT_LOG_DIR/.claims/<sessionId>/<event>.<timestamp>` (hook event, the payload's `sessionId`,
+and its millisecond `timestamp`) and writes the record; the second finds the claim and skips. So
+`events.jsonl` gets one record per event however many Neo plugins are installed.
+
+- A payload missing `sessionId` or `timestamp` has no identity to key on and is logged by every
+  plugin. If the claim can't be written, the event is logged anyway — a duplicate beats a drop.
+- Claim directories idle for over a day are pruned at `sessionStart`. `.claims/` is safe to delete.
+- De-duplication saves log records, not process launches — both hooks still run (see the
+  Windows cost note above).
 
 ## Analyze
 
