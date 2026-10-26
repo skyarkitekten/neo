@@ -10,7 +10,11 @@
 #
 # Env:
 #   AGENT_LOG_DIR  where to write logs   (default: $HOME/.agent-logs)
-#   AGENT_RUN_ID   correlation key       (default: current git branch)
+#   AGENT_RUN_ID   correlation key       (default: see "run" fallback below)
+#
+# The "run" field falls back in order: AGENT_RUN_ID -> git branch of the
+# payload's cwd -> git branch of the hook's own cwd -> payload session id ->
+# "unknown". Hooks often execute outside the repo, so the payload cwd matters.
 #
 # NOTE: the jq field paths below are defensive guesses across harnesses.
 # Verify them against your harness's real payload once and trim to what's there.
@@ -20,13 +24,43 @@ set -o pipefail
 EVENT="${1:-unknown}"
 LOG_DIR="${AGENT_LOG_DIR:-$HOME/.agent-logs}"
 LOG_FILE="$LOG_DIR/events.jsonl"
-RUN_ID="${AGENT_RUN_ID:-$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)}"
 TS="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
 mkdir -p "$LOG_DIR" 2>/dev/null
 
+payload="$(cat)"
+
+# Branch name for a directory, or empty. A detached HEAD reports "HEAD", which
+# is not a useful correlation key, so it is treated as no branch.
+git_branch() {
+  local b
+  if [ -n "$1" ]; then
+    b="$(git -C "$1" rev-parse --abbrev-ref HEAD 2>/dev/null)"
+  else
+    b="$(git rev-parse --abbrev-ref HEAD 2>/dev/null)"
+  fi
+  [ "$b" = "HEAD" ] && b=""
+  printf '%s' "$b"
+}
+
+HAVE_JQ=1
+command -v jq >/dev/null 2>&1 || HAVE_JQ=0
+
+PAYLOAD_CWD=""
+PAYLOAD_SESSION=""
+if [ "$HAVE_JQ" = 1 ]; then
+  PAYLOAD_CWD="$(printf '%s' "$payload" | jq -r '(.cwd // .workingDirectory // .working_directory // empty) | strings' 2>/dev/null | head -n 1)"
+  PAYLOAD_SESSION="$(printf '%s' "$payload" | jq -r '(.session_id // .sessionId // empty) | tostring' 2>/dev/null | head -n 1)"
+fi
+
+RUN_ID="${AGENT_RUN_ID:-}"
+[ -z "$RUN_ID" ] && [ -n "$PAYLOAD_CWD" ] && [ -d "$PAYLOAD_CWD" ] && RUN_ID="$(git_branch "$PAYLOAD_CWD")"
+[ -z "$RUN_ID" ] && RUN_ID="$(git_branch "")"
+[ -z "$RUN_ID" ] && RUN_ID="$PAYLOAD_SESSION"
+[ -z "$RUN_ID" ] && RUN_ID="unknown"
+
 # Check for jq prerequisite
-if ! command -v jq >/dev/null 2>&1; then
+if [ "$HAVE_JQ" = 0 ]; then
   # Warn once per run — the marker is keyed to RUN_ID, so a later run (or a
   # machine where jq is removed again) still gets one warning instead of none.
   WARN_FILE="${LOG_DIR}/.jq-warning-$(printf '%s' "$RUN_ID" | tr -c 'A-Za-z0-9._-' '_')"
@@ -35,14 +69,11 @@ if ! command -v jq >/dev/null 2>&1; then
     echo "WARNING: jq not found on PATH. Agent logging disabled." >&2
     echo "Install with: brew install jq (macOS) or apt-get install jq (Linux)" >&2
   fi
-  # Drain stdin so the harness writing the payload never takes EPIPE/SIGPIPE,
-  # then fail open without logging this event.
-  cat >/dev/null 2>&1
+  # stdin was already drained above, so the harness never takes EPIPE/SIGPIPE;
+  # fail open without logging this event.
   printf '{"continue":true}\n'
   exit 0
 fi
-
-payload="$(cat)"
 
 # Curated record with cross-harness fallbacks. Strings are truncated so tool
 # results and prompts don't bloat the log.

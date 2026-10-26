@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # teardown-hook-env.sh
 #
-# Unset the env vars setup-hook-env.sh set: PLUGIN_ROOT (+ COPILOT_/CLAUDE_
-# aliases), AGENT_LOG_DIR, and AGENT_RUN_ID. Does not delete the log directory
-# or its contents.
+# Unset the env vars setup-hook-env.sh set -- PLUGIN_ROOT (+ COPILOT_/CLAUDE_
+# aliases) and AGENT_LOG_DIR -- plus any AGENT_RUN_ID you exported yourself.
+# Does not delete the log directory or its contents.
 #
 # DOT-SOURCE this so the vars clear from your current shell:
 #     source scripts/teardown-hook-env.sh

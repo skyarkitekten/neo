@@ -16,7 +16,11 @@
 
   Env:
     AGENT_LOG_DIR  where to write logs   (default: $HOME/.agent-logs)
-    AGENT_RUN_ID   correlation key       (default: current git branch)
+    AGENT_RUN_ID   correlation key       (default: see "run" fallback below)
+
+  The "run" field falls back in order: AGENT_RUN_ID -> git branch of the payload's
+  cwd -> git branch of the hook's own cwd -> payload session id -> "unknown". Hooks
+  often execute outside the repo, so the payload cwd matters. Mirrors log-event.sh.
 
   NOTE: the field fallbacks below (agent_name, tool_name, ...) are defensive guesses
   across harnesses, mirroring log-event.sh. Verify them against your harness's real
@@ -33,14 +37,6 @@ $ErrorActionPreference = 'SilentlyContinue'
 try {
     $logDir = if ($env:AGENT_LOG_DIR) { $env:AGENT_LOG_DIR } else { Join-Path $HOME '.agent-logs' }
     $logFile = Join-Path $logDir 'events.jsonl'
-
-    $runId = $env:AGENT_RUN_ID
-    if (-not $runId) {
-        $runId = (& git rev-parse --abbrev-ref HEAD 2>$null)
-        if ($runId -is [array]) { $runId = $runId[0] }
-        $runId = ("$runId").Trim()
-    }
-    if (-not $runId) { $runId = 'unknown' }
 
     $ts = [DateTime]::UtcNow.ToString('yyyy-MM-ddTHH:mm:ssZ')
 
@@ -63,6 +59,29 @@ try {
     if ($raw -and $raw.Trim()) {
         try { $data = $raw | ConvertFrom-Json -ErrorAction Stop } catch { $data = $null }
     }
+
+    # Branch name for a directory, or empty. A detached HEAD reports "HEAD", which
+    # is not a useful correlation key, so it is treated as no branch.
+    function Get-GitBranch([string]$dir) {
+        $b = if ($dir) { & git -C $dir rev-parse --abbrev-ref HEAD 2>$null } else { & git rev-parse --abbrev-ref HEAD 2>$null }
+        if ($LASTEXITCODE -ne 0) { return '' }
+        if ($b -is [array]) { $b = $b[0] }
+        $b = ("$b").Trim()
+        if ($b -eq 'HEAD') { return '' }
+        return $b
+    }
+
+    $payloadCwd = Get-Prop $data @('cwd', 'workingDirectory', 'working_directory')
+    if ($payloadCwd -isnot [string]) { $payloadCwd = $null }
+    $payloadSession = Get-Prop $data @('session_id', 'sessionId')
+
+    $runId = $env:AGENT_RUN_ID
+    if (-not $runId -and $payloadCwd -and (Test-Path -LiteralPath $payloadCwd -PathType Container)) {
+        $runId = Get-GitBranch $payloadCwd
+    }
+    if (-not $runId) { $runId = Get-GitBranch '' }
+    if (-not $runId -and $null -ne $payloadSession) { $runId = "$payloadSession" }
+    if (-not $runId) { $runId = 'unknown' }
 
     if ($null -ne $data) {
         # Curated record with cross-harness fallbacks.
