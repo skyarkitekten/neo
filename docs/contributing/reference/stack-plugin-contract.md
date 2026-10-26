@@ -113,6 +113,7 @@ same route that repo gets its `AGENTS.md`.
 | `systems.thinking` | `neo-product` | Feasibility lens |
 | `neo-product-requirements` skill | `neo-product` | Owns the PRD artifact and template |
 | `neo-design-thinking` skill | `neo-product` | |
+| `/neo-design` command | `neo-product` | Short address for `neo-design-thinking` — `/neo-design <activity>` |
 | `neo-systems-thinking` skill | `neo-product` | |
 | `neo-evidence-standard` skill | `neo-product` | Copy of `neo-core`'s; keep the two in step |
 | Lifecycle hooks + `log-event.{sh,ps1}` | `neo-core`, `neo-product` | Duplicated, not shared — a plugin cannot reference files outside its own directory |

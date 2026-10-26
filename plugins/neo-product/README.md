@@ -51,6 +51,14 @@ consuming repo's `AGENTS.md`, PRDs, ADRs, and design docs — never baked into a
 | `neo-design-thinking` | Stakeholder/empathy mapping, personas, problem framing, journey mapping, ideation, assumption testing, service blueprinting |
 | `neo-systems-thinking` | Boundaries, stocks and flows, causal loops, delays, leverage points, archetypes, intervention design |
 
+**Commands** (`commands/`): one short slash command per multi-activity skill, a thin shim that
+hands its arguments to the skill (see
+[`plugin-contract.md` § 4.1](https://github.com/skyarkitekten/neo/blob/main/docs/contributing/reference/plugin-contract.md#41-command-surfaces-for-skills)).
+
+| Command | Skill | Usage |
+| --- | --- | --- |
+| `/neo-design` | `neo-design-thinking` | `/neo-design <activity>` runs one activity directly — `stakeholder-mapping`, `empathy-mapping`, `persona-definitions`, `problem-framing`, `journey-mapping`, `ideation-workshop`, `assumption-testing`, `service-blueprinting`, or an alias such as `persona`, `journey-map`, `blueprint`. No argument shows the menu and a recommendation. Full table in the skill's `## Commands` section |
+
 **Hooks** (`hooks/hooks.json`, v1 schema, `${PLUGIN_ROOT}`): the same registered fail-open
 observability logging, and the same **unregistered, opt-in** guardrail scripts, as
 `neo-core` — via this plugin's own `hooks/scripts/log-event.{sh,ps1}` and

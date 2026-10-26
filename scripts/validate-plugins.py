@@ -8,7 +8,7 @@ This script makes the remaining invariants executable:
 
   * every plugin has its Copilot manifest AND hooks config, and both are valid JSON;
   * the root Copilot marketplace manifest is valid JSON;
-  * every component path a plugin declares (`agents`, `skills`, `hooks`) resolves to
+  * every component path a plugin declares (`agents`, `skills`, `commands`, `hooks`) resolves to
     something real on disk, AND every component directory that exists is declared.
     Copilot defaults `agents` to `agents/` and `skills` to `skills/` and treats a
     path that resolves to nothing as an empty slot, not an error — the plugin installs
@@ -511,6 +511,10 @@ def check_host_tools(plugin_name: str, agent_file: Path, lowered: set[str], body
         )
 
 
+# A Neo command file: `neo-` prefix plus a kebab-case name (§4 of plugin-contract.md).
+_COMMAND_FILE = re.compile(r"neo-[a-z0-9]+(?:-[a-z0-9]+)*\.md")
+
+
 def check_component_paths(plugin: Path) -> None:
     """Every component the plugin ships must be declared AND resolve on disk.
 
@@ -539,7 +543,7 @@ def check_component_paths(plugin: Path) -> None:
         return [v] if isinstance(v, str) else [x for x in v if isinstance(x, str)]
 
     # 1. Declared paths must resolve — and must stay inside the plugin.
-    for key, want_dir in (("agents", True), ("skills", True), ("hooks", False)):
+    for key, want_dir in (("agents", True), ("skills", True), ("commands", True), ("hooks", False)):
         for rel in declared(key):
             # A plugin is copied standalone on install, so a path that escapes the plugin
             # root (absolute, or via ..) resolves during validation against this checkout
@@ -576,7 +580,12 @@ def check_component_paths(plugin: Path) -> None:
     #    CLI default in the manifest schema — an undeclared hooks file may contribute
     #    nothing, and the published docs are self-contradictory about whether
     #    hooks/hooks.json is auto-discovered. Declaring it removes the question.
-    for key, probe in (("agents", "agents"), ("skills", "skills"), ("hooks", "hooks/hooks.json")):
+    for key, probe in (
+        ("agents", "agents"),
+        ("skills", "skills"),
+        ("commands", "commands"),
+        ("hooks", "hooks/hooks.json"),
+    ):
         target = plugin / probe
         exists = target.is_file() if key == "hooks" else target.is_dir()
         if exists and not declared(key):
@@ -599,6 +608,26 @@ def check_component_paths(plugin: Path) -> None:
         for d in sorted(skills_dir.iterdir()):
             if d.is_dir() and not (d / "SKILL.md").is_file():
                 errors.append(f"[{name}] skills/{d.name}/ has no SKILL.md; it will not load")
+
+    # A command file's name is its bare `/name` slash command. Unlike skills, commands get no
+    # plugin-qualified fallback when two sources collide (the higher-priority one silently
+    # wins), so the `neo-` prefix is the only collision guard — see plugin-contract.md § 4.1.
+    for rel in declared("commands") or (["commands"] if (plugin / "commands").is_dir() else []):
+        cmd_dir = plugin / rel
+        if not cmd_dir.is_dir():
+            continue
+        md = [f for f in sorted(cmd_dir.iterdir()) if f.is_file() and f.suffix == ".md"]
+        if not md:
+            errors.append(
+                f"[{name}] {rel.rstrip('/')}/ holds no .md command files; Copilot will load "
+                f"zero commands from it"
+            )
+        for f in md:
+            if not _COMMAND_FILE.fullmatch(f.name):
+                errors.append(
+                    f"[{name}] {rel.rstrip('/')}/{f.name} would register the slash command "
+                    f"/{f.stem}; Neo command files must be named neo-<kebab-case-name>.md"
+                )
 
     # A bash hook script that isn't executable dies with "Permission denied" at runtime.
     # This shipped too: neo-product's .sh scripts were committed 100644, so every one of
@@ -708,7 +737,7 @@ def check_marketplace(path: Path) -> None:
         # CLI 1.0.81: an entry that was the sole declarant loaded zero skills, and one that
         # declared an outright false path still loaded correctly. Keeping a copy here means
         # maintaining a value nothing reads, which reads as live config to the next person.
-        for key in ("agents", "skills", "hooks"):
+        for key in ("agents", "skills", "commands", "hooks"):
             if key in entry:
                 errors.append(
                     f"[marketplace] {name} declares {key}: {entry[key]!r}, which the CLI "
