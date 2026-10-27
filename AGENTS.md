@@ -198,6 +198,12 @@ copilot plugin marketplace remove neo
   `& $s` or a bare `"$s"`, so no ambient host state decides whether the file is runnable. If you
   see blanket denials, restart the session first — a mid-session `plugin install` does not re-read
   hooks.
+- **Delegate by `agent_type`, not display name.** In Copilot CLI a plugin agent is
+  `<plugin>:<file-stem>` (`neo-core:neo.code-writer`); `Neo Code Writer` is rejected with
+  `Unknown agent_type`, and `agents:` isn't enforced. An orchestrator that names only display names
+  delegates intermittently, depending on whether the model guesses the ID. Orchestrators name the ID,
+  resolve availability once per session, and use a fixed, disclosed fallback. See
+  `docs/contributing/guides/agent-authoring-reference.md` § How delegation targets resolve.
 - **Evidence discipline is a shipped contract**, not a style preference — the `neo-evidence-standard`
   skill (duplicated into both plugins) owns the retrieval-or-silence rule and the
   `FACT` / `INFERENCE` / `RECALL — UNVERIFIED` labels. Agents that gather or consume evidence must load it.

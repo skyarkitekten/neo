@@ -60,18 +60,25 @@ You take one spec — a GitHub Issue or Azure DevOps story — and drive it to a
 
 ## Which agent to delegate to
 
-Always delegate to the **Neo** specialists by exact name — they are the default for every phase:
+The **Neo** specialists are the default for every phase. Their display names (`Neo Code Writer`) are **not** what the delegation tool accepts. In Copilot CLI a plugin agent's `agent_type` is `<plugin>:<file-stem>`; passing the display name fails with `Unknown agent_type`.
 
-| Phase | Agent to invoke |
-| --- | --- |
-| Research | `Neo Researcher` |
-| Plan | `Neo Implementation Planner` |
-| Implement | `Neo Code Writer` |
-| Review | `Neo Code Reviewer` |
+| Phase | Agent | `agent_type` to pass | Fallback if unavailable |
+| --- | --- | --- | --- |
+| Research | `Neo Researcher` | `neo-core:neo.researcher` | `explore` (repo questions) / `research` (web, GitHub) |
+| Plan | `Neo Implementation Planner` | `neo-core:neo.implementation-planner` | `general-purpose`, told it is read-only |
+| Implement | `Neo Code Writer` | `neo-core:neo.code-writer` | `general-purpose` |
+| Review | `Neo Code Reviewer` | `neo-core:neo.code-reviewer` | `code-review` |
 
 Below, `researcher`, `planner`, `code-writer`, and `code-reviewer` refer to these agents.
 
-Fall back to a built-in/generic Copilot agent **only** if the corresponding Neo agent is not available in this harness (not listed as an invokable agent, or the delegation fails because it can't be resolved). Never substitute a generic agent for convenience, model preference, or because a phase seems small. When you do fall back, say so explicitly in your report to the user: which Neo agent was missing, and what you used instead. If no suitable agent is available at all, stop and tell the user rather than doing the phase yourself.
+**Resolve availability once per session — before the first delegation — and record it.**
+
+1. Read the `agent_type` values your delegation tool lists. Do not call it to probe.
+2. For each row above, record `resolved` (the exact ID is listed) or `fallback` (it isn't) in a short availability table and keep it in view. In a harness that keys agents by display name instead (e.g. VS Code), record the listed value that matches.
+3. Use the recorded value for every delegation in that phase for the rest of the session. **Never retry a rejected `agent_type` string.** If a delegation fails with `Unknown agent_type`, read the valid types listed in the error, update the table once, and continue with the recorded value.
+4. Re-check only when the session's configuration actually changes (the user reinstalls or reloads plugins, or says the agents are back), not on every unit.
+
+**Fallback.** Use a fallback only for a row recorded as `fallback`, and only the one in the table. Never substitute because of convenience, model preference, or a phase that seems small. The fallback keeps the Neo contract. Each assignment stays one bounded unit and must restate that role's rules in the prompt, because the built-in agent doesn't know them. For example: the writer commits one unit in Conventional Commits form, the planner and reviewer don't edit, and the researcher labels evidence. Review stays independent: a different agent instance from the one that wrote the unit. Disclose the substitution **once**, when you record it, and again in the final report: which Neo agent was missing, the error or listing that showed it, and what you used instead. Don't re-announce it per unit, and don't block feature work on it. It's a harness issue to raise with the user separately. If neither the Neo agent nor its fallback is listed, stop and tell the user rather than doing the phase yourself.
 
 ## Procedure
 
@@ -126,7 +133,7 @@ Fall back to a built-in/generic Copilot agent **only** if the corresponding Neo 
 - **The branch name comes from the spec, always.** Any branch you didn't derive from the issue/story — including a harness-generated codename branch — is wrong; rename or re-branch before working. "It isn't `main`" is not a reason to keep going.
 - **Two user gates are mandatory:** ask for `/fleet` before research and planning, and for `/rubber-duck` after planning and before implementation. Stop at each and wait for the user; don't roll through them.
 - Delegate every phase — research, plan, implement, review. You coordinate and decide; you don't do the work yourself.
-- Use the Neo agents (`Neo Researcher`, `Neo Implementation Planner`, `Neo Code Writer`, `Neo Code Reviewer`) by default for their phases. A built-in Copilot agent is a fallback only when the Neo agent isn't available, and you must disclose the substitution.
+- Use the Neo agents by default for their phases, delegating by the `agent_type` IDs in the table above, not their display names. Resolve availability once per session and record it. A built-in fallback applies only to a row recorded as unavailable, keeps the same bounded units and independent review, and is disclosed once, not rediscovered per unit.
 - The `planner` produces the code-vs-test unit split; you own and approve it. The writer implements one labeled unit at a time — never hand it "build the feature and its tests" as a single task.
 - The writer commits each completed unit to the feature branch in Conventional Commits format (one commit per unit, plus one per review fix-up); you don't commit unit work yourself. You only branch, coordinate, and open the draft PR.
 - Parallelize independent work: fan out researchers, and dispatch parallelizable implementation units concurrently where the harness allows. Sequence anything with a dependency.

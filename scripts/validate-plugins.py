@@ -31,7 +31,8 @@ This script makes the remaining invariants executable:
     effective execution policy was `Restricted` (issue #95). Either bricked the
     session, and `NEO_ENFORCE_GUARDRAILS=0` could not rescue it because the script
     that reads that variable is the thing that never ran;
-  * every Copilot agent's `agents:` allowlist references a real agent `name:`;
+  * every Copilot agent's `agents:` allowlist references a real agent `name:`, and the
+    delegator's body names each target's CLI `agent_type` (`<plugin>:<file-stem>`);
   * any agent that delegates (non-empty `agents:`) also grants the `agent`/`Task`
     delegation tool in its `tools:` allowlist;
   * every agent's `tools:` allowlist grants at least one tool the Copilot CLI
@@ -632,14 +633,18 @@ def check_plugin(plugin: Path) -> None:
     #     directions — an undeclared or unresolvable path fails silently at runtime.
     check_component_paths(plugin)
 
-    # 2. Every Copilot agent's `agents:` allowlist must reference a real name:.
-    #    Copilot resolves delegated agents by their `name:` field, not filename,
-    #    so a name/allowlist mismatch silently breaks delegation.
+    # 2. Every Copilot agent's `agents:` allowlist must reference a real name:
+    #    (VS Code resolves the allowlist by `name:`). The CLI's delegation tool
+    #    instead keys plugin agents as `<plugin>:<file-stem>` and rejects the
+    #    display name, so the delegator's body must also spell out that ID.
     files = copilot_agent_files(plugin)
     if not files:
         errors.append(f"[{name}] no Copilot agents found under agents/")
         return
     declared = {fm_name(f) for f in files} - {None}
+    agent_type_of = {
+        fm_name(f): f"{name}:{f.name[: -len('.agent.md')]}" for f in files if fm_name(f)
+    }
     # Aliases that grant the sub-agent delegation ("Task") tool, case-insensitive.
     DELEGATION_TOOLS = {"agent", "custom-agent", "task"}
     for f in files:
@@ -659,11 +664,18 @@ def check_plugin(plugin: Path) -> None:
         refs = fm_agents(f)
         if not refs:
             continue
+        body = body_text(f)
         for ref in refs:
             if ref not in declared:
                 errors.append(
                     f"[{name}] {f.name} lists agent '{ref}' in its agents: allowlist, "
                     f"but no Copilot agent declares name: '{ref}'"
+                )
+            elif agent_type_of[ref] not in body:
+                errors.append(
+                    f"[{name}] {f.name} delegates to '{ref}' but its body never names the "
+                    f"agent_type '{agent_type_of[ref]}'; Copilot CLI rejects the display "
+                    f"name with 'Unknown agent_type'"
                 )
         # 4. An agent that delegates must also be granted the delegation tool.
         #    `tools:` is an allowlist: if set and it omits the `agent`/`Task` alias
