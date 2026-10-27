@@ -45,6 +45,8 @@ says who owns what.
 - [guides/enforcement.md](./guides/enforcement.md) — the opt-in `preToolUse` hooks that block
   commit/push to `main` and non-draft PRs; why they ship unregistered, how to wire them up,
   and how to relax them.
+- [guides/git-cleanup.md](./guides/git-cleanup.md) — **experimental, not distributed.** Report
+  and remove dead local branches and worktrees with `scripts/git-cleanup.sh`.
 
 ## design/ — the *why* (rationale, not a contract)
 
@@ -66,6 +68,7 @@ says who owns what.
 | Authoring agents / skills / hooks | [guides/agent-authoring-reference.md](./guides/agent-authoring-reference.md) |
 | Logging & prompt tuning | [guides/observability.md](./guides/observability.md) |
 | Opt-in `preToolUse` enforcement (block-on-main, draft-PR-only) | [guides/enforcement.md](./guides/enforcement.md) |
+| Dead-branch / worktree cleanup script (experimental) | [guides/git-cleanup.md](./guides/git-cleanup.md) |
 
 ## Superseded — kept for history
 

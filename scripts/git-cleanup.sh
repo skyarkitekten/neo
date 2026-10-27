@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # git-cleanup.sh — report (and optionally remove) dead local branches and worktrees.
+# EXPERIMENTAL — dev-time only, not ready for distribution. Do not ship in a plugin.
+# Docs: docs/contributing/guides/git-cleanup.md
 # Dry run by default. Compatible with the bash 3.2 that ships with macOS.
 set -eo pipefail
 
