@@ -288,7 +288,7 @@ the `agent_type` ID it passes, not only the display name. See
 Neo-authored skills carry the `neo-` prefix. A skill **vendored** from an upstream source keeps
 its upstream name unchanged (no `neo-` prefix), since its identity is owned elsewhere. Neither
 shipped plugin vendors a skill today; every current skill is Neo-authored. `neo-core` ships
-`neo-evidence-standard`, `neo-feature-authoring`, and `neo-task-authoring`; `neo-product` ships
+`neo-evidence-standard`, `neo-feature-authoring`, `neo-github-issue`, and `neo-task-authoring`; `neo-product` ships
 `neo-design-thinking`, `neo-evidence-standard`, `neo-product-requirements`, and
 `neo-systems-thinking`. `neo-evidence-standard` is duplicated into both plugins, because
 plugins can't share files (see [§1](#1-plugin-folder-shape), "No cross-plugin file

@@ -20,6 +20,8 @@ agents for GitHub Copilot CLI that drives a spec from concept to a draft PR.
 - **Skills** (`skills/`):
   - `neo-evidence-standard` — the retrieval-or-silence rule and the `FACT`/`INFERENCE`/`RECALL` labels.
   - `neo-feature-authoring` — authoring guidance for feature specs.
+  - `neo-github-issue` — reads a GitHub Issue as a spec and returns the provider-neutral
+    normalized spec the `technical-engineer` consumes.
   - `neo-task-authoring` — authoring guidance for tasksets.
 - **Hooks** (`hooks/hooks.json`, v1 schema, `${PLUGIN_ROOT}`):
   - fail-open **observability** logging via `hooks/scripts/log-event.{sh,ps1}` — the only

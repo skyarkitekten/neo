@@ -119,6 +119,14 @@ loop on it or rediscover it per segment.
 - File each approved task as its **carrier issue** — the task *is* the GitHub Issue / ADO story it is
   filed as (`docs/guides/filing-work.md`, `docs/contributing/reference/task-handoff-schema.md`).
 - Use `create_issue`, or `gh issue create` via `execute` when `create_issue` is unavailable.
+- Write each body in the canonical carrier shape (`docs/contributing/reference/task-handoff-schema.md`
+  §3): `## Parent feature`, `## What`, `## Validation criteria`, `## Depends on`. The Technical
+  Engineer's intake gate parses exactly these headings.
+- Apply the **`be-approved`** label to every issue in the approved set — it is the marker the
+  Technical Engineer's intake gate requires before it branches. Create the label first if the repo
+  lacks it (`gh label create be-approved --force --description "BE-approved task, cleared for the
+  Coding loop"`), then file with `--label be-approved` (or add it with `gh issue edit <n> --add-label
+  be-approved`). Never label a task the human has not approved.
 - Each issue must carry the task's What, its parent-feature link, and its machine-checkable
   validation criteria. A task filed without validation criteria is not ready to spawn.
 - Record the issue number for each task before spawning anything.
