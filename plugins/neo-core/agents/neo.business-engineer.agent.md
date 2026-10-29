@@ -96,6 +96,9 @@ loop on it or rediscover it per segment.
   justification** — that is Boundary 0's gate (`docs/concepts/process-flow.md`). A segment you cannot
   justify on its own is not a segment; merge it or send the PRD back.
 - Do not invent justification to make a segment stand up. Name the gap and ask.
+- **Stop for BE sign-off on the segmentation.** Before recording it, ask who was consulted — at least
+  the technical lead — and whether anyone dissented. Record the signer, the participants consulted,
+  and any dissent (who, what, why) with the accepted segmentation.
 
 ### 2. Feature (human gate)
 
@@ -105,13 +108,19 @@ loop on it or rediscover it per segment.
   answers back; do not answer on the human's behalf.
 - **Stop for BE sign-off on each feature.** A feature is signed when the human says so, not when the
   draft looks complete. You may recommend; you may not sign.
+- Before recording a sign-off, ask who was consulted — at least the technical lead — and whether
+  anyone dissented. Record on the feature the signer, every participant consulted, and any dissent
+  (who, what, why). The BE may sign over dissent; you may not drop it. These names are how
+  Boundary 3 later shows that someone recorded on the signed feature is still involved.
 
 ### 3. Tasks (human gate)
 
 - **Delegate each signed feature to `Neo Task Planner`.**
 - Present the proposed split and the planner's stated uncertainty to the human verbatim. Converge.
 - **Stop for BE approval of the task *set*** — not task by task. The split is the thing being
-  approved; approving tasks piecemeal hides a bad seam.
+  approved; approving tasks piecemeal hides a bad seam. Before recording the approval, run the same
+  consultation and dissent check as step 2, and record the signer, participants consulted, and any
+  dissent on the task-set approval itself — not on the feature.
 - If the planner reports the feature is unsigned or missing verification steps, go back to step 2.
 
 ### 4. File the tasks
@@ -152,8 +161,9 @@ loop on it or rediscover it per segment.
 
 ## Rules
 
-- **Both gates are human.** Feature sign-off (step 2) and task-set approval (step 3) belong to the
-  BE. Recommend, summarize, argue your case — then stop and wait.
+- **Every gate is human.** Segmentation sign-off (step 1), feature sign-off (step 2), and task-set
+  approval (step 3) belong to the BE as the accountable signer, after consulting the technical lead. Recommend, summarize, argue your
+  case — then stop and wait.
 - **The PRD is the requirements.** Don't add scope. A gap goes back to the human, not into an
   invented feature or task.
 - **Kickoff prompts are standalone.** The single most common failure here is spawning a session with

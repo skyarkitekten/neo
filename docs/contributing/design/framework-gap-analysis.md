@@ -107,7 +107,7 @@ backlog (`gh issue list --state open`) and the untracked loose ends in
 | **G2** — kill-condition gate at **build entry** | Boundary 1 | `todo.md` loose end only (back-door / KPI slice) | **Partial** | The loose end folds the *existing* KPI gate into the skill. The stronger move — a testability gate at the **front door** — is untracked, and is a genuine open design question. |
 | **G3** — **falsification-framed** verification | Boundary 3 | none (#14 is SRE/Platform-Eng ops agents) | **Untracked** | The default question is confirmatory ("does the feature behave as expected?"). Mitigated by the mis-built / mis-specified / both triage, but the word and the default still ask "does it work." |
 | **G4** — **strategic vs tactical** framing | whole spec loop | none | **Untracked** | Neo has one framing cadence (PRD → Feature → Task). No concept of a signal big enough to reopen the *system* vs spawn a *feature*. Includes the unresolved "what earns a strategic reopen?" |
-| **G5** — single-human vs **team-with-veto** entry gate | Boundary 1 | none | **Untracked (likely by-design)** | The entry gate is a single human (BE). Robust against committee-softening, but is the single point of failure principle 7 flags. |
+| **G5** — **decision rule** for the team-held gate | Boundaries 1 and 3 | [process-flow.md § Gate decision rule](../../concepts/process-flow.md#gate-decision-rule) | **Decided** | Judgment at the Specification and Verification gates is **team-held by design** — typically a business SME and a technical lead, both human — so the single-point-of-failure concern no longer applies. The team decides through an **accountable signer**: the BE signs after consulting the technical lead and records any dissent on the signed artifact. |
 
 ### Notes on each
 
@@ -149,23 +149,40 @@ word "verify" still lean confirmatory.
 reversible). Every reopen is a feature-sized reopen. The dialog's unclosed question travels with
 this gap: **what signal earns a strategic reopen?**
 
-**G5 — single-BE gate.** Principle 7 wants a team-held gate with single-member veto. Neo
-deliberately uses a single human (the BE), which is the same design that removes the hand-off BA
-(see [glossary.md § Roles](../../glossary.md#roles)). This tension is likely **by design**, not a
-defect — recorded here as an open question rather than a gap to close.
+**G5 — the gate is team-held; its decision rule is an accountable signer.** An earlier version of this gap read
+Neo's entry gate as a single human (the BE) and scored it "likely by-design" while conceding it was
+the single point of failure principle 7 flags. That reading was wrong. Design intent, confirmed by
+the design authority, is that judgment at the Specification and Verification gates is
+**team-held** — typically a **business SME and a technical lead, both human**. What Neo forbids is
+the **hand-off**, not headcount: "No hand-off BA" is a rule about *sequence*
+([architecture.md § Key decisions](../../concepts/architecture.md#key-decisions)), and the glossary's
+requirement is that the human who authors and signs the contract **stays in the room**
+([glossary.md § Roles](../../glossary.md#roles)). A team deciding together, concurrently, satisfies
+both. So principle 7's *team-held* half already holds, and the single-point-of-failure framing is
+retired (see
+[neo-agentic-sdlc.md § 11.5](../../design/system-boundaries/neo-agentic-sdlc.md#115-this-resolves-an-open-question-the-repo-already-carries)).
+
+**Decided (issue #113): an accountable signer.** Three candidates were weighed: **consensus**
+(principle 7 warns it softens), **single-member veto** (principle 7's preference: easy to fail, hard
+to pass), and an **accountable signer** who must convene the team but makes the call. Neo adopts the
+third; the rule itself is owned by
+[process-flow.md § Gate decision rule](../../concepts/process-flow.md#gate-decision-rule). Principle 7's veto is deliberately not adopted: recorded dissent keeps disagreement
+visible and attributable without giving each member a blocker.
 
 ---
 
 ## Open questions
 
-Carried forward from the dialog; none are settled:
+Carried forward from the dialog; 1 and 2 are open, 3 is resolved:
 
 1. **What signal earns a *strategic* reopen** (system-level) vs a *tactical* one
    (feature-level)? (G4, principle 8.)
 2. **Is Neo's back-door-only kill condition the right placement**, or should Boundary 1 also
    carry a front-door testability gate? (G2, principles 3–6.)
-3. **Is the single-BE entry gate correct**, or does testability warrant a team-held gate with
-   single-member veto — and can that coexist with the no-hand-off-BA principle? (G5, principle 7.)
+3. **Resolved — what decision rule governs the team-held gate?** An accountable signer who must
+   consult and record dissent; see
+   [process-flow.md § Gate decision rule](../../concepts/process-flow.md#gate-decision-rule).
+   (G5, principle 7.)
 
 ---
 

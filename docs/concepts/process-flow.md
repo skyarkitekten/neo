@@ -30,6 +30,34 @@ fan in to one verifiable feature. How that assembly happens is the
 
 ---
 
+## Gate decision rule
+
+Applies to every human-judgment gate the BE owns — Boundary 0, Boundary 1, and Boundary 3.
+Judgment at these gates is **team-held** (typically a business SME and a technical lead, both
+human); the verdict is not a vote.
+
+1. **One accountable signer.** The BE signs, and the signature is the verdict. No gate passes on
+   an agent's recommendation, or by silence.
+2. **Consultation is required.** Before signing, the BE consults the technical lead and any other
+   participant the team convened for this gate. A signature given without that consultation has
+   not passed the gate.
+3. **The verdict is recorded on the signed artifact.** Each gate has one: the accepted
+   segmentation (Boundary 0), the feature and its task-set approval (Boundary 1), and the
+   verification record (Boundary 3). The record names the signer and every participant consulted.
+4. **Dissent is recorded, not voted on.** If a consulted participant disagrees, the BE may still
+   sign, but the dissent — who, what, and why — joins that record. A signer who overrides recorded
+   dissent owns that call.
+5. **Continuity of intent.** At least one participant recorded on a signed feature stays involved
+   through its verification at Boundary 3; the Boundary 3 record shows who. Membership may change;
+   it may not turn over completely.
+
+**Why this rule.** Consensus softens gates and stalls them; a veto per member multiplies blockers
+by headcount. An accountable signer keeps one owner per decision — the BE named as gate owner
+below — while required consultation and recorded dissent keep the technical half of the judgment
+visible and attributable.
+
+---
+
 ## Boundary 0 — Product → Specification
 
 `[live]`. Formerly written as "PRD → Specification" with an unspecified origin — Neo assumed a
@@ -45,8 +73,9 @@ consumes *segments*, not whole documents, so a PRD that cannot be segmented cann
 Supporting criteria: measurable success criteria, explicit non-goals, prioritized requirements
 (P0/P1/P2), and honestly-stated open assumptions.
 
-**Gate owner.** The **BE** (human). The Product loop hands the PRD over and stops; it never
-invokes `feature-agent` or `task-planner` itself.
+**Gate owner.** The **BE** (human), deciding under the [gate decision rule](#gate-decision-rule).
+The Product loop hands the PRD over and stops; it never invokes `feature-agent` or `task-planner`
+itself.
 
 **On failure.** Back into the Product loop — usually to the lens that produced the weak section,
 or to a fresh research fan-out when the gap is factual rather than analytical.
@@ -73,8 +102,8 @@ criteria. The task is self-contained — a Coder needs no further business input
    decomposition is interactive and converges with the BE; a task from an unapproved split
    does not cross.
 
-**Gate owner.** The BE. This is a human gate by design — a bad split poisons everything
-downstream, so no agent may open it alone.
+**Gate owner.** The BE, deciding under the [gate decision rule](#gate-decision-rule). This is a
+human gate by design — a bad split poisons everything downstream, so no agent may open it alone.
 
 **Who carries the task across.** Either the BE hands a filed task to `neo-technical-engineer`
 directly, or `neo-business-engineer` does it for them: once the BE has approved the task *set*,
@@ -154,7 +183,8 @@ verification steps executed and passed.
 environment and renders a pass/fail judgment on each. These steps are *the contract*, authored
 at feature-definition time. If the BE cannot verify it, it does not deploy.
 
-**Gate owner.** The BE, exercising human judgment. This is the inverse of Boundary 2's
+**Gate owner.** The BE, exercising human judgment under the
+[gate decision rule](#gate-decision-rule). This is the inverse of Boundary 2's
 machine gate, and deliberately so: **verify features, validate tasks; humans verify, machines
 validate.**
 

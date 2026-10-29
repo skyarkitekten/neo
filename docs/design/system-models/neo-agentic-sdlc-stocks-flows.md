@@ -143,7 +143,7 @@ presumptive constraint, but a tractable one. Carried to causal-loop-mapping and 
 
 | Inflows | Outflows | Converters |
 | --- | --- | --- |
-| One person carrying a feature end-to-end; proof authored at definition time (`architecture.md:24-28`) | **Hand-offs** — each one leaks; **hand-over mid-feature** (the `GAP` from boundary §4); vague verification steps | The no-hand-off-BA rule, `architecture.md:85`; the segmentability contract |
+| Continuity of intent — at least one participant present at signing stays involved through verification (the deciding team is typically a business SME + technical lead; membership may change, per `../system-boundaries/neo-agentic-sdlc.md` §11.4); proof authored at definition time (`architecture.md:24-28`) | **Hand-offs** — each one leaks; **hand-over mid-feature** (the `GAP` from boundary §4); vague verification steps | The no-hand-off-BA rule, `architecture.md:85`; the segmentability contract |
 
 Intent fidelity is the stock Neo exists to protect, and the one stock with **no instrument**. Its
 depletion is only observable indirectly — as a mis-specified verdict at Boundary 3, months
