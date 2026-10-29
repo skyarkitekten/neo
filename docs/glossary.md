@@ -42,6 +42,8 @@ person, "Neo Business Engineer" is always software.
 
 **Team Leader / Coder** `[target]` — Coding-loop agents; the Team Leader coordinates Coders, who implement using stack skills.
 
+**Neo Validator** `[target]` — Draft agent (`neo.validator`, `neo-core`) that independently proves, or fails to prove, that one task's change meets its validation criteria. It works from the task, the diff, and the locked checks, never from the builder's reasoning, and returns an **evidence manifest**. Validation, not verification: it feeds the Business Engineer's judgment and does not replace it.
+
 **SRE Agent / Platform Engineering Agent** `[target]` — Operations & Deployment agents.
 
 ## Units of work
@@ -61,6 +63,12 @@ person, "Neo Business Engineer" is always software.
 **Validation** `[live]` — Machine execution (unit tests, system tests, autonomous agents) proving a **task** meets its spec. No human judgment.
 
 > **Verify features, validate tasks. Humans verify, machines validate.**
+
+**Evidence manifest** `[target]` — The per-task record of validation: each criterion's checks, their results at base and head, an integrity audit, and the validator's findings. It sits in the draft PR and is what the Boundary 2 gate evaluates. Defined by the `neo-evidence-manifest` skill; proposed in [verification-loop.md](./contributing/design/verification-loop.md).
+
+**Lock** `[target]` — The commit that registers a task's checks before any feature code is written. After the lock, the builder must make those checks pass and may not change them without a human-approved **lock amendment**.
+
+**Risk tier** `[target]` — T0–T3. Sets which evidence layers a task's validation requires. Approved by the Business Engineer with the task set, which is where a human reviews verification *strategy* rather than code.
 
 **The contract** `[live]` — A feature's verification steps, authored at feature-definition time. The gate the whole pipeline must satisfy to deploy: if the Business Engineer cannot verify it, it cannot ship.
 

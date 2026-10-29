@@ -382,3 +382,50 @@ chmod 644 .github/hooks/scripts/enforce-guardrails.sh
 
 Then restore the bit: `chmod 755 .github/hooks/scripts/enforce-guardrails.sh`
 
+
+## Locked checks
+
+`hooks/scripts/guard-locked-checks.sh` and `.ps1` are a **draft** third guardrail for the proposed
+verification loop ([design/verification-loop.md](../design/verification-loop.md)). Once a task's
+checks are committed and locked, they keep the builder from editing those checks. Like the other
+two scripts, they ship **unregistered**.
+
+**The lock** is a JSON marker in the worktree's git directory, so it is never committed:
+
+```bash
+cat > "$(git rev-parse --git-path neo-check-lock)" <<JSON
+{"lock_sha": "$(git rev-parse HEAD)", "branch": "$(git branch --show-current)",
+ "paths": ["tests/checkout/", "contracts/*.dfy"]}
+JSON
+```
+
+A path ending in `/` locks a directory, a path containing `*`, `?`, or `[` is a glob, and anything
+else is an exact file. With no marker, or on a different branch, the hook allows everything.
+
+**While the lock is active, it denies:**
+
+- `edit`/`create`/`apply_patch`-style tool calls that target a locked path;
+- shell commands that look like writes to one (`rm`, `mv`, `sed -i`, redirection, `git rm`/
+  `checkout`/`restore`, `Set-Content`, `Remove-Item`, …);
+- `git commit` while the index or working tree changes a locked path;
+- `git push` while `<lock_sha>..HEAD` changes a locked path;
+- any shell command that names the marker, because lifting or amending the lock is a human's call.
+
+It shares the failure contract above: it always exits 0, allows unparseable input with a stderr
+warning, and is a **speed bump, not a control**. The bash sibling needs `python3`; the PowerShell
+sibling is native. The control is `Neo Validator`'s integrity audit
+(`git diff <lock>..<head> -- <locked paths>`) and a CI job that repeats it.
+
+**Opting in** works exactly like § Opting in: vendor the script and wrap it with the same
+fail-open command, substituting `guard-locked-checks` for `enforce-guardrails`. Register it as a
+second `preToolUse` entry. **Relax it** with `NEO_CHECK_LOCK=0`, or by deleting the marker. A
+human doing either should record a lock amendment in the evidence manifest
+(`neo-evidence-manifest` skill).
+
+**Verify:**
+
+```bash
+printf '{"toolName":"edit","toolArgs":{"path":"tests/checkout/t.py"},"cwd":"%s"}' "$PWD" \
+  | bash hooks/scripts/guard-locked-checks.sh preToolUse
+# => {"permissionDecision": "deny", "permissionDecisionReason": "Neo check lock: tests/checkout/t.py is a locked check…"}
+```

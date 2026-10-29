@@ -43,13 +43,16 @@ says who owns what.
 - [guides/observability.md](./guides/observability.md) — install the logging hooks and read the
   per-agent / per-run stats to tune prompts.
 - [guides/enforcement.md](./guides/enforcement.md) — the opt-in `preToolUse` hooks that block
-  commit/push to `main` and non-draft PRs; why they ship unregistered, how to wire them up,
+  commit/push to `main` and non-draft PRs, plus the draft locked-checks guard; why they ship unregistered, how to wire them up,
   and how to relax them.
 
 ## design/ — the *why* (rationale, not a contract)
 
 - [design/framework-gap-analysis.md](./design/framework-gap-analysis.md) — Neo measured against the
   OODA / PDCA / Double-Diamond baseline: where it holds, where it's ahead, and the G1–G5 gaps.
+- [design/verification-loop.md](./design/verification-loop.md) — **draft proposal**: proof as the
+  deliverable. An independent validator, checks locked before the build, layered evidence, and an
+  evidence manifest that gates Boundary 2.
 
 ## Who owns what
 
@@ -59,6 +62,8 @@ says who owns what.
 | What Neo is, the loops, the core rule | [../concepts/architecture.md](../concepts/architecture.md) |
 | Loop boundaries, integration modes, KPI settlement | [../concepts/process-flow.md](../concepts/process-flow.md) |
 | Framework gap analysis (OODA–PDCA baseline, G1–G5) | [design/framework-gap-analysis.md](./design/framework-gap-analysis.md) |
+| Verification loop proposal (validator, locked checks, evidence manifest) | [design/verification-loop.md](./design/verification-loop.md) |
+| What counts as evidence; the manifest format | the `neo-evidence-manifest` skill (`neo-core`) |
 | Plugin folder shape, manifest fields, `neo-` naming | [reference/plugin-contract.md](./reference/plugin-contract.md) |
 | Core/stack split, tiers, loop plugins, stack-skill discovery | [reference/stack-plugin-contract.md](./reference/stack-plugin-contract.md) |
 | The Task handoff artifact | [reference/task-handoff-schema.md](./reference/task-handoff-schema.md) |
