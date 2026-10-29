@@ -30,3 +30,14 @@ jobs:
 
       - name: Validate Copilot plugins
         run: python3 scripts/validate-plugins.py
+
+      - name: Run validator unit tests
+        run: python3 -m unittest discover -s scripts/tests -v
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Run plugin extension tests
+        # Node expands the quoted glob itself (Node 22+).
+        run: node --test 'plugins/*/extensions/**/*.test.mjs'

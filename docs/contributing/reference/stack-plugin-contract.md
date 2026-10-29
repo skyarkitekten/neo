@@ -37,6 +37,7 @@ projects 1, 2, 5      neo-core + neo-react + neo-dotnet
 projects 3, 4         neo-core + neo-python + neo-agent-framework
 project 6             neo-core + neo-rust
 teams doing discovery neo-core + neo-product        (add a loop, not a stack)
+architecture reviews  neo-core + neo-arc            (add a loop, not a stack)
 ```
 
 ---
@@ -48,7 +49,7 @@ belongs is the repo's characteristic defect.
 
 | Tier | Owns | Ships as | Varies by |
 | --- | --- | --- | --- |
-| **Process** | Loops, roles, proof mechanisms, orchestration, observability | `neo-core`, plus a **loop plugin** per optional loop (`neo-product`) | Which loops you run — never the stack or the project |
+| **Process** | Loops, roles, proof mechanisms, orchestration, observability | `neo-core`, plus a **loop plugin** per optional loop (`neo-product`, `neo-arc`) | Which loops you run — never the stack or the project |
 | **Technology** | How to build, test, and review in a given stack | `neo-react`, `neo-dotnet`, … | Stack |
 | **Project** | Layout, exact commands, integration mode, gotchas, path-scoped rules | Consuming repo's `AGENTS.md` + `.github/instructions/` | Project |
 
@@ -64,6 +65,8 @@ axes, and the Process tier is the one place they come apart.
 A **loop plugin** is Process-tier content — loops, roles, orchestration, observability — packaged
 separately because the loop itself is optional. `neo-product` is the first: teams that already
 have a PRD don't need the Product loop, so making every installer carry it would be dead weight.
+`neo-arc` is the second, for the same reason: most teams answer most design questions without a
+ten-agent assessment.
 What a loop plugin ships is still identical everywhere it *is* installed; only *whether* you run
 that loop varies.
 
@@ -103,7 +106,7 @@ same route that repo gets its `AGENTS.md`.
 | `code-reviewer` | `neo-core` | Same |
 | `feature-agent` | `neo-core` | |
 | `task-planner` | `neo-core` | |
-| `neo-evidence-standard` skill | `neo-core` | Duplicated into `neo-product` — a plugin cannot reference files outside its own directory |
+| `neo-evidence-standard` skill | `neo-core` | Duplicated into `neo-product` and `neo-arc` — a plugin cannot reference files outside its own directory |
 | `neo-feature-authoring` skill | `neo-core` | |
 | `neo-task-authoring` skill | `neo-core` | |
 | `product.engineer` (orchestrator) | `neo-product` | Entry point for the Product loop |
@@ -114,9 +117,20 @@ same route that repo gets its `AGENTS.md`.
 | `neo-product-requirements` skill | `neo-product` | Owns the PRD artifact and template |
 | `neo-design-thinking` skill | `neo-product` | |
 | `neo-systems-thinking` skill | `neo-product` | |
-| `neo-evidence-standard` skill | `neo-product` | Copy of `neo-core`'s; keep the two in step |
-| Lifecycle hooks + `log-event.{sh,ps1}` | `neo-core`, `neo-product` | Duplicated, not shared — a plugin cannot reference files outside its own directory |
-| `enforce-guardrails.{sh,ps1}` | `neo-core`, `neo-product` | Opt-in `preToolUse` guardrail scripts, shipped unregistered; duplicated like the logger |
+| `neo-evidence-standard` skill | `neo-product` | Copy of `neo-core`'s; keep the copies in step |
+| `architecture-engineer` (orchestrator) | `neo-arc` | Entry point for the Architecture Assessment loop |
+| `arc-scout` | `neo-arc` | Writes the reader brief; runs first |
+| `arc-reader` | `neo-arc` | Fanned out in parallel, one area each |
+| `arc-designer` | `neo-arc` | Three in parallel, one angle each |
+| `arc-judge` | `neo-arc` | Three in parallel, one lens each |
+| `arc-synthesizer` | `neo-arc` | |
+| `arc-refuter` | `neo-arc` | One per load-bearing reuse claim, capped at sixteen |
+| `arc-critic` | `neo-arc` | |
+| `arc-report` | `neo-arc` | Returns the report content; the orchestrator or the `neo-arc-assessment` workflow saves it |
+| `arc-factcheck` | `neo-arc` | Three in parallel, one check kind each |
+| `neo-evidence-standard` skill | `neo-arc` | Copy of `neo-core`'s; keep the copies in step |
+| Lifecycle hooks + `log-event.{sh,ps1}` | `neo-core`, `neo-product`, `neo-arc` | Duplicated, not shared — a plugin cannot reference files outside its own directory |
+| `enforce-guardrails.{sh,ps1}` | `neo-core`, `neo-product`, `neo-arc` | Opt-in `preToolUse` guardrail scripts, shipped unregistered; duplicated like the logger |
 | `analyze_agent_logs.py` | `neo-core` | Analyzes logs the core hooks emit — ships with them |
 | **`master-control`** | **nothing** | Dev-time only |
 | Stack skills (React, xUnit, Bicep, …) | `neo-<stack>` | Mostly not yet authored |

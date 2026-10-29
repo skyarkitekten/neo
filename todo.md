@@ -35,7 +35,7 @@ Run `gh issue list --state open` for the live backlog. Current shape:
   was **withdrawn from the shipped manifests** in #95: the scripts remain in-tree but are
   no longer registered, because a fail-closed hook that can't launch denies every tool call,
   and the policy belongs to the consuming repo. See `docs/contributing/guides/enforcement.md`.
-  #75 tracks duplicate hook registration now that two plugins each ship the same events.
+  #75 tracks duplicate hook registration now that three plugins each ship the same events.
 - **Docs tooling** — #76 add undocumented-plugin and Neo-stylization checks to the Docs
   Consistency Audit; blocked on gh-aw v0.83.1 to recompile the workflow lock file.
 - **Verification agents** — #14 SRE / Platform Eng (`phase: core`, not built).

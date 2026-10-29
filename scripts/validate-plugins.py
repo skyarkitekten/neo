@@ -8,7 +8,7 @@ This script makes the remaining invariants executable:
 
   * every plugin has its Copilot manifest AND hooks config, and both are valid JSON;
   * the root Copilot marketplace manifest is valid JSON;
-  * every component path a plugin declares (`agents`, `skills`, `hooks`) resolves to
+  * every component path a plugin declares (`agents`, `skills`, `hooks`, `extensions`) resolves to
     something real on disk, AND every component directory that exists is declared.
     Copilot defaults `agents` to `agents/` and `skills` to `skills/` and treats a
     path that resolves to nothing as an empty slot, not an error — the plugin installs
@@ -540,7 +540,7 @@ def check_component_paths(plugin: Path) -> None:
         return [v] if isinstance(v, str) else [x for x in v if isinstance(x, str)]
 
     # 1. Declared paths must resolve — and must stay inside the plugin.
-    for key, want_dir in (("agents", True), ("skills", True), ("hooks", False)):
+    for key, want_dir in (("agents", True), ("skills", True), ("hooks", False), ("extensions", True)):
         for rel in declared(key):
             # A plugin is copied standalone on install, so a path that escapes the plugin
             # root (absolute, or via ..) resolves during validation against this checkout
@@ -577,7 +577,12 @@ def check_component_paths(plugin: Path) -> None:
     #    CLI default in the manifest schema — an undeclared hooks file may contribute
     #    nothing, and the published docs are self-contradictory about whether
     #    hooks/hooks.json is auto-discovered. Declaring it removes the question.
-    for key, probe in (("agents", "agents"), ("skills", "skills"), ("hooks", "hooks/hooks.json")):
+    for key, probe in (
+        ("agents", "agents"),
+        ("skills", "skills"),
+        ("hooks", "hooks/hooks.json"),
+        ("extensions", "extensions"),
+    ):
         target = plugin / probe
         exists = target.is_file() if key == "hooks" else target.is_dir()
         if exists and not declared(key):
@@ -600,6 +605,29 @@ def check_component_paths(plugin: Path) -> None:
         for d in sorted(skills_dir.iterdir()):
             if d.is_dir() and not (d / "SKILL.md").is_file():
                 errors.append(f"[{name}] skills/{d.name}/ has no SKILL.md; it will not load")
+
+    # Each declared extensions path holds extension packages: direct child directories,
+    # each with an `extension.mjs` entry module. A package without one never loads.
+    # Only paths that passed the containment check above are inspected.
+    for rel in declared("extensions"):
+        ext_dir = plugin / rel
+        try:
+            if not ext_dir.resolve().is_relative_to(plugin.resolve()) or not ext_dir.is_dir():
+                continue
+        except OSError:
+            continue
+        packages = sorted(d for d in ext_dir.iterdir() if d.is_dir())
+        if not packages and any(ext_dir.iterdir()):
+            errors.append(
+                f"[{name}] plugin.json extensions path '{rel}' contains no extension "
+                f"package directories; Copilot will load zero extensions from it"
+            )
+        for d in packages:
+            if not (d / "extension.mjs").is_file():
+                errors.append(
+                    f"[{name}] {rel.rstrip('/')}/{d.name}/ has no extension.mjs; it will "
+                    f"not load"
+                )
 
     # A bash hook script that isn't executable dies with "Permission denied" at runtime.
     # This shipped too: neo-product's .sh scripts were committed 100644, so every one of
@@ -720,7 +748,7 @@ def check_marketplace(path: Path) -> None:
         # CLI 1.0.81: an entry that was the sole declarant loaded zero skills, and one that
         # declared an outright false path still loaded correctly. Keeping a copy here means
         # maintaining a value nothing reads, which reads as live config to the next person.
-        for key in ("agents", "skills", "hooks"):
+        for key in ("agents", "skills", "hooks", "extensions"):
             if key in entry:
                 errors.append(
                     f"[marketplace] {name} declares {key}: {entry[key]!r}, which the CLI "

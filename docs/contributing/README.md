@@ -50,6 +50,8 @@ says who owns what.
 
 - [design/framework-gap-analysis.md](./design/framework-gap-analysis.md) — Neo measured against the
   OODA / PDCA / Double-Diamond baseline: where it holds, where it's ahead, and the G1–G5 gaps.
+- [design/neo-arc-method.md](./design/neo-arc-method.md) — the multi-agent architecture design
+  method behind `neo-arc`, and how the shipped plugin adapts it to Neo's contracts.
 
 ## Who owns what
 
