@@ -170,6 +170,14 @@ payload:
 - Write to local, gitignored paths (`~/.agent-logs/…` by default), never to committed
   ones.
 
+The opt-in guardrail's **denial records** are the worked example: when
+`enforce-guardrails` denies a call it appends one `guardrailDenied` record carrying only
+derived fields (timestamp, run, sanitized session id and tool name, a stable rule id, the
+decision, and a short reason code). The command string, file contents, and the rest of the
+`preToolUse` payload are never persisted, and the human-readable deny reason shown to the
+agent is not logged either. See [`guides/enforcement.md`](../guides/enforcement.md) §
+Denial records.
+
 ## Validation checklist
 
 Before you open a PR that touches a hook:
