@@ -3,9 +3,13 @@
   Set the env vars the neo-core hook scripts read, for local testing.
 
 .DESCRIPTION
-  Sets PLUGIN_ROOT (plus the COPILOT_/CLAUDE_ aliases), AGENT_LOG_DIR (and
-  creates it), and AGENT_RUN_ID (the correlation id, defaulted to the current
-  git branch to match the hooks' own fallback).
+  Sets PLUGIN_ROOT (plus the COPILOT_/CLAUDE_ aliases) and AGENT_LOG_DIR (and
+  creates it).
+
+  AGENT_RUN_ID is deliberately NOT set: when it is unset the loggers derive
+  "run" themselves (payload cwd's git branch -> hook cwd's branch -> session
+  id). To pin one correlation id, set $env:AGENT_RUN_ID yourself before or
+  after dot-sourcing; an existing value is left untouched.
 
   DOT-SOURCE this so the vars land in your current shell:
       . .\scripts\setup-hook-env.ps1
@@ -31,13 +35,11 @@ if (-not (Test-Path -LiteralPath $env:AGENT_LOG_DIR)) {
     New-Item -ItemType Directory -Path $env:AGENT_LOG_DIR -Force | Out-Null
 }
 
-$branch = (& git -C $repoRoot rev-parse --abbrev-ref HEAD 2>$null)
-if ($branch -is [array]) { $branch = $branch[0] }
-$branch = ("$branch").Trim()
-if (-not $branch) { $branch = 'unknown' }
-$env:AGENT_RUN_ID = $branch
-
 Write-Host 'Neo hook env set:'
 Write-Host "  PLUGIN_ROOT   = $env:PLUGIN_ROOT"
 Write-Host "  AGENT_LOG_DIR = $env:AGENT_LOG_DIR"
-Write-Host "  AGENT_RUN_ID  = $env:AGENT_RUN_ID"
+if ($env:AGENT_RUN_ID) {
+    Write-Host "  AGENT_RUN_ID  = $env:AGENT_RUN_ID (pre-set, kept)"
+} else {
+    Write-Host '  AGENT_RUN_ID  = (unset; loggers derive run from payload cwd/session)'
+}

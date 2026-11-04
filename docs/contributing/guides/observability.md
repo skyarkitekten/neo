@@ -73,8 +73,10 @@ Then check `~/.agent-logs/events.jsonl` for the new line.
 
 To run the hooks by hand you need `PLUGIN_ROOT` pointed at the plugin (the dir
 containing `hooks/scripts/`), plus the optional `AGENT_LOG_DIR` / `AGENT_RUN_ID`.
-`scripts/setup-hook-env.{ps1,sh}` set all three (and the `COPILOT_`/`CLAUDE_`
-aliases) and create the log dir; the `teardown-hook-env` siblings clear them.
+`scripts/setup-hook-env.{ps1,sh}` set `PLUGIN_ROOT` (and the `COPILOT_`/`CLAUDE_`
+aliases) and `AGENT_LOG_DIR`, and create the log dir; the `teardown-hook-env`
+siblings clear them (and `AGENT_RUN_ID`). The setup scripts deliberately leave
+`AGENT_RUN_ID` alone — they never set it, and keep any value you exported.
 **Dot-source** them so the vars land in your current shell — running them
 normally only sets vars in a child process that then exits:
 
@@ -88,14 +90,23 @@ source scripts/setup-hook-env.sh                # or: source scripts/setup-hook-
 source scripts/teardown-hook-env.sh
 ```
 
-`AGENT_RUN_ID` defaults to the current git branch, matching the loggers' own
-fallback (see below).
+With `AGENT_RUN_ID` unset, the loggers derive `run` themselves (see
+[What gets logged](#what-gets-logged)). To pin one correlation id instead,
+export it yourself (`export AGENT_RUN_ID=my-spec` / `$env:AGENT_RUN_ID = 'my-spec'`).
 
 ## What gets logged
 
-Each line: `ts`, `run` (correlation id — defaults to git branch), `event`, `agent`, `tool`, `status`, and a truncated `prompt`. Default log path is `~/.agent-logs/events.jsonl` (override with `AGENT_LOG_DIR`).
+Each line: `ts`, `run` (correlation id), `event`, `agent`, `tool`, `status`, `session`, and a truncated `prompt`. Default log path is `~/.agent-logs/events.jsonl` (override with `AGENT_LOG_DIR`).
 
-Set `AGENT_RUN_ID` to correlate all events for one spec/task; otherwise the current git branch is used, which works well with the feature-branch-per-spec flow.
+`run` is resolved by the same ordered fallback in both loggers — the first non-empty value wins:
+
+1. **`AGENT_RUN_ID`** — set it to correlate all events for one spec/task explicitly.
+2. **Git branch of the payload's `cwd`** (`cwd` / `workingDirectory` / `working_directory`), via `git -C <cwd>`. The harness does not guarantee the hook process runs inside the repo, so the payload's working directory is the reliable anchor; this is what makes the feature-branch-per-spec flow group correctly.
+3. **Git branch of the hook process's own cwd** — the original behaviour, kept for harnesses that send no `cwd`.
+4. **Payload session id** (`session_id` / `sessionId`) — still groups one session's events when there is no branch.
+5. **`unknown`**.
+
+A detached `HEAD` is not treated as a branch, so it falls through to the session id. Without `jq` the shell logger skips logging entirely (see [Install](#install)), so the payload-based steps only matter when a record is written.
 
 ## Analyze
 

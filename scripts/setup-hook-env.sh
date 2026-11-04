@@ -2,9 +2,12 @@
 # setup-hook-env.sh [plugin-root]
 #
 # Set the env vars the neo-core hook scripts read, for local testing:
-#   PLUGIN_ROOT (+ COPILOT_/CLAUDE_ aliases), AGENT_LOG_DIR (created), and
-#   AGENT_RUN_ID (the correlation id, defaulted to the current git branch to
-#   match the hooks' own fallback).
+#   PLUGIN_ROOT (+ COPILOT_/CLAUDE_ aliases) and AGENT_LOG_DIR (created).
+#
+# AGENT_RUN_ID is deliberately NOT set: when it is unset the loggers derive
+# "run" themselves (payload cwd's git branch -> hook cwd's branch -> session
+# id). To pin one correlation id, export AGENT_RUN_ID yourself before or after
+# sourcing; an existing value is left untouched.
 #
 # DOT-SOURCE this so the vars land in your current shell:
 #     source scripts/setup-hook-env.sh
@@ -24,13 +27,14 @@ export CLAUDE_PLUGIN_ROOT="$PLUGIN_ROOT"
 export AGENT_LOG_DIR="${AGENT_LOG_DIR:-$HOME/.agent-logs}"
 mkdir -p "$AGENT_LOG_DIR" 2>/dev/null
 
-AGENT_RUN_ID="$(git -C "$_neo_repo_root" rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)"
-[ -n "$AGENT_RUN_ID" ] || AGENT_RUN_ID="unknown"
-export AGENT_RUN_ID
 
 printf 'Neo hook env set:\n'
 printf '  PLUGIN_ROOT   = %s\n' "$PLUGIN_ROOT"
 printf '  AGENT_LOG_DIR = %s\n' "$AGENT_LOG_DIR"
-printf '  AGENT_RUN_ID  = %s\n' "$AGENT_RUN_ID"
+if [ -n "${AGENT_RUN_ID:-}" ]; then
+  printf '  AGENT_RUN_ID  = %s (pre-set, kept)\n' "$AGENT_RUN_ID"
+else
+  printf '  AGENT_RUN_ID  = (unset; loggers derive run from payload cwd/session)\n'
+fi
 
 unset _neo_script_dir _neo_repo_root
