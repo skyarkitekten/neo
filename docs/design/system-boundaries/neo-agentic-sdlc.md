@@ -562,7 +562,7 @@ both fluencies"; it is "give a pairing a dependable way to decide."
 **FACT** — the repo's own gap analysis records **G5 — single-human vs team-with-veto entry gate**,
 scoring it "**Untracked (likely by-design)**" and noting: "The entry gate is a single human (BE).
 Robust against committee-softening, but is the single point of failure principle 7 flags."
-`docs/contributing/design/framework-gap-analysis.md:110`, with the narrative at `:144-147`.
+`docs/contributing/design/framework-gap-analysis.md:110`, with the narrative at `:152-155` (as of `main` before #113).
 
 G5 was written against the same single-human reading this section corrects. The design intent stated
 in §11.1 answers it: judgment at these gates is **team-held by design**. Two consequences:
@@ -572,10 +572,13 @@ in §11.1 answers it: judgment at these gates is **team-held by design**. Two co
 2. G5's remaining live question is **not** *single vs. team* but **what the decision rule is** —
    consensus, single-member veto, or an accountable signer who must convene but decides. **GAP** —
    searched `docs/glossary.md`, `docs/concepts/process-flow.md`, and
-   `plugins/neo-core/agents/neo.business-engineer.agent.md`; no decision rule is specified. Under
+   `plugins/neo-core/agents/neo.business-engineer.agent.md`; no decision rule is specified. (The
+   framework yardstick's principle 7 states a preference for single-member veto, but Neo has not
+   adopted it.) Under
    team-held judgment this is now the live design question, and it belongs in the handbook alongside
    the workshop standards.
 
-**Recommendation.** `framework-gap-analysis.md` G5 should be updated to reflect this intent; it
-currently encodes a reading the design authority has corrected. Flagged, not actioned — that file is
-outside this analysis's remit.
+**Recommendation (actioned, issue #113).** `framework-gap-analysis.md` G5 has been updated to
+reflect this intent: it now records team-held judgment as design intent, retires the
+single-point-of-failure framing, and carries the decision rule as the open question. The quotation
+above is the superseded wording, kept for the record.
