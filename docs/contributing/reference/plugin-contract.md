@@ -210,6 +210,9 @@ marketplace form shown here except when specifically testing non-default compone
 
 Every shipped plugin must carry its Copilot `plugin.json` and `hooks.json`; a missing or
 invalid manifest breaks the plugin. `scripts/validate-plugins.py` enforces that both parse.
+Each plugin therefore registers its own copy of the logging hooks; when several are installed
+the logger writes one record per event, not one per plugin (see
+[observability.md](../guides/observability.md#multiple-neo-plugins)).
 
 The **hook manifest + script contract** — the schema, the per-shell `${PLUGIN_ROOT}` rule
 (`$env:PLUGIN_ROOT` in PowerShell), and the stdin/`{"continue":true}` script contract — is

@@ -83,7 +83,50 @@ try {
     if (-not $runId -and $null -ne $payloadSession) { $runId = "$payloadSession" }
     if (-not $runId) { $runId = 'unknown' }
 
-    if ($null -ne $data) {
+    # De-duplicate across plugins — mirrors log-event.sh. neo-core and neo-product each
+    # register this logger, so with both installed Copilot fires it twice per event with
+    # the same payload on stdin. The first invocation atomically claims the event
+    # (CreateNew), keyed on hook event + a SHA-256 of the raw stdin string; the second
+    # sees the claim and skips. Hashing the raw payload (not parsed fields) keeps distinct
+    # events apart even when they share a millisecond (parallel tool calls) and avoids
+    # ConvertFrom-Json turning ISO timestamps into second-precision DateTimes. Only
+    # payloads carrying both a sessionId and a timestamp are claimed (others always log),
+    # and a claim that can't be written still logs: a duplicate beats a dropped event.
+    # Claim dirs idle for over a day are pruned at sessionStart.
+    $claimRoot = Join-Path $logDir '.claims'
+    if ($Event -eq 'sessionStart' -and (Test-Path -LiteralPath $claimRoot)) {
+        $cutoff = [DateTime]::Now.AddDays(-1)
+        Get-ChildItem -LiteralPath $claimRoot -Directory |
+            Where-Object { $_.LastWriteTime -lt $cutoff } |
+            Remove-Item -Recurse -Force
+    }
+    $skip = $false
+    $claimSid = "$(Get-Prop $data @('sessionId', 'session_id'))" -replace '[^A-Za-z0-9._-]', '_'
+    $claimTs = Get-Prop $data @('timestamp')
+    if ($claimSid -and $null -ne $claimTs -and "$claimTs") {
+        $claimHash = $null
+        try {
+            $sha = [System.Security.Cryptography.SHA256]::Create()
+            try {
+                $bytes = $sha.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($raw))
+                $claimHash = [System.BitConverter]::ToString($bytes).Replace('-', '').ToLowerInvariant()
+            } finally { $sha.Dispose() }
+        } catch { $claimHash = $null }
+        if ($claimHash) {
+            $claimDir = Join-Path $claimRoot $claimSid
+            $claim = Join-Path $claimDir (($Event -replace '[^A-Za-z0-9._-]', '_') + '.' + $claimHash)
+            try {
+                New-Item -ItemType Directory -Path $claimDir -Force | Out-Null
+                [System.IO.File]::Open($claim, [System.IO.FileMode]::CreateNew).Dispose()
+            } catch {
+                if (Test-Path -LiteralPath $claim) { $skip = $true }
+            }
+        }
+    }
+
+    if ($skip) {
+        # Another plugin's logger already recorded this event.
+    } elseif ($null -ne $data) {
         # Curated record with cross-harness fallbacks.
         $status = Get-Prop $data @('status', 'result_status')
         if ($null -eq $status) {
@@ -117,10 +160,12 @@ try {
         }
     }
 
-    $line = $record | ConvertTo-Json -Compress -Depth 10
-    # Never append an empty line — a blank record breaks every downstream reader.
-    if (-not [string]::IsNullOrWhiteSpace($line)) {
-        Add-Content -LiteralPath $logFile -Value $line -Encoding utf8
+    if (-not $skip) {
+        $line = $record | ConvertTo-Json -Compress -Depth 10
+        # Never append an empty line — a blank record breaks every downstream reader.
+        if (-not [string]::IsNullOrWhiteSpace($line)) {
+            Add-Content -LiteralPath $logFile -Value $line -Encoding utf8
+        }
     }
 } catch {
     # Fail-open: never surface an error to the harness.

@@ -75,6 +75,46 @@ if [ "$HAVE_JQ" = 0 ]; then
   exit 0
 fi
 
+# De-duplicate across plugins. neo-core and neo-product each register this
+# logger, so with both installed Copilot fires it twice per event with the
+# same payload on stdin. The first invocation atomically claims the event —
+# keyed on hook event + a hash of the full raw payload — and the second sees
+# the claim and skips. Hashing the whole payload (not just session + timestamp)
+# keeps distinct events apart even when they share a millisecond, e.g. parallel
+# tool calls. Only payloads carrying both a sessionId and a timestamp are
+# claimed (others can't tell a repeat from a duplicate, so they always log), and
+# if the claim can't be written we log anyway: a duplicate beats a dropped
+# event. Claim dirs idle for over a day are pruned at sessionStart.
+payload_hash() {
+  if command -v shasum >/dev/null 2>&1; then
+    printf '%s' "$payload" | shasum -a 256 2>/dev/null | awk '{print $1}'
+  elif command -v sha256sum >/dev/null 2>&1; then
+    printf '%s' "$payload" | sha256sum 2>/dev/null | awk '{print $1}'
+  elif command -v cksum >/dev/null 2>&1; then
+    printf '%s' "$payload" | cksum 2>/dev/null | awk '{print $1 "-" $2}'
+  fi
+}
+claim_ids="$(printf '%s' "$payload" | jq -r \
+  '[(.sessionId // .session_id // ""), ((.timestamp // "") | tostring)] | @tsv' 2>/dev/null)"
+claim_sid="$(printf '%s' "${claim_ids%%	*}" | tr -c 'A-Za-z0-9._-' '_')"
+claim_ts="${claim_ids#*	}"
+CLAIM_ROOT="$LOG_DIR/.claims"
+if [ "$EVENT" = "sessionStart" ] && [ -d "$CLAIM_ROOT" ]; then
+  find "$CLAIM_ROOT" -mindepth 1 -maxdepth 1 -type d -mmin +1440 -exec rm -rf {} + 2>/dev/null
+fi
+if [ -n "$claim_sid" ] && [ -n "$claim_ts" ]; then
+  claim_hash="$(payload_hash)"
+  if [ -n "$claim_hash" ]; then
+    claim_dir="$CLAIM_ROOT/$claim_sid"
+    claim="$claim_dir/$(printf '%s' "$EVENT" | tr -c 'A-Za-z0-9._-' '_').$claim_hash"
+    mkdir -p "$claim_dir" 2>/dev/null
+    if ! (set -C; : > "$claim") 2>/dev/null && [ -e "$claim" ]; then
+      printf '{"continue":true}\n'
+      exit 0
+    fi
+  fi
+fi
+
 # Curated record with cross-harness fallbacks. Strings are truncated so tool
 # results and prompts don't bloat the log.
 record="$(printf '%s' "$payload" | jq -c \
