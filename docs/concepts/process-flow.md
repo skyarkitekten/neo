@@ -28,6 +28,13 @@ verification loop thinks in **features** again. Boundary 2 is therefore not 1:1 
 fan in to one verifiable feature. How that assembly happens is the
 [integration mode](#integration-modes), a project-level choice with a Neo default.
 
+**Off the chain: the Architecture Assessment loop.** `[live]`. The optional `neo-arc` plugin
+answers one architecture design question with an evidence-backed **assessment report**. It owns
+no boundary in the chain above: nothing crosses *into* another loop automatically. A human carries
+what the report recommends — an ADR, a PRD change, a design decision — into the Product or
+Specification loop, where that loop's own gates apply. The loop's stages and contracts are owned by
+`plugins/neo-arc/README.md`.
+
 ---
 
 ## Boundary 0 — Product → Specification

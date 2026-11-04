@@ -72,7 +72,24 @@ This is a **loop plugin** — Process-tier capability packaged separately becaus
 optional. See
 [../contributing/reference/stack-plugin-contract.md](../contributing/reference/stack-plugin-contract.md).
 
-## 5. Add a stack (optional)
+## 5. Add the Architecture Assessment loop (optional)
+
+To answer architecture design questions with evidence from your codebase before anyone builds,
+install the Architecture Assessment loop:
+
+```
+copilot plugin install neo-arc@neo
+```
+
+It adds the **Neo Architecture Engineer** orchestrator and nine read-only workers, and it ends at an
+**assessment report**. It stands beside the other loops rather than in their chain, so it needs
+neither `neo-product` nor a PRD. If your `AGENTS.md` names a folder for architecture assessments,
+the report goes there; otherwise it defaults to `docs/design/assessments/`.
+
+Like the Product loop, this is a **loop plugin** — see
+[../contributing/reference/stack-plugin-contract.md](../contributing/reference/stack-plugin-contract.md).
+
+## 6. Add a stack (optional)
 
 `neo-core` handles the process; **stack plugins** (e.g. a React or .NET plugin) carry the
 tech-specific skills a coder uses *inside* a task. Every project installs `neo-core`; stacks are
@@ -80,7 +97,7 @@ additive and late-bound. The core/stack split — the three tiers and how stack 
 at runtime — is owned by
 [../contributing/reference/stack-plugin-contract.md](../contributing/reference/stack-plugin-contract.md).
 
-## 6. Verify the install
+## 7. Verify the install
 
 - The agents appear in Copilot's agent picker (look for `Neo <Role>` names, e.g. **Neo Technical
   Engineer**).
@@ -165,6 +182,7 @@ Fixes, best first:
    ```console
    copilot plugin uninstall neo-core
    copilot plugin uninstall neo-product
+   copilot plugin uninstall neo-arc
    ```
 
 `NEO_ENFORCE_GUARDRAILS=0` will not help here. That setting is read by the hook script, and in this

@@ -5,8 +5,8 @@ Records what each agent does into a JSONL log so you can tune the `.agent.md` pr
 > **Windows cost.** Each hook launches a nested `pwsh` so that ambient execution policy cannot
 > refuse the script file (see [enforcement.md](enforcement.md) § Opting in for why). Measured on
 > a warm Windows 11 client that costs roughly **270 ms per hook invocation** on top of the
-> harness's own launch, and both plugins register the same events, so a tool call that fires
-> `postToolUse` pays it about four times. Unix invokes `bash "$s"` for the same reason, but at no
+> harness's own launch, and every installed Neo plugin registers the same events, so with two
+> plugins installed a tool call that fires `postToolUse` pays it about four times — more with three. Unix invokes `bash "$s"` for the same reason, but at no
 > added cost — it replaces the shebang's own `env` lookup rather than adding a process (measured
 > 243 ms vs 259 ms for the direct form). If that matters more to you than the logs, turn logging
 > off with `NEO_LOG_HOOKS=0`.

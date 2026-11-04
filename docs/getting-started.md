@@ -20,6 +20,7 @@ are built:
 | Loop | What it does | Status |
 | --- | --- | --- |
 | **Product loop** | Problem/opportunity → research → viability/desirability/feasibility → **PRD** | `[live]` |
+| **Architecture Assessment loop** (optional, beside the chain) | Design question → scout → readers → designs → judges → refuted synthesis → **assessment report** | `[live]` |
 | **Specification loop** | PRD/requirements → **Feature** (business, human-signed) → **Task** (spec, ≈ 1 PR) | `[live]` |
 | **Coding loop** | Research → plan → implement → review → draft PR | `[live]` |
 | **Verification / Operations** | PR review, smoke/user test, CD, telemetry | `[target]` |
@@ -47,7 +48,7 @@ is the thing you can actually automate.
 - **I want to run Neo in my repo.** → [guides/installing-neo.md](./guides/installing-neo.md) —
   install `neo-core`, write your project's `AGENTS.md`, add a loop or a stack.
 - **I want to drive the crew.** → [guides/using-neo.md](./guides/using-neo.md) — produce a PRD,
-  then work the Specification loop with the BE.
+  then work the Specification loop with the BE, or assess an architecture question.
 - **I want to hand in a piece of work.** → [guides/filing-work.md](./guides/filing-work.md) — what a
   well-formed Feature and Task look like.
 - **I want to change Neo itself.** → [contributing/README.md](./contributing/README.md) — contracts,
@@ -66,6 +67,13 @@ copilot plugin install neo-core@neo
 
 ```
 copilot plugin install neo-product@neo
+```
+
+To answer an architecture design question with evidence from your codebase, add the optional
+Architecture Assessment loop:
+
+```
+copilot plugin install neo-arc@neo
 ```
 
 Then invoke the crew from your project. Full setup — including the `AGENTS.md` your project needs

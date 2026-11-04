@@ -37,7 +37,8 @@ Start at **[`contributing/README.md`](./contributing/README.md)** — the contri
   hook contract.
 - **Authoring & operations** (`contributing/guides/`) — agent authoring, observability,
   enforcement.
-- **Design rationale** (`contributing/design/`) — the framework gap analysis.
+- **Design rationale** (`contributing/design/`) — the framework gap analysis and the `neo-arc`
+  method.
 
 ## The one rule (both doors)
 
@@ -50,7 +51,7 @@ owner table for its half; the shared-core owners are:
 | What Neo is, the loops, the core rule | [`concepts/architecture.md`](./concepts/architecture.md) |
 | Loop boundaries, integration modes, KPI settlement | [`concepts/process-flow.md`](./concepts/process-flow.md) |
 | Which `tools:` aliases the Copilot CLI actually resolves | [`contributing/guides/agent-authoring-reference.md`](./contributing/guides/agent-authoring-reference.md) |
-| Evidence discipline — retrieval, citations, FACT/INFERENCE/RECALL labels | the `neo-evidence-standard` skill, shipped in both plugins |
+| Evidence discipline — retrieval, citations, FACT/INFERENCE/RECALL labels | the `neo-evidence-standard` skill, shipped in every plugin |
 
 Repo-level layout, checks, and guardrails for working on Neo itself live in the root
 [`AGENTS.md`](../AGENTS.md), not here. None of `docs/` ships in a plugin.

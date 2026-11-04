@@ -1,0 +1,22 @@
+{
+  "name": "neo-arc",
+  "version": "0.1.0",
+  "description": "Neo arc \u2014 the optional Architecture Assessment loop: answers an architecture design question with evidence from the codebase. Ships the Architecture Engineer orchestrator plus Scout, Reader, Designer, Judge, Synthesizer, Refuter, Critic, Report, and Factcheck workers, ending in an assessment report with verified reuse claims, with lifecycle-logging hooks.",
+  "author": {
+    "name": "Chad Thomas"
+  },
+  "homepage": "https://github.com/skyarkitekten/neo",
+  "repository": "https://github.com/skyarkitekten/neo",
+  "license": "MIT",
+  "keywords": [
+    "agents",
+    "architecture",
+    "assessment",
+    "hooks",
+    "observability"
+  ],
+  "agents": "agents/",
+  "extensions": "extensions/",
+  "hooks": "hooks/hooks.json",
+  "skills": "skills/"
+}

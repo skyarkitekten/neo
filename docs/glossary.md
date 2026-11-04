@@ -38,6 +38,10 @@ person, "Neo Business Engineer" is always software.
 
 **Researcher** `[target]` — Agent that gathers context feeding the Specification and Coding loops.
 
+**Neo Architecture Engineer** `[live]` — The agent (`neo.architecture-engineer`, `neo-arc`) that runs the **Architecture Assessment loop**: invokes the Arc Scout, fans out Arc Readers, three Arc Designers and three Arc Judges, the Arc Synthesizer, one Arc Refuter per load-bearing reuse claim, the Arc Critic, the Arc Report writer, and three Arc Factcheckers, and assembles an **assessment report**. It routes and assembles; it never implements. It is the loop's entry point, as the other Engineers are theirs, but it pairs with no human seat — the loop owns no boundary. Canonical `name:` is **Neo Architecture Engineer**; its workers are **Neo Arc Scout**, **Neo Arc Reader**, **Neo Arc Designer**, **Neo Arc Judge**, **Neo Arc Synthesizer**, **Neo Arc Refuter**, **Neo Arc Critic**, **Neo Arc Report**, and **Neo Arc Factcheck**.
+
+**Arc Refuter** `[live]` — Agent (`neo-arc`) handed one load-bearing **reuse claim** and told to break it by reading the code; it defaults to *refuted* when the claim cannot be confirmed and returns a corrected **reuse grade**. The report carries the refuters' grades, not the synthesizer's.
+
 **Implementation Planner** `[target]` — The `Research → Plan → Implement` phase in the Coding loop that breaks a **task** into **steps**. Named for what it produces, matching **Task Planner** below.
 
 **Team Leader / Coder** `[target]` — Coding-loop agents; the Team Leader coordinates Coders, who implement using stack skills.
@@ -68,6 +72,8 @@ person, "Neo Business Engineer" is always software.
 
 **Product loop** `[live]` — The loop *upstream* of the Specification loop, shipped by the `neo-product` plugin: research fan-out → viability/desirability/feasibility lenses → synthesis → **PRD**. It answers "what should exist, and why" and is the origin of the PRD that Neo previously assumed into being. Human-gated at two points: the decision to proceed past synthesis, and the Business Engineer's acceptance of the PRD at [Boundary 0](./concepts/process-flow.md#boundary-0--product--specification). It does **not** absorb or replace `feature-agent`/`task-planner`.
 
+**Architecture Assessment loop** `[live]` — An optional loop *beside* the chain, shipped by the `neo-arc` plugin: design question → scout → parallel readers → three designs → three-lens judge panel → synthesis → one refuter per reuse claim → critic → **assessment report** → three fact-checks. It owns no boundary; a human carries its recommendations into the Product or Specification loop. Every stage returns a fixed template, and every claim the recommendation leans on is handed to an Arc Refuter.
+
 **Specification loop** `[live]` — PRD→Feature and Feature→Task; problem space into solution space. Human-gated: *Start Human, Finish Human; Critical Thinking required.*
 
 **Coding loop** `[target]` — `Research → Planner → Implement` across Build, Validation, and Verification spaces. Ends at Review → Code Review → PR.
@@ -84,10 +90,14 @@ person, "Neo Business Engineer" is always software.
 
 **Feature Skill / Feature Agent** `[live]` — The level above `neo-task-authoring` / `task-planner`: PRD-segment → Feature. The `neo-feature-authoring` skill defines what a clean feature is; the `feature-agent` runs the interactive drafting with the Business Engineer.
 
+**Assessment report** `[live]` — The artifact the **Architecture Assessment loop** produces: a recommended shape, a phased plan, verified **reuse claims**, the decisions only the user can make, and the single question that gates the design. Markdown with Mermaid figures, written to the consuming repo's reports folder and fact-checked before it is presented. Never committed by the loop.
+
+**Reuse claim / reuse grade** `[live]` — A claim that an existing component (named, with `path:line`) can carry part of a design, graded `verbatim` (usable as-is), `extend` (new implementation behind an existing interface, or a new case in an existing switch), `pattern-only` (copy the shape), or `not-reusable`. Used throughout `neo-arc`; the grade that reaches the **assessment report** is the **Arc Refuter**'s.
+
 ---
 
 **Neo, stylized.** The system is always written **Neo** in prose — never "neo", never "NEO".
-Lowercase `neo` appears only as a literal identifier: plugin names (`neo-core`, `neo-product`),
+Lowercase `neo` appears only as a literal identifier: plugin names (`neo-core`, `neo-product`, `neo-arc`),
 the marketplace (`neo`) and install targets (`neo-core@neo`), agent filenames
 (`neo.<role>.agent.md`), skill directories (`neo-feature-authoring`), and repository paths. Inside
 code fences and inline code, reproduce the identifier exactly — do not "correct" it.
