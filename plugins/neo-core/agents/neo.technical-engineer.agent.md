@@ -32,7 +32,8 @@ argument-hint: <issue or story URL/ID>
 
 <!-- Tool access. The orchestrator ALWAYS needs these base tools, independent of project:
      `agent` (delegate to sub-agents — without it there is no task/delegation tool),
-     `execute` (shell: `gh`/`az` to read the spec, `git` to branch, `gh pr create --draft`
+     `execute` (shell: `gh`/`az` to read the spec — GitHub Issues through the `neo-github-issue`
+     skill — `git` to branch, `gh pr create --draft`
      to open the PR), and `read`/`search`. The `github/*` read tools cover reading a GitHub
      Issue via MCP; Azure DevOps has no MCP tool here, so ADO specs are read with `az` via
      `execute` — do not add a speculative `azure*` MCP tool to this list. Any *stack-specific*
@@ -84,7 +85,17 @@ Below, `researcher`, `planner`, `code-writer`, and `code-reviewer` refer to thes
 
 ### 1. Branch
 
-- Read the spec (GitHub Issue / Azure DevOps story) and **derive the branch name from it**: `feat/<issue-id>-<short-name>` or `fix/<issue-id>-<short-name>`, where `<short-name>` is a 2–4 word kebab-case slug of the spec title. The name must identify *this* work item at a glance.
+- Read the spec through its intake skill: for a GitHub Issue (URL, `owner/repo#<n>`, or `#<n>`), load `neo-github-issue` and work from the normalized spec it returns — every later phase reads that object. The Azure DevOps intake skill is not available yet (#39): for an Azure DevOps story, tell the user intake can't be normalized and stop, unless they explicitly accept an unnormalized read with `az boards work-item show`.
+- **Intake gate — before any branch exists.** The spec is a task carrier (`docs/contributing/reference/task-handoff-schema.md` §2, §5), and only a complete, BE-approved task crosses into the Coding loop. Check the normalized spec against every required carrier field:
+  - **Task id** — `id`, `number`, and `url` are all present.
+  - **Title** — `title` is non-empty.
+  - **Parent feature** — `parent` is not `null`.
+  - **What** — `description` carries a non-empty `## What` section (Azure DevOps: a non-empty Description).
+  - **Validation criteria** — `missing_acceptance_criteria` is `false` **and** `acceptance_criteria_source` is a named section or field (`section:…` / `field:…`). Criteria inferred from a body checklist (`checklist`) do not satisfy this field.
+  - **BE-approved** — `labels` contains `be-approved` (Azure DevOps: the `be-approved` tag, or the project's approved state on an unnormalized read).
+
+  If any check fails, **stop and route the task back**: tell the user which fields are missing or which marker is absent, that the task returns to the Specification loop (Business Engineer / Task Planner) to be completed and approved, and that nothing was branched or started. If only the `be-approved` marker is missing, say that a human with Business Engineer sign-off can clear it by adding the label (`gh issue edit <n> --add-label be-approved`). Do not create the branch, dispatch research, or fill a gap yourself — never invent scope, criteria, a parent, or an approval, and never apply the label yourself. Resume only when the corrected issue is handed back, re-reading it through intake.
+- **Derive the branch name from the spec**: `feat/<issue-id>-<short-name>` or `fix/<issue-id>-<short-name>`, where `<short-name>` is a 2–4 word kebab-case slug of the spec title. The name must identify *this* work item at a glance.
 - **A branch that isn't `main` is not automatically an acceptable branch.** Some harnesses drop you onto an auto-generated branch with a random codename (e.g. `feat/didactic-parakeet`). That name carries no spec identity — never keep working on it just because it isn't `main`.
 - Get onto the derived branch before any change: if the current branch is auto-generated or otherwise not spec-derived and has no pushed commits, rename it (`git branch -m <derived-name>`); otherwise create the derived branch off the default branch. Verify with `git branch --show-current` and report the final name to the user.
 - All work lands on this branch; never work on or commit to `main`.
@@ -92,9 +103,9 @@ Below, `researcher`, `planner`, `code-writer`, and `code-reviewer` refer to thes
 ### 2. Research
 
 - **Gate — ask the user to invoke `/fleet` first.** Before dispatching any researcher, stop and tell the user to run `/fleet` so research and planning fan out as parallel background subagents. State the branch name and the questions you intend to farm out. Wait for the user's go-ahead; proceed without `/fleet` only if the user explicitly says to.
-- Split the investigation into independent questions (e.g. one per affected area or system).
+- Split the investigation into independent questions (e.g. one per affected area or system). Give each researcher the normalized spec from step 1, not a paraphrase of it.
 - **Delegate each question to `Neo Researcher`, running them in parallel.** Each researcher answers one scoped question and returns affected areas, existing patterns, constraints, and risks.
-- Collect the findings. **If the spec is ambiguous or has no acceptance criteria, stop and ask the user before planning** — do not invent requirements beyond the spec. If research surfaces a gap, commission another `Neo Researcher`.
+- Collect the findings. Missing or checklist-inferred acceptance criteria never reach this point — the step 1 intake gate already routed them back. **If the spec is still ambiguous — research exposes a gap in the criteria, or intake warned that comments contradict the body or propose criteria not in it — stop and ask the user before planning**; do not invent requirements beyond the spec. If research surfaces a gap, commission another `Neo Researcher`.
 - **Evidence gate.** Load the `neo-evidence-standard` skill. Every claim a researcher returns must carry `FACT` (with a locator retrieved this session), `INFERENCE` (derivation shown), or `RECALL — UNVERIFIED`. Send the report back rather than planning from it if a claim is unlabeled, if a file path or `sha` is cited that nobody actually opened, or if a number is called fact without a fetched source. Labels propagate — never promote `RECALL — UNVERIFIED` to fact because it sounds right or two researchers said it.
 
 ### 3. Plan

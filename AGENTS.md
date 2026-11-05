@@ -90,7 +90,7 @@ This repo has nothing to compile, lint, or unit-test in the app sense. Do **not*
   ```bash
   export COPILOT_HOME=$(mktemp -d)
   copilot plugin marketplace add .       # must run from the repo root
-  copilot plugin install neo-core@neo    # must say "Installed 3 skills."
+  copilot plugin install neo-core@neo    # must say "Installed 4 skills."
   copilot plugin install neo-product@neo # must say "Installed 4 skills."
   copilot plugin list                    # confirms installed, enabled, and live directory
   copilot -p "List the exact names of every skill available to you and nothing else."

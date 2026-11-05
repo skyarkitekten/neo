@@ -105,6 +105,7 @@ same route that repo gets its `AGENTS.md`.
 | `task-planner` | `neo-core` | |
 | `neo-evidence-standard` skill | `neo-core` | Duplicated into `neo-product` — a plugin cannot reference files outside its own directory |
 | `neo-feature-authoring` skill | `neo-core` | |
+| `neo-github-issue` skill | `neo-core` | Spec intake for GitHub Issues → normalized spec ([`task-handoff-schema.md` § 6](./task-handoff-schema.md#6-normalized-spec--the-consumers-intake-shape)) |
 | `neo-task-authoring` skill | `neo-core` | |
 | `product.engineer` (orchestrator) | `neo-product` | Entry point for the Product loop |
 | `product.researcher` | `neo-product` | Fanned out in parallel by the orchestrator |

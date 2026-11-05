@@ -9,8 +9,9 @@ identity, fields, and on-harness format so the emitter and consumer agree on one
 
 It does **not** restate the logical rules for a clean task — those live in the
 [`task-authoring`](../../../plugins/neo-core/skills/neo-task-authoring/SKILL.md) skill and are referenced, not
-duplicated. This doc adds the **carrier** (what the task *is*) and the **serialization** (where
-each field lives on a GitHub Issue and an Azure DevOps story).
+duplicated. This doc adds the **carrier** (what the task *is*), the **serialization** (where
+each field lives on a GitHub Issue and an Azure DevOps story), and the **normalized spec** the
+consumer reads back from either provider (§6).
 
 > **Provisional.** This schema is the item most likely to churn once the E2E dry run (#23)
 > exercises it end to end. Treat it as provisional until the dry run confirms the emitter and
@@ -136,12 +137,15 @@ The story-grade work-item type is fixed at project setup (§1, Naming caution).
 
 ### Consumer — Team Leader / orchestrator (#11)
 
+- Reads the issue/story through its provider's intake skill into the normalized spec (§6).
 - Treats the issue/story it is handed **as** the task (§1). The
   [`neo-technical-engineer`](../../../plugins/neo-core/agents/neo.technical-engineer.agent.md) "GitHub Issue or
   Azure DevOps story" input and the spec loop's "Task" are one object.
 - May assume all required fields (§2) are present and the task is `be-approved`. If a required
   field is missing or the approval marker is absent, it stops and routes back — it does **not**
   invent scope to fill the gap ([`neo-code-writer`](../../../plugins/neo-core/agents/neo.code-writer.agent.md)).
+  The [`neo-technical-engineer`](../../../plugins/neo-core/agents/neo.technical-engineer.agent.md) enforces
+  this as its **intake gate**, right after normalization (§6) and before it creates a branch.
 - Reads the **Validation criteria** as the spec's **acceptance criteria** it plans and
   validates against (§ naming reconciliation).
 
@@ -156,7 +160,73 @@ The two names refer to one list; do not treat them as separate inputs.
 
 ---
 
-## 6. Out of scope
+## 6. Normalized spec — the consumer's intake shape
+
+§3 and §4 define how a task is **written** on each provider. This section defines what the
+consumer **reads back**: one provider-neutral object, produced by a per-provider intake skill,
+so the orchestrator and its workers bind to a single contract whichever provider the spec came
+from. It applies to any issue/story handed to the orchestrator, not only Neo-emitted tasks.
+
+| Provider | Intake skill | Status |
+| --- | --- | --- |
+| GitHub Issues | [`neo-github-issue`](../../../plugins/neo-core/skills/neo-github-issue/SKILL.md) | shipped (#41) |
+| Azure DevOps work items | Azure DevOps intake skill | not yet available — tracked in #39 |
+
+Each intake skill carries its own copy of this shape, because a plugin can't reference files
+outside itself ([`plugin-contract.md`](./plugin-contract.md) § 1). **This section is the
+normative copy** — change it here first, then update every intake skill to match.
+
+### Fields
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `provider` | `"github"` \| `"azure-devops"` | Where the spec lives. |
+| `id` | string | Provider-qualified identity: `<owner>/<repo>#<n>` on github.com, `<host>/<owner>/<repo>#<n>` on GitHub Enterprise, `<org>/<project>#<id>` on Azure DevOps. The Task id (§1). |
+| `number` | integer | The bare issue number / work-item id, for branch names and PR links. |
+| `url` | string | Canonical web URL. |
+| `title` | string | Verbatim. |
+| `type` | string | Lowercased item type — GitHub issue type or `"issue"`; Azure DevOps work-item type (e.g. `"user story"`). |
+| `state` | string | Lowercased, for every provider. GitHub: `open` \| `closed`. Azure DevOps: the work item's state name, lowercased (e.g. `active`). |
+| `state_reason` | string \| null | Why it closed, where the provider records one; else `null`. |
+| `description` | string | The body / `Description`, verbatim. |
+| `acceptance_criteria` | `{text, done}[]` | Extracted, never authored. `done` is `true` \| `false` \| `null` (not a checkbox). These are the task's **validation criteria** (§5, naming reconciliation). |
+| `acceptance_criteria_source` | string | `section:<heading>`, `checklist`, `field:<name>` (Azure DevOps), or `none`. |
+| `missing_acceptance_criteria` | boolean | `true` exactly when `acceptance_criteria` is empty. The consumer then stops and routes the task back (§5). |
+| `labels` | string[] | GitHub labels; Azure DevOps tags. |
+| `parent` | item \| null | The parent issue / work item (the task's **parent feature**, §2). |
+| `sub_items` | item[] | Sub-issues / child work items. |
+| `related` | `{relation, id, url, title, state}[]` | Other links. `relation` is one of `blocked-by`, `blocks`, `depends-on`, `closed-by-pr`, `mentioned`, or a provider link type lowercased. `title`/`state` may be `null`. |
+| `comments_count` | integer | Number of comments / discussion entries read. |
+| `comments_summary` | string | Attributed summary of scope changes, decisions, proposed criteria, and blockers; `""` when none. A reading aid — the body stays the requirements. |
+| `warnings` | string[] | Every fallback, inference, truncation, contradiction, or failed retrieval. Never silently dropped. |
+
+An *item* is `{ "id", "url", "title", "state" }`.
+
+Every top-level key is always present. A relationship that couldn't be retrieved takes its
+empty value (`null` for `parent`, `[]` for lists) and gets a `warnings` entry; if the spec
+itself can't be fetched, no object is returned and the failure is reported instead.
+
+### Provider detection
+
+The orchestrator classifies the raw spec reference before choosing an intake skill:
+
+- A `github.com` (or authenticated GitHub Enterprise) issue URL, `<owner>/<repo>#<n>`, or
+  `#<n>` → `github`. A pull-request URL is not a spec.
+  A GitHub reference resolves to `<host>`, `<owner>`, `<repo>`, `<n>`; shorthand (`<owner>/<repo>#<n>`,
+  `#<n>`) takes `<host>` from the current repo (`gh repo view --json nameWithOwner,url`). The host
+  is kept for every call — `gh auth status --hostname <host>`, `gh issue view --repo <host>/<owner>/<repo>`
+  on GitHub Enterprise, `gh api --hostname <host>` for REST fallbacks — and in the GHE `id`.
+- A `dev.azure.com` or `*.visualstudio.com` work-item URL, or `AB#<id>` → `azure-devops`.
+- A bare number is ambiguous: resolved by the repo's git remotes (GitHub-only → `github`,
+  Azure DevOps-only → `azure-devops`), otherwise by asking the user.
+
+Until the Azure DevOps intake skill (#39) ships, an `azure-devops` spec is reported to the user
+as unsupported by intake rather than mapped ad hoc; the orchestrator continues only if the user
+explicitly accepts an unnormalized read.
+
+---
+
+## 7. Out of scope
 
 This schema defines the crossing artifact and nothing else. It deliberately does not cover:
 

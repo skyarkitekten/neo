@@ -45,6 +45,11 @@ Issue or Azure DevOps story** it lives in, not a separate document. A well-forme
 The **Neo Task Planner** produces these with you; the exact field list and on-harness serialization
 are owned by the [task-handoff schema](../contributing/reference/task-handoff-schema.md).
 
+A Task crosses into the Coding loop only once it carries the **`be-approved`** label. The Business
+Engineer applies it when it files an approved task set; if you file a Task by hand, add the label
+yourself once the Business Engineer has signed it off (`gh issue edit <n> --add-label be-approved`).
+Without it, the Technical Engineer stops at intake and routes the Task back.
+
 ## Why the bar is where it is
 
 Validation criteria are authored **at task creation**, not bolted on later, because the whole point
