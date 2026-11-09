@@ -46,7 +46,7 @@ says who owns what.
   commit/push to `main` and non-draft PRs; why they ship unregistered, how to wire them up,
   and how to relax them.
 - [guides/git-cleanup.md](./guides/git-cleanup.md) — **experimental, not distributed.** Report
-  and remove dead local branches and worktrees with `scripts/git-cleanup.sh`.
+  and remove dead local branches and worktrees with `scripts/git-cleanup.py`.
 
 ## design/ — the *why* (rationale, not a contract)
 

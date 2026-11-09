@@ -1,27 +1,45 @@
 # Cleaning up dead branches and worktrees
 
 > [!WARNING]
-> **Experimental — not ready for distribution.** `scripts/git-cleanup.sh` is a dev-time
+> **Experimental — not ready for distribution.** `scripts/git-cleanup.py` is a dev-time
 > convenience for people working on Neo. It is not part of any plugin, is not covered by CI,
 > and its flags, categories, and output may change without notice. Do not copy it into
 > `plugins/*/` or recommend it to consuming repos. Always read the dry-run report before you
 > pass `--apply`.
 
 Neo work happens on short-lived feature branches, often in Copilot app worktrees. After the
-PRs merge, the local branches and worktrees stay behind. `scripts/git-cleanup.sh` lists the
+PRs merge, the local branches and worktrees stay behind. `scripts/git-cleanup.py` lists the
 ones that are safe to remove and, if you ask it to, removes them.
 
 ## Quick start
 
-From anywhere inside the repo:
+From the repo root:
 
 ```bash
-scripts/git-cleanup.sh                  # report only — changes nothing
-scripts/git-cleanup.sh --apply          # prompts once, then removes what's marked removable
-scripts/git-cleanup.sh --apply --yes    # no prompt
+uv run scripts/git-cleanup.py                  # report only — changes nothing
+uv run scripts/git-cleanup.py --apply          # prompts once, then removes what's marked removable
+uv run scripts/git-cleanup.py --apply --yes    # no prompt
 ```
 
-It runs on the bash 3.2 that ships with macOS. It needs only `git` and standard POSIX tools.
+The script acts on whichever repo your shell is in, so you can point it at another checkout:
+`cd ../other-repo && uv run /path/to/neo/scripts/git-cleanup.py`.
+
+### Running it: `uv` recommended
+
+Neo's scripts are Python so they behave the same on macOS, Linux, and Windows. This one uses
+only the standard library and needs Python 3.9+ and `git` on `PATH`.
+
+Neo power users should run scripts with [`uv`](https://docs.astral.sh/uv/). The script carries
+[PEP 723](https://peps.python.org/pep-0723/) inline metadata, so `uv run` picks a matching
+interpreter (downloading one if needed) in an isolated environment. No virtualenv, no
+`pip install`, and no dependence on whatever `python3` your `PATH` resolves to.
+
+Without `uv`, call the interpreter directly:
+
+```bash
+python3 scripts/git-cleanup.py          # macOS / Linux
+py scripts\git-cleanup.py               # Windows
+```
 
 ## What it reports
 
@@ -56,7 +74,7 @@ will not match. It lands in `gone` or `stale` instead.
 
 | Flag | Effect |
 | --- | --- |
-| `-a`, `--apply` | Remove everything marked removable. Prompts unless `--yes`. |
+| `-a`, `--apply` | Remove everything marked removable. Prompts unless `--yes`. Without a terminal (CI, piped input), it refuses to run unless you also pass `--yes`. |
 | `-y`, `--yes` | Skip the confirmation prompt. |
 | `-b`, `--base <ref>` | Compare against `<ref>` instead of the auto-detected base. |
 | `-s`, `--stale-days <n>` | Age threshold for `stale` (default 30). |
@@ -83,7 +101,10 @@ session. Archive the session in the app instead.
 
 ## Known limitations
 
-- **Not tested in CI.** It was exercised by hand against this repo and a scratch repo.
+- **Not tested in CI.** It was exercised by hand against this repo and a scratch repo, on macOS
+  with Python 3.9 and 3.12.
+- **Windows is untested.** It is written to be portable (standard library only, no shell-outs
+  besides `git`), but nobody has run it on Windows yet.
 - **One base only.** Branches merged into a release branch other than base aren't recognized.
 - **Local view only.** It doesn't check open PRs. A `gone` branch might still back a PR on a
   fork. Check before you `--force`.
