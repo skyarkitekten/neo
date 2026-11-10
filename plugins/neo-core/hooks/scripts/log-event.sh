@@ -75,6 +75,31 @@ if [ "$HAVE_JQ" = 0 ]; then
   exit 0
 fi
 
+# De-duplicate across plugins. neo-core and neo-product each register this
+# logger, so with both installed Copilot fires it twice per event with the
+# same payload. The first invocation atomically claims the event — keyed on
+# hook event + sessionId + the payload's millisecond timestamp — and the
+# second sees the claim and skips. Payloads without both ids are always
+# logged, and if the claim can't be written we log anyway: a duplicate beats
+# a dropped event. Claim dirs idle for over a day are pruned at sessionStart.
+claim_ids="$(printf '%s' "$payload" | jq -r \
+  '[(.sessionId // .session_id // ""), ((.timestamp // "") | tostring)] | @tsv' 2>/dev/null)"
+claim_sid="$(printf '%s' "${claim_ids%%	*}" | tr -c 'A-Za-z0-9._-' '_')"
+claim_ts="$(printf '%s' "${claim_ids#*	}" | tr -c 'A-Za-z0-9._-' '_')"
+CLAIM_ROOT="$LOG_DIR/.claims"
+if [ "$EVENT" = "sessionStart" ] && [ -d "$CLAIM_ROOT" ]; then
+  find "$CLAIM_ROOT" -mindepth 1 -maxdepth 1 -type d -mmin +1440 -exec rm -rf {} + 2>/dev/null
+fi
+if [ -n "$claim_sid" ] && [ -n "$claim_ts" ]; then
+  claim_dir="$CLAIM_ROOT/$claim_sid"
+  claim="$claim_dir/$(printf '%s' "$EVENT" | tr -c 'A-Za-z0-9._-' '_').$claim_ts"
+  mkdir -p "$claim_dir" 2>/dev/null
+  if ! (set -C; : > "$claim") 2>/dev/null && [ -e "$claim" ]; then
+    printf '{"continue":true}\n'
+    exit 0
+  fi
+fi
+
 # Curated record with cross-harness fallbacks. Strings are truncated so tool
 # results and prompts don't bloat the log.
 record="$(printf '%s' "$payload" | jq -c \

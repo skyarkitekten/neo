@@ -25,6 +25,13 @@
 # python3 on PATH) it ALLOWS with a stderr warning rather than denying every tool
 # call and bricking the session. Server-side branch protection is the real backstop.
 #
+# Denial records (issue #98): every deny also appends ONE derived-fields-only record
+# ({ts, run, session, event:"guardrailDenied", tool, rule, decision, reason}) to the
+# observability log, $AGENT_LOG_DIR/events.jsonl (default $HOME/.agent-logs). The raw
+# payload, command string, and file contents are never written. Logging is best-effort and
+# silent: it cannot change the deny JSON on stdout or the exit code. NEO_LOG_HOOKS=0 turns
+# it off. See docs/contributing/guides/enforcement.md § Denial records.
+#
 # Relaxation: set NEO_ENFORCE_GUARDRAILS=0 (or "off"/"false") to disable. Other
 # levers live at the harness layer (disableAllHooks, settings.local.json,
 # --config-dir, prompt-mode GITHUB_COPILOT_PROMPT_MODE_REPO_HOOKS) — see
@@ -34,12 +41,68 @@ set -o pipefail
 
 allow() { exit 0; }  # empty stdout == allow
 
+# Same "run" fallback as log-event.sh (issue #99), so denial records join the logger's
+# records: AGENT_RUN_ID -> branch of payload cwd -> branch of hook cwd -> session -> unknown.
+# A detached HEAD reports "HEAD", which is not a useful key, so it counts as no branch.
+denial_run() {
+  local b="${AGENT_RUN_ID:-}"
+  if [ -z "$b" ] && [ -n "${cwd:-}" ] && [ -d "$cwd" ]; then
+    b="$(git -C "$cwd" rev-parse --abbrev-ref HEAD 2>/dev/null)"; [ "$b" = "HEAD" ] && b=""
+  fi
+  if [ -z "$b" ]; then
+    b="$(git rev-parse --abbrev-ref HEAD 2>/dev/null)"; [ "$b" = "HEAD" ] && b=""
+  fi
+  [ -z "$b" ] && b="${session:-}"
+  printf '%s' "${b:-unknown}"
+}
+
+# Append one guardrailDenied record. Derived fields only - never the payload or command.
+# Every stream is discarded and the status ignored, so nothing here can reach stdout
+# (which carries only the permission JSON) or change the exit code.
+log_denial() {
+  # $1 = stable rule id, $2 = short reason code
+  case "${NEO_LOG_HOOKS:-1}" in
+    0|off|OFF|false|FALSE|no|NO) return 0 ;;
+  esac
+  NEO_DENY_RULE="$1" NEO_DENY_REASON="$2" NEO_DENY_TOOL="${tool:-}" NEO_DENY_SESSION="${session:-}" \
+  NEO_DENY_RUN="$(denial_run)" \
+  NEO_DENY_LOG_DIR="${AGENT_LOG_DIR:-$HOME/.agent-logs}" \
+    python3 - >/dev/null 2>&1 <<'PY' || true
+import json, os, re, time
+
+def clean(v, cap):
+    # Restricted charset + length cap: these come from the payload.
+    v = re.sub(r"[^A-Za-z0-9._:/-]", "_", v or "")[:cap]
+    return v or None
+
+try:
+    d = os.environ["NEO_DENY_LOG_DIR"]
+    rec = {
+        "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "run": (os.environ.get("NEO_DENY_RUN") or "unknown")[:200],
+        "session": clean(os.environ.get("NEO_DENY_SESSION"), 128),
+        "event": "guardrailDenied",
+        "tool": clean(os.environ.get("NEO_DENY_TOOL"), 64),
+        "rule": os.environ["NEO_DENY_RULE"],
+        "decision": "deny",
+        "reason": os.environ["NEO_DENY_REASON"],
+    }
+    os.makedirs(d, exist_ok=True)
+    with open(os.path.join(d, "events.jsonl"), "a", encoding="utf-8") as f:
+        f.write(json.dumps(rec, separators=(",", ":")) + "\n")
+except Exception:
+    pass
+PY
+}
+
 deny() {
-  # $1 = human-readable reason (shown to the agent)
-  python3 - "$1" <<'PY' 2>/dev/null || printf '{"permissionDecision":"deny","permissionDecisionReason":"blocked by Neo guardrail"}\n'
+  # $1 = stable rule id, $2 = short reason code (both logged),
+  # $3 = human-readable reason (shown to the agent, never logged)
+  python3 - "$3" <<'PY' 2>/dev/null || printf '{"permissionDecision":"deny","permissionDecisionReason":"blocked by Neo guardrail"}\n'
 import json, sys
 print(json.dumps({"permissionDecision": "deny", "permissionDecisionReason": sys.argv[1]}))
 PY
+  log_denial "$1" "$2"
   exit 0
 }
 
@@ -101,12 +164,14 @@ elif isinstance(args, str):
     cmd = args
 
 cwd = data.get("cwd") or ""
+session = data.get("sessionId") or data.get("session_id") or ""
 
 # Host-tool verdict. The Copilot desktop app registers its own tools (create_session,
 # create_pull_request, ...) which carry structured args rather than a shell command, so
 # the command patterns below can't see them. Rule B has to be enforced here too or the
 # host PR tools route straight around the draft-only guardrail.
 host_deny = ""
+host_rule = ""
 host_warn = ""
 if str(tool) in ("create_pull_request", "update_pull_request"):
     # Args we cannot read are args we cannot judge. Fail OPEN with a warning, matching the
@@ -118,12 +183,14 @@ if str(tool) in ("create_pull_request", "update_pull_request"):
         host_warn = "Neo enforce-guardrails: unreadable toolArgs for %s; allowing." % str(tool)
     elif str(tool) == "create_pull_request":
         if args.get("draft") is not True:
+            host_rule = "B3-host-create-pr-not-draft"
             host_deny = (
                 "Neo guardrail: agents open DRAFT pull requests only. Call "
                 "create_pull_request with draft: true (or use 'gh pr create --draft'). "
                 "To override intentionally, set NEO_ENFORCE_GUARDRAILS=0."
             )
     elif args.get("draft") is False:
+        host_rule = "B4-host-update-pr-undraft"
         host_deny = (
             "Neo guardrail: agents must not take a PR out of draft; leave it a draft "
             "for a human. Override with NEO_ENFORCE_GUARDRAILS=0."
@@ -135,6 +202,8 @@ print(cmd.replace("\r", " ").replace("\n", " "))
 print(str(cwd).replace("\n", " "))
 print(host_deny.replace("\r", " ").replace("\n", " "))
 print(host_warn.replace("\r", " ").replace("\n", " "))
+print(str(session).replace("\r", " ").replace("\n", " "))
+print(host_rule)
 PY
 )"
 
@@ -149,6 +218,8 @@ cmd="$(printf '%s' "$parsed" | sed -n '2p')"
 cwd="$(printf '%s' "$parsed" | sed -n '3p')"
 host_deny="$(printf '%s' "$parsed" | sed -n '4p')"
 host_warn="$(printf '%s' "$parsed" | sed -n '5p')"
+session="$(printf '%s' "$parsed" | sed -n '6p')"
+host_rule="$(printf '%s' "$parsed" | sed -n '7p')"
 
 # Args we could not read for a host PR tool: warn, then fall through to allow. This is the
 # stderr warning the PowerShell sibling emits inline; it has to be relayed here because the
@@ -156,7 +227,7 @@ host_warn="$(printf '%s' "$parsed" | sed -n '5p')"
 [ -n "$host_warn" ] && printf '%s\n' "$host_warn" >&2
 
 # Rule B for desktop-app host tools, which carry structured args instead of a command.
-[ -n "$host_deny" ] && deny "$host_deny"
+[ -n "$host_deny" ] && deny "$host_rule" draft_only "$host_deny"
 
 # Beyond that, only shell tools carry commands we enforce against. Everything else
 # runs freely.
@@ -176,12 +247,12 @@ norm="$(printf '%s' "$cmd" | tr -s '[:space:]' ' ')"
 # ---------------------------------------------------------------------------
 if printf '%s' "$norm" | grep -Eq '(^|[;&|[:space:]])gh[[:space:]]+pr[[:space:]]+create([[:space:]]|$)'; then
   if ! printf '%s' "$norm" | grep -Eq '(^|[[:space:]])(--draft|-d)([[:space:]=]|$)'; then
-    deny "Neo guardrail: agents open DRAFT pull requests only. Re-run 'gh pr create' with --draft. To override intentionally, set NEO_ENFORCE_GUARDRAILS=0."
+    deny B1-gh-pr-create-not-draft draft_only "Neo guardrail: agents open DRAFT pull requests only. Re-run 'gh pr create' with --draft. To override intentionally, set NEO_ENFORCE_GUARDRAILS=0."
   fi
 fi
 
 if printf '%s' "$norm" | grep -Eq '(^|[;&|[:space:]])gh[[:space:]]+pr[[:space:]]+ready([[:space:]]|$)'; then
-  deny "Neo guardrail: agents must not mark a PR ready for review ('gh pr ready'); leave it a draft for a human. Override with NEO_ENFORCE_GUARDRAILS=0."
+  deny B2-gh-pr-ready draft_only "Neo guardrail: agents must not mark a PR ready for review ('gh pr ready'); leave it a draft for a human. Override with NEO_ENFORCE_GUARDRAILS=0."
 fi
 
 # ---------------------------------------------------------------------------
@@ -192,7 +263,7 @@ fi
 #     git push origin main | git push origin HEAD:main | git push origin :master
 if printf '%s' "$norm" | grep -Eq '(^|[;&|[:space:]])git[[:space:]]+push\b'; then
   if printf '%s' "$norm" | grep -Eq '(^|[[:space:]:])(main|master)([[:space:]]|$)'; then
-    deny "Neo guardrail: pushing to 'main'/'master' is blocked. Push your feature branch instead and open a draft PR. Override with NEO_ENFORCE_GUARDRAILS=0."
+    deny A1-push-protected-ref protected_branch "Neo guardrail: pushing to 'main'/'master' is blocked. Push your feature branch instead and open a draft PR. Override with NEO_ENFORCE_GUARDRAILS=0."
   fi
 fi
 
@@ -205,7 +276,7 @@ if printf '%s' "$norm" | grep -Eq '(^|[;&|[:space:]])git[[:space:]]+(commit|push
   fi
   case "$branch" in
     main|master)
-      deny "Neo guardrail: you are on '$branch'; committing or pushing to it is blocked. Create a feature branch first. Override with NEO_ENFORCE_GUARDRAILS=0."
+      deny A2-commit-on-protected-branch protected_branch "Neo guardrail: you are on '$branch'; committing or pushing to it is blocked. Create a feature branch first. Override with NEO_ENFORCE_GUARDRAILS=0."
       ;;
   esac
 fi
