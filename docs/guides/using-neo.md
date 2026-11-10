@@ -52,6 +52,37 @@ artifact that crosses it, and it's what you segment in step 1.
 The loop is **upstream of**, not a replacement for, `feature-agent` and `task-planner`. It answers
 *what should exist, and why*; the Specification loop answers *what to build*.
 
+### Running one design activity directly
+
+When you already know which design artifact you want, skip the description and address it:
+`/neo-design <activity>` (or the long form, `/neo-design-thinking <activity>` — they behave
+identically). Both ship in `neo-product`.
+
+| Command | Also accepts | Produces (under `docs/design/`) |
+| --- | --- | --- |
+| `/neo-design stakeholder-mapping` | `stakeholders`, `stakeholder-map` | `stakeholder-maps/` |
+| `/neo-design empathy-mapping` | `empathy`, `empathy-map` | `empathy-maps/` |
+| `/neo-design persona-definitions` | `persona`, `personas` | `personas/` |
+| `/neo-design problem-framing` | `frame`, `problem-frame` | `problem-frames/` |
+| `/neo-design journey-mapping` | `journey-map`, `journey` | `journey-maps/` |
+| `/neo-design ideation-workshop` | `ideate`, `ideation` | `ideation/` |
+| `/neo-design assumption-testing` | `assumptions`, `assumption-test` | `assumption-tests/` |
+| `/neo-design service-blueprinting` | `blueprint`, `service-blueprint` | `service-blueprints/` |
+
+- **`/neo-design` on its own** shows this menu and recommends one activity based on what already
+  exists in `docs/design/`. It never starts an activity until you pick one.
+- **A name it doesn't know** (say, `/neo-design jouney` or `/neo-design audit`) gets the menu,
+  with the nearest match called out when there is one — it never guesses or starts an activity.
+- **Words after the activity** are context: `/neo-design journey-map new admin onboarding`.
+- **It still checks your existing work first.** `/neo-design persona` in a repo that already has
+  personas tells you what it found and extends them rather than quietly adding a near-duplicate.
+- Describing what you need in prose still works exactly as before.
+
+The short command is `/neo-design`, not `/design`: a bare `/design` from a plugin can collide
+with another plugin's command, and commands — unlike skills — have no fallback name when they
+do. The reasoning is in
+[`plugin-contract.md` § 4.1](../contributing/reference/plugin-contract.md#41-command-surfaces-for-skills).
+
 ## The Specification loop, step by step
 
 This is the part that's `[live]`. It is **interactive and human-gated** — never autonomous — because

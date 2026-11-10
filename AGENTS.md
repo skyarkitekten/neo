@@ -32,6 +32,7 @@ plugins/neo-product/                 The Product loop — same shape, grouped by
   plugin.json                        Copilot plugin manifest
   agents/                            neo.<domain>.<role>.agent.md
   skills/                            Copilot skills — neo-<name>/SKILL.md
+  commands/                          slash commands — neo-<name>.md (e.g. /neo-design → neo-design-thinking)
   hooks/hooks.json                   Copilot hook config (v1 schema, ${PLUGIN_ROOT})
   hooks/scripts/log-event.sh         its own copy — plugins can't share files
 .github/plugin/marketplace.json      Copilot marketplace (root, lists plugins[])
@@ -77,7 +78,8 @@ This repo has nothing to compile, lint, or unit-test in the app sense. Do **not*
 - **Plugins validate** — run `python3 scripts/validate-plugins.py` (`uv run scripts/validate-plugins.py`
   where `python3` isn't on PATH, e.g. Windows). It walks every
   `plugins/*/`, checks the Copilot manifest + hooks parse, asserts every declared component
-  path (`agents`, `skills`, `hooks`) resolves to something real on disk, validates each
+  path (`agents`, `skills`, `commands`, `hooks`) resolves to something real on disk (and that
+  every command file is named `neo-<kebab-case>.md`), validates each
   `hooks.json` against the hook-manifest contract (`scripts/linting/schemas/hook-manifest.schema.json`
   — including the rule that a `powershell` command must use `$env:PLUGIN_ROOT`, not the
   bare `${PLUGIN_ROOT}`), rejects non-canonical hook event names, and fails on any `agents:`
@@ -177,7 +179,8 @@ copilot plugin marketplace remove neo
   nothing, and reports success. This shipped: both plugins kept skills in `.github/skills/` without
   a `skills` key, so **every skill silently failed to load for several releases** (issue #81). Two
   rules follow — declare `agents`, `skills`, and `hooks` explicitly in every `plugin.json` even when
-  the value matches the default, and never trust a green validator as proof a component loaded.
+  the value matches the default (and `commands` whenever the plugin has a `commands/` component —
+  a plugin without commands is still valid), and never trust a green validator as proof a component loaded.
   Install into a throwaway `COPILOT_HOME` and read the skill count the CLI prints.
 - **A `preToolUse` hook that can't *run* its script bricks the whole session — so Neo no longer
   ships one.** `preToolUse` is fail-closed: a non-zero exit denies the tool call, so a hook that
