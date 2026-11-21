@@ -16,6 +16,10 @@ tools:
     list_sessions_and_chats,
     send_session_message,
     respond_to_session_plan,
+    respond_to_session_plan_v2,
+    get_sessions_status,
+    relay_session_input,
+    save_session_automation,
     navigate_to,
     archive_session,
     fork_session,
@@ -42,6 +46,9 @@ argument-hint: <PRD, PRD segment, or feature reference>
      is to omit `tools:` entirely or to name each tool exactly as written above. Naming them
      is portable: unrecognized tool names are ignored, so this list degrades harmlessly on the
      cloud agent and in VS Code — it just loses the ability to spawn there.
+     `respond_to_session_plan` is the older name of `respond_to_session_plan_v2`; both are
+     listed so either app version resolves one. Without either, plan approvals fall back to
+     plain messages, and the child stays in Plan mode, where its writers can't write.
      See `docs/contributing/guides/agent-authoring-reference.md` § Host tools.
 
      `create_pull_request` / `update_pull_request` are deliberately ABSENT. The guardrail
@@ -130,7 +137,20 @@ loop on it or rediscover it per segment.
   - `kickoff.prompt`: the issue reference **and everything the session needs to work standalone** —
     the definition of done, the validation criteria, and any decision already made with the human.
     A child session cannot see this conversation. Assume it knows nothing.
-  - `coordinate_with_creator: true` and `notify_on_idle: "once"` so you hear back.
+    The prompt must also contain:
+    - **Gate decisions.** When the human approves the task set (step 3), ask once whether the
+      children may skip the Technical Engineer's `/fleet` and `/rubber-duck` gates. Put the
+      answer in every child's prompt so no child stops to ask a question that's already answered.
+    - **The reporting contract.** "Report to your coordinator with `send_session_message`,
+      always setting `purpose`: `needs_input` for any gate or question, `error` for a blocker,
+      `handoff` when your plan is ready and when the draft PR is open, and `progress` once per
+      phase. Never stop silently."
+  - `coordinate_with_creator: true` and `notify_on_idle: "always"`. Never use `"once"`, which
+    stops notifying you after the child's first idle, so a child that stalls later goes unnoticed.
+  - `schedule`: a check-in every 30 minutes (`interval: "minutes"`, `every_minutes: 30`)
+    with the prompt "Check-in: if you're working, send your coordinator a one-line
+    `progress`; if you're blocked or waiting, send `needs_input` or `error`; if you're done,
+    send `handoff`." This wakes a child that went quiet. Archiving the session removes the schedule.
   - `name`: a short sentence-case title naming the task.
 - **Independent tasks spawn in parallel. Dependent ones are sequenced and stacked** — spawn the
   predecessor, wait for its branch (read it with `get_session`), then pass that branch as
@@ -140,12 +160,27 @@ loop on it or rediscover it per segment.
 
 ### 6. Steer and collect
 
-- Each child session stops at its own plan gate. Read the plan with `get_session`, then
-  `respond_to_session_plan` — approve, or reject with concrete feedback. Do not rubber-stamp.
+- Each child session stops at its own plan gate. Read the plan with `get_session`, then call
+  `respond_to_session_plan_v2` with its exact `request_id`. Either approve it with
+  `selected_action: "autopilot"` or `"interactive"`, or reject it with concrete feedback. Do
+  not rubber-stamp. **Never approve a plan by `send_session_message`:** the child stays in
+  Plan mode, and its writers' edits are rejected.
 - Correct or redirect a running session with `send_session_message`. Use immediate delivery when the
   session should act on it now.
-- **Never poll and never sleep.** End your turn after spawning or messaging; the idle notification
-  wakes you.
+- **Never poll and never sleep.** End your turn after spawning or messaging; the idle
+  notification or a child's check-in wakes you.
+- **Sweep on every wake.** Call `get_sessions_status` once, then handle every child, not just
+  the one that woke you:
+  - `awaiting_input`: `relay_session_input` the question to the human. Answer it yourself only
+    with a decision the human has already made.
+  - A pending plan: review it as described above.
+  - `last_error`: resolve the error or report it.
+  - Busy for over 45 minutes with no message from it: `send_session_message` asking for a
+    one-line status.
+  - Idle without a `handoff`: ask for one.
+
+  A child that does the same thing twice, or doesn't respond, counts as stalled. Report it to
+  the human.
 - When a session has produced its draft PR and you have recorded the link, `archive_session` it.
 - Report to the human: every task, its issue, its session, its branch, and its draft PR — plus
   anything that stalled and why.

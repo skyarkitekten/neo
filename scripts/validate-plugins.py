@@ -115,8 +115,11 @@ HOST_TOOLS = {
     # Session lifecycle — this is the family that makes spawning possible.
     "create_session", "fork_session", "open_pr_session", "open_issue_session",
     "archive_session", "delete_item", "get_session", "list_sessions_and_chats",
-    "send_session_message", "respond_to_session_plan", "navigate_to",
-    "rename_session", "rename_branch",
+    "send_session_message", "respond_to_session_plan", "respond_to_session_plan_v2",
+    "navigate_to", "rename_session", "rename_branch",
+    # Session supervision — status sweeps and relaying a child's blocked question.
+    # Observed in the desktop app's tool list (2026-11); not yet probed via the CLI.
+    "get_sessions_status", "relay_session_input", "answer_session_input",
     # Projects.
     "list_projects", "create_project",
     # GitHub surfaces the app owns.

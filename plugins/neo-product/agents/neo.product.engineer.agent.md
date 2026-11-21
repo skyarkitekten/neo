@@ -24,6 +24,7 @@ tools:
     list_sessions_and_chats,
     send_session_message,
     respond_to_session_plan,
+    respond_to_session_plan_v2,
     archive_session,
     fork_session,
   ]

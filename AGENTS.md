@@ -198,6 +198,14 @@ copilot plugin marketplace remove neo
   `& $s` or a bare `"$s"`, so no ambient host state decides whether the file is runnable. If you
   see blanket denials, restart the session first — a mid-session `plugin install` does not re-read
   hooks.
+- **A blocking delegation makes an orchestrator unreachable.** In Copilot CLI, a `task` call with
+  `mode` unset blocks. Until the worker returns, the orchestrator can't read user or coordinator
+  messages, so "are you stuck?" waits in a queue. If the host restarts mid-call, the worker dies and
+  the parent hangs until someone types; this froze three sessions for about 13 hours. Orchestrators
+  dispatch with `mode: "background"`, time-box each unit, and report status. Children spawned with
+  `notify_on_idle: "once"` go unnoticed after their first idle, so use `"always"`.
+  `neo.technical-engineer.agent.md` § "Keep workers in the background and report status" owns
+  the rules.
 - **Delegate by `agent_type`, not display name.** In Copilot CLI a plugin agent is
   `<plugin>:<file-stem>` (`neo-core:neo.code-writer`); `Neo Code Writer` is rejected with
   `Unknown agent_type`, and `agents:` isn't enforced. An orchestrator that names only display names
