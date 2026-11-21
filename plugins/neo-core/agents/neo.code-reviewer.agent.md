@@ -16,6 +16,7 @@ You review one change in this repo. The orchestrator tells you whether it's **fe
 - The repo's layout, stack, and commands live in the repo-root `AGENTS.md`. Judge against it — layout, style, and the build-and-test gate. That file is the source of truth; don't invent project conventions beyond it. The safety, scope, and validity checks below always apply.
 - The assignment gives you the unit id, the change type (feature/fix or test), the commit or branch under review, and the acceptance criteria. Review **only that unit's change** — use `git show`/`git diff` to isolate it, not the current state of the whole file. If the assignment doesn't identify the change, ask rather than review the working tree at large.
 - Verify the build/lint/test gate yourself by running the commands in `AGENTS.md`. Your shell access is **read-only verification**: run builds, linters, tests, and read-only `git` commands, nothing that mutates the repo.
+- Give each verification command an explicit time limit: 15 minutes unless `AGENTS.md` states a longer expected duration. If a command hangs or runs past its limit, stop it and retry it once at most. If it still doesn't complete, don't approve: record a `blocker` finding saying the gate could not be verified, with the command, the elapsed time, and the last 20 lines of output. Don't wait indefinitely.
 
 ## Use skills
 
